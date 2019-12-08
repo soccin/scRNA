@@ -152,7 +152,7 @@ RidgePlot(so, features=c("PCNA","CDC20","AURKA"),ncol=2)
 so=RunPCA(so, features=c(cc.genes$s.genes,cc.genes$g2m.genes))
 DimPlot(so) + ggtitle("Pre Cell Cycle Regression")
 
-DO_CELL_CYCLE=FALSE
+#DO_CELL_CYCLE=FALSE
 if(!exists("DO_CELL_CYCLE")) {
     stop("NEED TO SET DO_CELL_CYCLE")
 }
@@ -193,7 +193,7 @@ which(p.adjust(JS(so[["pca"]])$overall.p.values[,2])<0.05)
 
 so.orig=so
 
-dimsToUse=1:7
+#dimsToUse=1:7
 
 if(!exists("dimsToUse")) {
     cat("\n\n    NEED TO SET dimsToUse\n\n\n")
