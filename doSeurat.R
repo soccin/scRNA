@@ -55,8 +55,8 @@ rownames(ds)=scater::uniquifyFeatureNames(annote$GeneID,annote$GeneSymbol)
 
 metadata=read_csv(metaDataFile)
 
-gPos=t(ifelse(ds[genesOfInterest,]>0,"Pos","Neg"))
-gPos=gPos %>% data.frame %>% rownames_to_column("Sample") %>% as_tibble
+gPos=data.frame(Pos=t(ifelse(ds[genesOfInterest,]>0,"Pos","Neg")))
+gPos=gPos %>% rownames_to_column("Sample") %>% as_tibble
 metadata=full_join(gPos,metadata)
 
 #
@@ -72,9 +72,6 @@ if(!all(colnames(ds)==rownames(metadata))) {
 so=CreateSeuratObject(counts=ds,project=PROJNO,min.cells=3,min.features=200,meta.data=metadata)
 
 so[["percent.mt"]]=PercentageFeatureSet(so, pattern = "^MT-")
-
-stop("DDDDD")
-
 
 pdf(nextQCPlotFileName(),width=11,height=8.5)
 
@@ -146,20 +143,21 @@ so <- ScaleData(so, features = all.genes, vars.to.regress = c("Plate"))
 ## Cell Cycle Analysis
 #
 
-#DO_CELL_CYCLE=FALSE
+
+cc.genes=cc.genes.updated.2019
+
+so=CellCycleScoring(so,s.features=cc.genes$s.genes,g2m.features=cc.genes$g2m.genes,set.ident=T)
+pdf(nextQCPlotFileName("CellCycle"),width=11,height=8.5)
+RidgePlot(so, features=c("PCNA","CDC20","AURKA"),ncol=2)
+so=RunPCA(so, features=c(cc.genes$s.genes,cc.genes$g2m.genes))
+DimPlot(so) + ggtitle("Pre Cell Cycle Regression")
+
+DO_CELL_CYCLE=FALSE
 if(!exists("DO_CELL_CYCLE")) {
     stop("NEED TO SET DO_CELL_CYCLE")
 }
 
 if(DO_CELL_CYCLE) {
-    cc.genes=cc.genes.updated.2019
-
-    so=CellCycleScoring(so,s.features=cc.genes$s.genes,g2m.features=cc.genes$g2m.genes,set.ident=T)
-    pdf(nextQCPlotFileName("CellCycle"),width=11,height=8.5)
-    RidgePlot(so, features=c("PCNA","CDC20","AURKA"),ncol=2)
-    so=RunPCA(so, features=c(cc.genes$s.genes,cc.genes$g2m.genes))
-    DimPlot(so) + ggtitle("Pre Cell Cycle Regression")
-
     #
     # Regress out cell cycle scores during data scaling also remove Plate covariate
     #
@@ -169,8 +167,9 @@ if(DO_CELL_CYCLE) {
     so <- RunPCA(so, features=c(cc.genes$s.genes,cc.genes$g2m.genes))
     DimPlot(so) + ggtitle("Post Cell Cycle Regression")
 
-    dev.off()
 }
+
+dev.off()
 
 so <- RunPCA(so, features = VariableFeatures(so), nfeatures.print = 10)
 VizDimLoadings(so, dims = 1:2, reduction = "pca")
@@ -189,9 +188,17 @@ JackStrawPlot(so, dims = 1:10)
 ElbowPlot(so)
 dev.off()
 
+JS(so[["pca"]])$overall.p.values
+which(p.adjust(JS(so[["pca"]])$overall.p.values[,2])<0.05)
+
 so.orig=so
 
-dimsToUse=1:6
+dimsToUse=1:7
+
+if(!exists("dimsToUse")) {
+    cat("\n\n    NEED TO SET dimsToUse\n\n\n")
+}
+
 
 so=FindNeighbors(so,dims=dimsToUse)
 so=FindClusters(so,resolution=0.5)
@@ -209,9 +216,19 @@ DimPlot(so,reduction="umap",ncol=2,pt.size=3,group.by="Phase") +
 DimPlot(so,reduction="umap",ncol=2,pt.size=3,group.by="Plate") +
     ggtitle(paste("By Plate | Dimensions =",dimsToUse[1],"...",dimsToUse[len(dimsToUse)]))
 
-FeaturePlot(so,c("APOBEC3A"),pt.size=3)
-FeaturePlot(so,c("APOBEC3B"),pt.size=3)
-VlnPlot(so,c("APOBEC3A","APOBEC3B"))
+DimPlot(so,reduction="umap",ncol=2,pt.size=3,group.by="Pos.ID1") +
+    ggtitle("ID1")
+
+DimPlot(so,reduction="umap",ncol=2,pt.size=3,group.by="Pos.ID3") +
+    ggtitle("ID3")
+
+for(gi in genesOfInterest) {
+    FeaturePlot(so,c(gi),pt.size=3)
+}
+
+FeaturePlot(so,genesOfInterest,pt.size=3)
+VlnPlot(so,genesOfInterest)
+
 dev.off()
 
 so.markers <- FindAllMarkers(so, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
