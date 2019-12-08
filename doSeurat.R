@@ -1,15 +1,10 @@
 
 qcPlotNum = 0
-
-TAGS="PlateReg"
-
 nextQCPlotFileName <- function(...) {
     qcPlotNum <<- qcPlotNum + 1
     paste0("qc",sprintf("%02d",qcPlotNum),cc("Seurat",TAGS,...),".pdf")
 }
 
-library(tidyverse)
-library(Seurat)
 
 if(interactive()) {
     pdf.orig<-pdf
@@ -18,8 +13,19 @@ if(interactive()) {
     dev.off<-function(...){}
 }
 
-#if(!file.exists("seurate_2019-12-07.Rdata")) {
-countsFile="results/r_001/gene/counts_gene/Proj_10091_htseq_all_samples.txt"
+SDIR=""
+if(SDIR=="") stop("Set SDIR")
+
+#########################################################################################
+#########################################################################################
+library(tidyverse)
+library(Seurat)
+#########################################################################################
+stop("INCLUDE")
+#########################################################################################
+
+TAGS="PlateReg"
+countsFile="pipeline/gene/counts_gene/Proj_10223_B_htseq_all_samples.txt"
 
 dx=read_tsv(countsFile, col_types = cols())
 
