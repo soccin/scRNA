@@ -30,6 +30,14 @@ countsFile="pipeline/gene/counts_gene/Proj_10223_B_htseq_all_samples.txt"
 metaDataFile="metadata.csv"
 genesOfInterest=c("ID1","ID3")
 
+#
+# Primary QC filtering paramters
+#
+
+PCT_MITO=25
+MIN_FEATURE_RNA=1000
+MIN_NCOUNT_RNA=0.25e6
+
 dx=read_tsv(countsFile, col_types = cols())
 
 ds <- dx %>%
@@ -51,7 +59,12 @@ gPos=t(ifelse(ds[genesOfInterest,]>0,"Pos","Neg"))
 gPos=gPos %>% data.frame %>% rownames_to_column("Sample") %>% as_tibble
 metadata=full_join(gPos,metadata)
 
-if(!all(colnames(ds)==metadata$Sample)) {
+#
+# Seurat needs metadata as data from with Samples in rownames
+#
+metadata=data.frame(metadata) %>% column_to_rownames("Sample")
+
+if(!all(colnames(ds)==rownames(metadata))) {
     cat("\n    ERROR cols/rows of data & metadata do not match up\n\n")
     stop("FATAL:ERROR")
 }
@@ -73,18 +86,19 @@ CombinePlots(plots = list(plot1, plot2))
 
 dev.off()
 
-keep=(so@meta.data$nFeature_RNA>2500 & so@meta.data$nCount_RNA>.25e6 & so@meta.data$percent.mt<40)
+keep=(
+        so@meta.data$nFeature_RNA > MIN_FEATURE_RNA &
+        so@meta.data$nCount_RNA > MIN_NCOUNT_RNA &
+        so@meta.data$percent.mt < PCT_MITO
+        )
+
 knitr::kable(table(keep,so@meta.data$Plate))
 
-# |      |  A|  B| Ctrl| Po|
-# |:-----|--:|--:|----:|--:|
-# |FALSE |  9|  4|    6|  2|
-# |TRUE  | 79| 84|    2|  6|
-
-
 so.orig=so
-so <- subset(so, subset = nFeature_RNA > 2500 & nCount_RNA>.25e6 & percent.mt < 40 & Plate %in% c("A","B"))
-so@meta.data$Plate=droplevels(so@meta.data$Plate)
+so <- subset(so,
+        subset = nFeature_RNA > MIN_FEATURE_RNA & nCount_RNA > MIN_NCOUNT_RNA & percent.mt < PCT_MITO
+        )
+#so@meta.data$Plate=droplevels(so@meta.data$Plate)
 
 so <- NormalizeData(so)
 
@@ -132,31 +146,31 @@ so <- ScaleData(so, features = all.genes, vars.to.regress = c("Plate"))
 ## Cell Cycle Analysis
 #
 
-cc.genes=cc.genes.updated.2019
+#DO_CELL_CYCLE=FALSE
+if(!exists("DO_CELL_CYCLE")) {
+    stop("NEED TO SET DO_CELL_CYCLE")
+}
 
-so=CellCycleScoring(so,s.features=cc.genes$s.genes,g2m.features=cc.genes$g2m.genes,set.ident=T)
-pdf(nextQCPlotFileName("CellCycle"),width=11,height=8.5)
-RidgePlot(so, features=c("PCNA","CDC20","AURKA"),ncol=2)
-so=RunPCA(so, features=c(cc.genes$s.genes,cc.genes$g2m.genes))
-DimPlot(so) + ggtitle("Pre Cell Cycle Regression")
+if(DO_CELL_CYCLE) {
+    cc.genes=cc.genes.updated.2019
 
-#
-# Regress out cell cycle scores during data scaling also remove Plate covariate
-#
+    so=CellCycleScoring(so,s.features=cc.genes$s.genes,g2m.features=cc.genes$g2m.genes,set.ident=T)
+    pdf(nextQCPlotFileName("CellCycle"),width=11,height=8.5)
+    RidgePlot(so, features=c("PCNA","CDC20","AURKA"),ncol=2)
+    so=RunPCA(so, features=c(cc.genes$s.genes,cc.genes$g2m.genes))
+    DimPlot(so) + ggtitle("Pre Cell Cycle Regression")
 
-#so <- ScaleData(so, vars.to.regress = c("S.Score", "G2M.Score"), features = rownames(so))
-so <- ScaleData(so, vars.to.regress = c("S.Score", "G2M.Score", "Plate"), features = rownames(so))
-so <- RunPCA(so, features=c(cc.genes$s.genes,cc.genes$g2m.genes))
-DimPlot(so) + ggtitle("Post Cell Cycle Regression")
+    #
+    # Regress out cell cycle scores during data scaling also remove Plate covariate
+    #
 
-dev.off()
+    #so <- ScaleData(so, vars.to.regress = c("S.Score", "G2M.Score"), features = rownames(so))
+    so <- ScaleData(so, vars.to.regress = c("S.Score", "G2M.Score", "Plate"), features = rownames(so))
+    so <- RunPCA(so, features=c(cc.genes$s.genes,cc.genes$g2m.genes))
+    DimPlot(so) + ggtitle("Post Cell Cycle Regression")
 
-save.image("seurate_2019-12-07.Rdata",compress=T)
-
-# } else {
-#     load("seurate_2019-12-07.Rdata")
-#     cat("\n\nLoaded Image\n\n")
-# }
+    dev.off()
+}
 
 so <- RunPCA(so, features = VariableFeatures(so), nfeatures.print = 10)
 VizDimLoadings(so, dims = 1:2, reduction = "pca")
