@@ -13,19 +13,22 @@ if(interactive()) {
     dev.off<-function(...){}
 }
 
-SDIR=""
-if(SDIR=="") stop("Set SDIR")
+PDIR="scRNA"
+if(PDIR=="") stop("Set SDIR")
 
 #########################################################################################
 #########################################################################################
 library(tidyverse)
 library(Seurat)
 #########################################################################################
-stop("INCLUDE")
+#stop("INCLUDE")
 #########################################################################################
 
 TAGS="PlateReg"
+PROJNO="10223_B"
 countsFile="pipeline/gene/counts_gene/Proj_10223_B_htseq_all_samples.txt"
+metaDataFile="metadata.csv"
+genesOfInterest=c("ID1","ID3")
 
 dx=read_tsv(countsFile, col_types = cols())
 
@@ -37,21 +40,28 @@ ds <- dx %>%
     as.matrix
 
 annote =  dx %>% filter(!is.na(GeneSymbol)) %>% select(1,2)
-mitoGenes=scan("mitoGenes.id.txt","")
+mitoGenes=scan(file.path(PDIR,"mitoGenes.id.txt"),"")
 annote=annote %>% mutate(MitoGene=gsub("\\.\\d+$","",GeneID) %in% mitoGenes)
 
 rownames(ds)=scater::uniquifyFeatureNames(annote$GeneID,annote$GeneSymbol)
 
-plateCode=gsub("s_","",colnames(ds)) %>% gsub("\\d+$","",.) %>% gsub("_\\d+.$","",.) %>% gsub("\\d+.$","",.)
-plates=tibble(Sample=colnames(ds),Plate=factor(plateCode))
-metadata=plates %>% data.frame %>% column_to_rownames("Sample")
+metadata=read_csv(metaDataFile)
 
-gPos=t(ifelse(ds[grep("^APOBEC3[AB]$",rownames(ds),value=T),]>0,"Pos","Neg"))
-metadata=data.frame(metadata,Markers=gPos)
+gPos=t(ifelse(ds[genesOfInterest,]>0,"Pos","Neg"))
+gPos=gPos %>% data.frame %>% rownames_to_column("Sample") %>% as_tibble
+metadata=full_join(gPos,metadata)
 
-so=CreateSeuratObject(counts=ds,project="Proj_10091",min.cells=3,min.features=200,meta.data=metadata)
+if(!all(colnames(ds)==metadata$Sample)) {
+    cat("\n    ERROR cols/rows of data & metadata do not match up\n\n")
+    stop("FATAL:ERROR")
+}
+
+so=CreateSeuratObject(counts=ds,project=PROJNO,min.cells=3,min.features=200,meta.data=metadata)
 
 so[["percent.mt"]]=PercentageFeatureSet(so, pattern = "^MT-")
+
+stop("DDDDD")
+
 
 pdf(nextQCPlotFileName(),width=11,height=8.5)
 
