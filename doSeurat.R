@@ -172,12 +172,13 @@ if(DO_CELL_CYCLE) {
 dev.off()
 
 so <- RunPCA(so, features = VariableFeatures(so), nfeatures.print = 10)
-VizDimLoadings(so, dims = 1:2, reduction = "pca")
 
 pdf(nextQCPlotFileName("PCA"),width=11,height=8.5)
-DimPlot(so, reduction = "pca", group.by="Plate",pt.size = 3)
 
+VizDimLoadings(so, dims = 1:2, reduction = "pca")
+DimPlot(so, reduction = "pca", group.by="Plate",pt.size = 3)
 DimHeatmap(so, dims = 1, cells = 500, balanced = TRUE)
+
 dev.off()
 
 so <- JackStraw(so, num.replicate = 100)
@@ -203,7 +204,7 @@ if(!exists("dimsToUse")) {
 so=FindNeighbors(so,dims=dimsToUse)
 so=FindClusters(so,resolution=0.5)
 so=RunUMAP(so,dims=dimsToUse)
-DimPlot(so,reduction="umap",ncol=2,pt.size=3,group.by="seurat_clusters")
+if(interactive()) DimPlot(so,reduction="umap",ncol=2,pt.size=3,group.by="seurat_clusters")
 
 
 pdf(nextQCPlotFileName("UMAP"),width=11,height=8.5)
