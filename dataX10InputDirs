@@ -1,0 +1,6 @@
+../s_RT1/outs/filtered_feature_bc_matrix
+../s_RT2/outs/filtered_feature_bc_matrix
+../s_Sham1/outs/filtered_feature_bc_matrix
+../s_Sham2/outs/filtered_feature_bc_matrix
+../s_Tmem_RT_1/outs/filtered_feature_bc_matrix
+../s_Tmem_RT_2/outs/filtered_feature_bc_matrix
