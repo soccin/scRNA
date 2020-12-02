@@ -137,8 +137,8 @@ dev.off()
 #
 # SCTransform Normalizes
 #
-d10Xlist=list(DMSO=dmso,IBR10=ibr10)
-for (i in 1:length(d10Xlist)) {
+d10X.list=d10X
+for (i in 1:length(d10X.list)) {
     d10X.list[[i]] <- SCTransform(d10X.list[[i]], vars.to.regress = c('S.Score', 'G2M.Score'), verbose = T)
 }
 
