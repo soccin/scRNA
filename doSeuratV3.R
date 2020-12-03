@@ -171,7 +171,7 @@ plot_grid(p1, p2)
 p3=DimPlot(d10X.integrated, reduction = "umap", split.by = "orig.ident")
 print(p3)
 
-d10X.integrated@project.name="DMSO+IBR10"
+d10X.integrated@project.name="p11206"
 plotCellCycle(d10X.integrated)
 
 dev.off()
@@ -184,11 +184,13 @@ clusters=levels(d10X.integrated@meta.data$seurat_clusters)
 
 clusterMarkers=list()
 for(ci in clusters) {
-    clusterMarkers[[ci]]=FindConservedMarkers(d10X.integrated, ident.1 = ci, grouping.var = "orig.ident")
+    clusterMarkers[[ci]]=NULL
+    try({
+        clusterMarkers[[ci]]=FindConservedMarkers(d10X.integrated, ident.1 = ci, grouping.var = "orig.ident")
+    })
 }
 
 save.image(cc("CHECKPOINT",DATE(),digest::digest(d10X),".Rdata"),compress=T)
-
 
 Idents(d10X.integrated)="orig.ident"
 
@@ -198,48 +200,50 @@ so=NormalizeData(so)
 so=FindVariableFeatures(so)
 so=ScaleData(so)
 
-markers.all=FindMarkers(so,ident.1="IBR10",ident.2="DMSO",pct=.1)
-
-save.image(cc("CHECKPOINT",DATE(),digest::digest(d10X),".Rdata"),compress=T)
-
 library(tidyverse)
 library(openxlsx)
-annote=readRDS("Homo_sapiens.GRCh37.75__GeneIDNameClass.rda")
-codingGenes=annote %>% filter(class=="protein_coding") %>% distinct(gene_name) %>% pull(gene_name)
+
+#markers.all=FindMarkers(so,ident.1="IBR10",ident.2="DMSO",pct=.1)
+
+#save.image(cc("CHECKPOINT",DATE(),digest::digest(d10X),".Rdata"),compress=T)
+
+#annote=readRDS("Homo_sapiens.GRCh37.75__GeneIDNameClass.rda")
+#codingGenes=annote %>% filter(class=="protein_coding") %>% distinct(gene_name) %>% pull(gene_name)
+
+# tbl.1=markers.all %>%
+#     rownames_to_column("Gene") %>%
+#     as_tibble %>%
+#     mutate(avg_log2FC=log2(exp(1))*avg_logFC) %>%
+#     mutate(FoldChange=ifelse(avg_log2FC>0,2^avg_log2FC,-2^(-avg_log2FC))) %>%
+#     select(Gene,p_val_adj,FoldChange,avg_log2FC,pct.1,pct.2,p_val) %>%
+#     mutate(OR.1=pct.1/(1-pct.1),OR.2=pct.2/(1-pct.2),lOR=log10(OR.1/OR.2))
 
 
-tbl.1=markers.all %>%
-    rownames_to_column("Gene") %>%
-    as_tibble %>%
-    mutate(avg_log2FC=log2(exp(1))*avg_logFC) %>%
-    mutate(FoldChange=ifelse(avg_log2FC>0,2^avg_log2FC,-2^(-avg_log2FC))) %>%
-    select(Gene,p_val_adj,FoldChange,avg_log2FC,pct.1,pct.2,p_val) %>%
-    mutate(OR.1=pct.1/(1-pct.1),OR.2=pct.2/(1-pct.2),lOR=log10(OR.1/OR.2))
-
-
-tbl.f=tbl.1 %>% arrange(desc(abs(FoldChange))) %>% filter(abs(FoldChange)>2 & p_val_adj<0.05)
+# tbl.f=tbl.1 %>% arrange(desc(abs(FoldChange))) %>% filter(abs(FoldChange)>2 & p_val_adj<0.05)
 
     # filter(Gene %in% codingGenes) %>%
     # filter(abs(avg_log2FC)>log2(2) & p_val_adj<0.05)
 
-pct.clusters=so@meta.data %>% rownames_to_column("Cell") %>% as_tibble %>% count(orig.ident,seurat_clusters) %>% group_by(orig.ident) %>% mutate(PCT=n/sum(n)) %>% select(-n) %>% spread(seurat_clusters,PCT)
+# pct.clusters=so@meta.data %>% rownames_to_column("Cell") %>% as_tibble %>% count(orig.ident,seurat_clusters) %>% group_by(orig.ident) %>% mutate(PCT=n/sum(n)) %>% select(-n) %>% spread(seurat_clusters,PCT)
 
-write.xlsx(list(diffGenes=tbl.f,PCT.Cluster=pct.clusters),
-    "findMarkersDefault_pct0.1_IBR10_vs_DMSO__FC_2_FDR_0.05.xlsx")
+# write.xlsx(list(diffGenes=tbl.f,PCT.Cluster=pct.clusters),
+#     "findMarkersDefault_pct0.1_IBR10_vs_DMSO__FC_2_FDR_0.05.xlsx")
 
-tbl.f %>% pull(Gene) -> gg
-plts=VlnPlot(so,features=gg,combine=F,pt.size=0,split.by="orig.ident",group.by="seurat_clusters")
+# tbl.f %>% pull(Gene) -> gg
+# plts=VlnPlot(so,features=gg,combine=F,pt.size=0,split.by="orig.ident",group.by="seurat_clusters")
 
-pg=list()
-for(ii in seq(ceiling(len(gg)/6))-1) {
-    if(ii<len(gg)) {
-        pg[[paste0("p",ii)]]=CombinePlots(plots=plts[((ii*6)+1):len(plts)],ncol=3,nrow=2,legend="right")
-    }
-}
+# pg=list()
+# for(ii in seq(ceiling(len(gg)/6))-1) {
+#     if(ii<len(gg)) {
+#         pg[[paste0("p",ii)]]=CombinePlots(plots=plts[((ii*6)+1):len(plts)],ncol=3,nrow=2,legend="right")
+#     }
+# }
 
+stop("DDDDD")
 
 pg.dot=DotPlot(so,features=rev(gg),cols = c("blue", "red"), dot.scale = 10,split.by="orig.ident",group.by="seurat_clusters")+RotatedAxis()
 
+stop("DMSO")
 pdf(file="diffGenes__pct0.1_IBR10_vs_DMSO__FC_2_FDR_0.05.pdf",height=8.5,width=11)
 print(pg)
 print(pg.dot)
@@ -261,6 +265,7 @@ markers=list()
 
 for(ci in levels(d10X.integrated@meta.data$seurat_clusters)) {
     grp1=paste0("c",ci,"_IBR10")
+stop("DMSO")
     grp2=paste0("c",ci,"_DMSO")
     cat(grp1,"vs",grp2,"...")
     markers[[paste0("c",ci)]]=FindMarkers(so,ident.1=grp1,ident.2=grp2,pct.min=.1,) %>%
@@ -300,6 +305,7 @@ save.image(cc("CHECKPOINT",DATE(),digest::digest(d10X),".Rdata"),compress=T)
 
 stop("END OF SCRIPT")
 
+stop("DMSO")
 write.xlsx(tbl.1,"findMarkersDefault_pct0.1_IBR10_vs_DMSO__logFC_2_FDR_0.05.xlsx")
 
 tbl.1 %>% head %>% pull(Gene) -> g1
@@ -307,6 +313,7 @@ head(tbl.1[tbl.1$FoldChange<0,]) %>% pull(Gene) -> gneg
 
 pg=VlnPlot(d10X.integrated,features=g1)
 pneg=VlnPlot(d10X.integrated,features=gneg)
+stop("DMSO")
 pdf(file="top6Genes___pct0.1_IBR10_vs_DMSO__logFC_2_FDR_0.05.pdf",width=11,height=8.5)
 print(pg)
 dev.off()
@@ -337,6 +344,7 @@ markers=list()
 
 for(ci in sort(unique(so@meta.data$Phase))) {
     grp1=paste0(ci,"_IBR10")
+stop("DMSO")
     grp2=paste0(ci,"_DMSO")
     cat(grp1,"vs",grp2,"...")
     markers[[ci]]=FindMarkers(so,ident.1=grp1,ident.2=grp2)
