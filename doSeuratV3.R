@@ -6,7 +6,7 @@ library(patchwork)
 source("seuratTools.R")
 
 dataFolders=scan("dataX10InputDirs","")
-names(dataFolders)=gsub(".outs.*","",gsub(".*/s_","",dataFolders))
+names(dataFolders)=gsub("_",".",gsub(".outs.*","",gsub(".*/s_","",dataFolders)))
 
 #dmso <- read10XIntoSeuratObj("data/HG19+MM10/s_DMSO/outs/filtered_feature_bc_matrix","DMSO")
 #ibr10 <- read10XIntoSeuratObj("data/HG19+MM10/s_Ibr10/outs/filtered_feature_bc_matrix","IBR10")
@@ -31,7 +31,6 @@ doQCandFilter <- function(so) {
 
     prjName=as.character(so@meta.data$orig.ident[1])
 
-
     pg0=VlnPlot(so, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
 
     plot1 <- FeatureScatter(so, feature1 = "nCount_RNA", feature2 = "percent.mt")
@@ -53,6 +52,7 @@ doQCandFilter <- function(so) {
     pg1=VlnPlot(so, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
 
     pdf(file=cc("seuratQC",prjName,"01.pdf"),height=8.5,width=11)
+    cat(cc("seuratQC",prjName,"01.pdf"),"\n")
     print(pg0)
     print(plot1+plot2)
     print(pg1)
@@ -71,7 +71,7 @@ for(ii in seq(d10X)) {
     d10X[[ii]]=doQCandFilter(d10X[[ii]])
 }
 
-DEBUG=T
+DEBUG=F
 if(DEBUG) {
 
     c("\n\nDEBUG SET; Subset data\n\n")
@@ -150,7 +150,6 @@ d10X.anchors <- FindIntegrationAnchors(object.list = d10X.list, normalization.me
     anchor.features = d10X.features, verbose = T)
 d10X.integrated <- IntegrateData(anchorset = d10X.anchors, normalization.method = "SCT",
     verbose = T)
-
 
 DefaultAssay(d10X.integrated) <- "integrated"
 
@@ -239,6 +238,7 @@ library(openxlsx)
 #     }
 # }
 
+if(!interactive()) {quit()}
 stop("DDDDD")
 
 pg.dot=DotPlot(so,features=rev(gg),cols = c("blue", "red"), dot.scale = 10,split.by="orig.ident",group.by="seurat_clusters")+RotatedAxis()
