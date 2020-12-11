@@ -60,6 +60,11 @@ plotCellCycle<-function(sc) {
     pg
 }
 
+#############################################################################################
+#
+if(interactive()) {stop("INCLUDE")}
+#####
+
 load("CHECKPOINT_20201203_39e06a8336f2efa9d09ddb2806fc5d0a_.Rdata")
 
 
