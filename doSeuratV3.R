@@ -175,9 +175,12 @@ d10X.integrated <- IntegrateData(anchorset = d10X.anchors, normalization.method 
 
 DefaultAssay(d10X.integrated) <- "integrated"
 
-d10X.integrated <- ScaleData(d10X.integrated)
-d10X.integrated <- RunPCA(d10X.integrated,verbose=T)
+# This shoudld not be needed here, data scaled prior to IntegrateData
+# see (https://satijalab.org/seurat/v3.0/integration.html)
+#
+#d10X.integrated <- ScaleData(d10X.integrated)
 
+d10X.integrated <- RunPCA(d10X.integrated,verbose=T)
 d10X.integrated <- RunUMAP(d10X.integrated, reduction = "pca", dims = 1:20)
 d10X.integrated <- FindNeighbors(d10X.integrated, reduction = "pca", dims = 1:20)
 d10X.integrated <- FindClusters(d10X.integrated, resolution = 0.2)
