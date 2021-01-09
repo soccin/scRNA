@@ -1,0 +1,5 @@
+cp ../dataX10InputDirs .
+cp ../doSeurat*.R .
+cp ../seuratTools.R .
+cp ../CellCycleGenesUpdated2019_MouseFromHuman.rda .
+
