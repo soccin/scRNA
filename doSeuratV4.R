@@ -135,6 +135,9 @@ dev.off()
 #
 # SCTransform Normalizes
 #
+
+cat("\n\n  SCTransform and normalize\n")
+
 d10X.list=d10X
 for (i in 1:length(d10X.list)) {
     d10X.list[[i]] <- SCTransform(d10X.list[[i]], vars.to.regress = c('S.Score', 'G2M.Score'), verbose = T)
@@ -200,14 +203,7 @@ save.image(cc("CHECKPOINT",DATE(),digest::digest(d10X),".Rdata"),compress=T)
 ## Find Cluster Markers
 ##
 
-so=d10X.integrated
-DefaultAssay(so)="RNA"
-so=NormalizeData(so)
-so=FindVariableFeatures(so)
-so=ScaleData(so)
-
-if(!interactive()) {quit()}
-# stop("\n\nInit and Load\n\n")
+cat("\n\n  Find Cluster Markers\n")
 
 so=d10X.integrated
 DefaultAssay(so)="RNA"
