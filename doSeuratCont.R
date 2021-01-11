@@ -65,7 +65,11 @@ plotCellCycle<-function(sc) {
 if(interactive()) {stop("INCLUDE")}
 #####
 
-load("CHECKPOINT_20201203_39e06a8336f2efa9d09ddb2806fc5d0a_.Rdata")
+checkFiles=dir(pattern="CHECKPOINT.*.Rdata")
+if(len(checkFiles)>1) {
+    cat("\n\n Too many CHECKPOINT files need to set explicitly\n")
+}
+load(checkFiles)
 
 
 projectTag="p11206"
