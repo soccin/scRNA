@@ -30,6 +30,12 @@ read10XMouseIntoSeuratObj <- function(fname,projName) {
 
 }
 
+plotCellCycle<-function(sc) {
+    sc=RunPCA(sc,features=c(cc.genes$s.genes,cc.genes$g2m.genes))
+    pg=DimPlot(sc,group.by="Phase") + ggtitle(paste(sc@project.name,"Cell Cycle PCA Projection"))
+    pg
+}
+
 
 convertGeneSymbolsHumanToMouse <- function(hgg) {
 
