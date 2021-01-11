@@ -127,8 +127,6 @@ for(ii in seq(d10X)) {
     pcc[[ii]]=plotCellCycle(preProcessSO(d10X[[ii]]))
 }
 
-save.image(cc("CHECKPOINT",DATE(),digest::digest(d10X),".Rdata"),compress=T)
-
 pdf(file="seuratQC_CellCycle.pdf",width=8.5,height=11)
     wrap_plots(pcc[1:4],ncol=2)
     wrap_plots(pcc[5:6],ncol=2)
@@ -196,6 +194,8 @@ print(p2)
 
 dev.off()
 
+save.image(cc("CHECKPOINT",DATE(),digest::digest(d10X),".Rdata"),compress=T)
+
 ##
 ## Find Cluster Markers
 ##
@@ -239,3 +239,4 @@ for(cii in levels(clusterMarkers$cluster)) {
 
 dev.off()
 
+save.image(cc("CHECKPOINT",DATE(),digest::digest(d10X),".Rdata"),compress=T)
