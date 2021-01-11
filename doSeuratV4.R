@@ -215,6 +215,8 @@ so@meta.data$Types=gsub("\\d$","",so@meta.data$orig.ident)
 
 clusterMarkers=FindAllMarkers(so,only.pos=TRUE,logfc.threshold=0.25,min.pct = 0.25)
 
+require(dplyr)
+
 top6ClusterMarkers=clusterMarkers %>%
     tibble %>%
     group_by(cluster) %>%
@@ -222,7 +224,15 @@ top6ClusterMarkers=clusterMarkers %>%
     mutate(N=row_number()) %>%
     filter(N<=6)
 
-pdf(file=cc("seuratAnalysis_ClusterMarkers",projectTag,".pdf"),width=11,height=8.5)
+png(filename=cc("seuratAnalysis_ClusterMarkers",projectTag,"%03d.png"),
+    type="cairo",
+    units="in",
+    width=11,
+    height=8.5,
+    pointsize=12,
+    res=96)
+
+#pdf(file=cc("seuratAnalysis_ClusterMarkers",projectTag,".pdf"),width=11,height=8.5)
 
 for(cii in levels(clusterMarkers$cluster)) {
     print(cii)
