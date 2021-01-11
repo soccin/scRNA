@@ -100,11 +100,6 @@ if(args$DEBUG) {
 
     set.seed(101)
 
-# xx=dmso
-# dmso=subset(xx,cells=Cells(xx)[runif(nrow(xx@meta.data))<.05])
-# xx=ibr10
-# ibr10=subset(xx,cells=Cells(xx)[runif(nrow(xx@meta.data))<.05])
-
     cat("\nDEBUG::subset\n")
 
     for(ii in seq(d10X)) {
@@ -117,25 +112,13 @@ if(args$DEBUG) {
 
 }
 
-# dmso=scoreCellCycle(dmso)
-# ibr10=scoreCellCycle(ibr10)
 cat("\nScoreCellCycle\n")
 for(ii in seq(d10X)) {
     print(ii)
     d10X[[ii]]=scoreCellCycle(d10X[[ii]])
 }
 
-preProcessSO<-function(so) {
-    so=NormalizeData(so);
-    so=FindVariableFeatures(so);
-    so=ScaleData(so,features=rownames(so))
-}
-
 cc.genes=lapply(cc.genes.updated.2019,function(x){convertGeneSymbolsHumanToMouse(x)})
-
-
-# pcc.dmso=plotCellCycle(preProcessSO(dmso))
-# pcc.ibr10=plotCellCycle(preProcessSO(ibr10))
 
 pcc=list()
 cat("\nPlotCellCycle\n")

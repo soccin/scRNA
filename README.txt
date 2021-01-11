@@ -10,3 +10,4 @@
 
 - Remove extra ScaleData after IntegrateData; should not be needed
 
+- Merge doSeuratV3.R doSeuratCont.R ==> doSeuratV4.R and move rest of functions to seuratTools.R
