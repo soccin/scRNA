@@ -72,6 +72,9 @@ scoreCellCycle <- function(dorig) {
 
     cc.genes=lapply(cc.genes.updated.2019,function(x){convertGeneSymbolsHumanToMouse(x)})
 
+    cat("\n\n   Adding Pclaf to cc.genes\n")
+    cc.genes=c(cc.genes,"Pclaf")
+
     so=CellCycleScoring(so,s.features=cc.genes$s.genes,g2m.features=cc.genes$g2m.genes,set.ident=T)
 
     cc.meta.data=so@meta.data[,c("S.Score","G2M.Score","Phase")]
