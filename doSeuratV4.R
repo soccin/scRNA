@@ -119,6 +119,8 @@ for(ii in seq(d10X)) {
 }
 
 cc.genes=lapply(cc.genes.updated.2019,function(x){convertGeneSymbolsHumanToMouse(x)})
+cat("\n\n   Adding Pclaf to cc.genes\n")
+cc.genes=c(cc.genes,"Pclaf")
 
 pcc=list()
 cat("\nPlotCellCycle\n")
