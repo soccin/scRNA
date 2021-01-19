@@ -64,7 +64,7 @@ fp=FeaturePlot(so,features=genes,max.cutoff="q98",min.cutoff="q9",combine=F)
 
 pfile2=cc("pltSeuratV1","FeaturePlot",d10X.integrated@project.name,"Pipe",pipeTag,"%02d.png")
 
-pp=paginatePlots(fp,3,4)
+pp=paginatePlots(fp,2,2)
 
 png(filename=pfile2,
     type="cairo",
@@ -74,7 +74,7 @@ png(filename=pfile2,
     pointsize=12,
     res=300)
 
-map(pp,print)
+xx=map(pp,print)
 
 dev.off()
 
@@ -99,7 +99,7 @@ pp2=paginatePlots(vv,3,1)
 vv=VlnPlot(so,features=genes,group.by="seurat_clusters",split.by="sample",pt.size=0,combine=F)
 pp3=paginatePlots(vv,3,1)
 
-pdf(file=pfile3,width=8.5,height=11)
+pdf(file=pfile3,width=10,height=11)
 print(dp1)
 print(dp2)
 xx=map(c(pp1,pp2,pp3),print)
