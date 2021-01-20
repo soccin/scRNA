@@ -248,3 +248,6 @@ for(cii in levels(clusterMarkers$cluster)) {
 dev.off()
 
 save.image(cc("CHECKPOINT",DATE(),digest::digest(d10X),".Rdata"),compress=T)
+
+saveRDS(d10X.integrated,"obj__d10X.integrated.rda",compress=T)
+saveRDS(d10X.integrated@meta.data,"obj__d10X.integrated_meta.data.rda",compress=T)

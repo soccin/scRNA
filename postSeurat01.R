@@ -104,3 +104,7 @@ print(dp1)
 print(dp2)
 xx=map(c(pp1,pp2,pp3),print)
 dev.off()
+
+saveRDS(d10X.integrated,"obj__d10X.integrated.rda",compress=T)
+
+
