@@ -14,3 +14,6 @@ md=tibble(d10X.integrated@meta.data) %>%
     mutate(sample=factor(sample,levels=c("Sham","RT","Tmem.RT"))) %>%
     mutate(cluster=forcats::fct_relevel(seurat_clusters,rev))
 
+numClust=nlevels(md$cluster)
+colors=rev(rep(RColorBrewer::brewer.pal(10,"Paired"),ceiling(numClust/10))[1:numClust])
+
