@@ -1,12 +1,13 @@
 require(tidyverse)
 require(readxl)
 
-getCellTypeGeneLists<-function() {
+getCellTypeGeneLists<-function(listOfAllGenes) {
 
-    typeTable=read_xlsx("markerGenes.xlsx") %>%
+    typeTable=read_xlsx("markerGenesV2.xlsx") %>%
         select(Type,Genes) %>%
         separate_rows(Genes,sep=",") %>%
         mutate(Genes=gsub(" ","",Genes) %>% str_to_title(.)) %>%
+        filter(Genes %in% listOfAllGenes) %>%
         group_split(Type)
 
     types=list()
