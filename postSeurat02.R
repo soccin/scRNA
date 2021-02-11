@@ -56,6 +56,7 @@ source("getCellTypesGenesLists.R")
 features=getCellTypeGeneLists(rownames(d10X.integrated@assays$RNA@counts))
 
 defaultAssay="Integrated"
+defaultAssay="RNA"
 
 if(defaultAssay=="RNA") {
     so=d10X.integrated
@@ -130,15 +131,25 @@ for(si in samples) {
 }
 
 
-clusterTypeTbl=tibble(newMetaData) %>% count(seurat_clusters,CellType) %>% group_by(seurat_clusters) %>% mutate(PCT=n/sum(n))
+clusterTypeTbl=tibble(newMetaData) %>%
+    count(seurat_clusters,CellType) %>%
+    group_by(seurat_clusters) %>%
+    mutate(PCT=n/sum(n))
+
+cellTypes=clusterTypeTbl %>% ungroup %>% distinct(CellType) %>% pull %>% sort
+
+clusterTypeTbl=clusterTypeTbl %>%
+    mutate(CellType=factor(CellType,levels=rev(cellTypes)))
+
 superMajority=clusterTypeTbl %>% arrange(desc(PCT)) %>% filter(PCT>.6)
-cellTypes=clusterTypeTbl %>% ungroup %>% distinct(CellType) %>% pull
 
 pass1=superMajority %>% pull(seurat_clusters)
 
-pgA=clusterTypeTbl %>% ggplot(aes(seurat_clusters,PCT,fill=factor(CellType,levels=rev(cellTypes))))+geom_bar(stat="identity") + scale_fill_manual(values=pal,name="Cell Types") + theme_bw(base_size=18)+ scale_y_continuous(labels=scales::percent) + ggtitle("All Clusters")
-pgB=clusterTypeTbl %>% filter(!(seurat_clusters %in% pass1)) %>% ggplot(aes(seurat_clusters,PCT,fill=factor(CellType,levels=rev(cellTypes))))+geom_bar(stat="identity") + scale_fill_manual(values=pal,name="Cell Types") + theme_bw(base_size=18)+ scale_y_continuous(labels=scales::percent) + ggtitle("Mixed Clusters")
-pgC=clusterTypeTbl %>% filter(seurat_clusters %in% pass1) %>%ggplot(aes(seurat_clusters,PCT,fill=factor(CellType,levels=rev(cellTypes))))+geom_bar(stat="identity") + scale_fill_manual(values=pal,name="Cell Types") + theme_bw(base_size=18)+ scale_y_continuous(labels=scales::percent) + ggtitle("Super Majority Clusters")
+names(pal)=levels(cellTypes)
+
+pgA=clusterTypeTbl %>% ggplot(aes(seurat_clusters,PCT,fill=CellType))+geom_bar(stat="identity") + scale_fill_manual(values=pal,name="Cell Types",drop=F) + theme_bw(base_size=18)+ scale_y_continuous(labels=scales::percent) + ggtitle("All Clusters")
+pgB=clusterTypeTbl %>% filter(!(seurat_clusters %in% pass1)) %>% ggplot(aes(seurat_clusters,PCT,fill=CellType))+geom_bar(stat="identity") + scale_fill_manual(values=pal,name="Cell Types",drop=F) + theme_bw(base_size=18)+ scale_y_continuous(labels=scales::percent) + ggtitle("Mixed Clusters")
+pgC=clusterTypeTbl %>% filter(seurat_clusters %in% pass1) %>%ggplot(aes(seurat_clusters,PCT,fill=CellType))+geom_bar(stat="identity") + scale_fill_manual(values=pal,name="Cell Types",drop=F) + theme_bw(base_size=18)+ scale_y_continuous(labels=scales::percent) + ggtitle("Super Majority Clusters")
 
 pfile4=cc("pltSeuratV1","CellTypeAutoId","DefAssay",defaultAssay,d10X.integrated@project.name,"Pipe",pipeTag,".pdf")
 pdf(file=pfile4,width=14,height=8.5)
