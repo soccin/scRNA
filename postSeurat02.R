@@ -97,7 +97,7 @@ newMetaData=xx@meta.data %>%
 if(defaultAssay=="Integrated") {
     so=d10X.integrated
 }
-q
+
 so@meta.data=newMetaData
 
 nCellTypes=len(unique(cellTypes$Score))
