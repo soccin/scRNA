@@ -1,9 +1,6 @@
 ._*
 CHECKPOINT_*
-Pass*/*.rda
-Pass*/*.pdf
 LSF/
-Debug
 *.pdf
 *.png
 *.rda
