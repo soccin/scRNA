@@ -26,6 +26,7 @@ suppressPackageStartupMessages({
     library(cowplot)
     library(patchwork)
     library(tidyverse)
+    library(gridExtra)
 })
 
 source("seuratTools.R")
@@ -45,11 +46,12 @@ for(ii in seq(len(dataFolders))) {
     cat("\n")
 }
 
+glb.digest=digest::digest(d10X)
 cat("digest=",digest::digest(d10X),"\n")
 
 ## QC
 PCT_MITO=10
-MIN_FEATURE_RNA=1500
+MIN_FEATURE_RNA=1000
 MIN_NCOUNT_RNA=2500
 
 algoParams=list()
@@ -79,6 +81,14 @@ doQCandFilter <- function(so) {
             ) %>%
         mutate(PCT=round(100*n/sum(n),1))
 
+    tbl2=so@meta.data %>% tibble %>%
+        mutate(
+            nCount_RNA=nCount_RNA>MIN_NCOUNT_RNA,
+            nFeature_RNA=nFeature_RNA>MIN_FEATURE_RNA,
+            percent.mt=percent.mt<PCT_MITO
+            ) %>%
+        summarize_if(is.logical,~round(100*(1-sum(.)/n()),1)) %>%
+        gather(Metric,PCT.Fail)
 
     plot1 <- FeatureScatter(so, feature1 = "nCount_RNA", feature2 = "percent.mt") +
                 geom_hline(yintercept=PCT_MITO,col="grey",alpha=0.75) +
@@ -92,8 +102,8 @@ doQCandFilter <- function(so) {
                 geom_hline(yintercept=MIN_FEATURE_RNA,col="grey",alpha=0.75) +
                 geom_vline(xintercept=MIN_NCOUNT_RNA,col="grey",alpha=0.75) +
                 scale_x_continuous(breaks=sort(c(MIN_NCOUNT_RNA,seq(0,1e6,by=20000)))) +
-                scale_y_continuous(breaks=sort(c(MIN_FEATURE_RNA,seq(0,1e5,by=2000))))
-
+                scale_y_continuous(breaks=sort(c(MIN_FEATURE_RNA,seq(0,1e5,by=2000)))) +
+                annotation_custom(tableGrob(tbl2,rows=NULL),xmin=max.nCount_RNA/3,ymin=max.nFeature_RNA/10)
     #CombinePlots(plots = list(plot1, plot2))
 
     keep=(
@@ -124,13 +134,11 @@ doQCandFilter <- function(so) {
 }
 
 cat("\nDoQCandFilter\n")
+d10X.orig=d10X
 for(ii in seq(d10X)) {
     print(ii)
     d10X[[ii]]=doQCandFilter(d10X[[ii]])
 }
-
-stop("##########################################################")
-
 
 if(args$DEBUG) {
 
@@ -157,8 +165,11 @@ for(ii in seq(d10X)) {
 }
 
 cc.genes=lapply(cc.genes.updated.2019,function(x){convertGeneSymbolsHumanToMouse(x)})
-cat("\n\n   Adding Pclaf to cc.genes\n")
-cc.genes=c(cc.genes,"Pclaf")
+
+stop("## BREAK ##")
+
+save.image(cc("CHECKPOINT",DATE(),,".Rdata"),compress=T)
+
 
 pcc=list()
 cat("\nPlotCellCycle\n")
@@ -171,6 +182,9 @@ pdf(file="seuratQC_CellCycle.pdf",width=8.5,height=11)
     wrap_plots(pcc[1:4],ncol=2)
     wrap_plots(pcc[5:6],ncol=2)
 dev.off()
+
+
+
 
 #
 # SCTransform Normalizes
