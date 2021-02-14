@@ -166,25 +166,28 @@ for(ii in seq(d10X)) {
 
 cc.genes=lapply(cc.genes.updated.2019,function(x){convertGeneSymbolsHumanToMouse(x)})
 
-stop("## BREAK ##")
-
-save.image(cc("CHECKPOINT",DATE(),,".Rdata"),compress=T)
-
-
 pcc=list()
 cat("\nPlotCellCycle\n")
 for(ii in seq(d10X)) {
-    print(ii)
     pcc[[ii]]=plotCellCycle(preProcessSO(d10X[[ii]]))
 }
 
-pdf(file="seuratQC_CellCycle.pdf",width=8.5,height=11)
-    wrap_plots(pcc[1:4],ncol=2)
-    wrap_plots(pcc[5:6],ncol=2)
+pdf(file="seuratQC_CellCycle.pdf",width=11,height=11)
+nPages=ceiling(len(pcc)/4)
+for(ii in seq(nPages)) {
+    jj=(1:4)+4*(ii-1)
+    jj=intersect(seq(pcc),jj)
+    pOut=pcc[jj]
+    if(len(pOut)<4){
+        pOut=c(pOut,rep(list(ggplot()+theme_void()),4-len(jj)))
+    }
+    print(wrap_plots(pOut,ncol=2))
+}
 dev.off()
 
+save.image(cc("CHECKPOINT",DATE(),,".Rdata"),compress=T)
 
-
+stop("## BREAK ##")
 
 #
 # SCTransform Normalizes
