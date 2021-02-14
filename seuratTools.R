@@ -44,6 +44,28 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
 
 }
 
+scoreCellCycle <- function(dorig) {
+
+    so <- dorig
+    so <- NormalizeData(so)
+    so <- FindVariableFeatures(so, selection.method="vst")
+    so <- ScaleData(so, features=rownames(so))
+
+    cc.genes=lapply(cc.genes.updated.2019,function(x){convertGeneSymbolsHumanToMouse(x)})
+
+    so=CellCycleScoring(so,s.features=cc.genes$s.genes,g2m.features=cc.genes$g2m.genes,set.ident=T)
+
+    cc.meta.data=so@meta.data[,c("S.Score","G2M.Score","Phase")]
+
+    dorig=AddMetaData(dorig,cc.meta.data$Phase,"Phase")
+    dorig=AddMetaData(dorig,cc.meta.data$G2M.Score,"G2M.Score")
+    dorig=AddMetaData(dorig,cc.meta.data$S.Score,"S.Score")
+
+    Idents(dorig)="Phase"
+    return(dorig)
+
+}
+
 preProcessSO<-function(so) {
     so=NormalizeData(so);
     so=FindVariableFeatures(so);
@@ -77,30 +99,6 @@ convertGeneSymbolsHumanToMouse <- function(hgg) {
 
 }
 
-scoreCellCycle <- function(dorig) {
-
-    so <- dorig
-    so <- NormalizeData(so)
-    so <- FindVariableFeatures(so, selection.method="vst")
-    so <- ScaleData(so, features=rownames(so))
-
-    cc.genes=lapply(cc.genes.updated.2019,function(x){convertGeneSymbolsHumanToMouse(x)})
-
-    cat("\n\n   Adding Pclaf to cc.genes\n")
-    cc.genes=c(cc.genes,"Pclaf")
-
-    so=CellCycleScoring(so,s.features=cc.genes$s.genes,g2m.features=cc.genes$g2m.genes,set.ident=T)
-
-    cc.meta.data=so@meta.data[,c("S.Score","G2M.Score","Phase")]
-
-    dorig=AddMetaData(dorig,cc.meta.data$Phase,"Phase")
-    dorig=AddMetaData(dorig,cc.meta.data$G2M.Score,"G2M.Score")
-    dorig=AddMetaData(dorig,cc.meta.data$S.Score,"S.Score")
-
-    Idents(dorig)="Phase"
-    return(dorig)
-
-}
 
 regressCellCycle <- function(so,saveVar=T) {
 
