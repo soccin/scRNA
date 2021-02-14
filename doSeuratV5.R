@@ -47,17 +47,6 @@ for(ii in seq(len(dataFolders))) {
 
 cat("digest=",digest::digest(d10X),"\n")
 
-
-
-
-stop("##########################################################")
-
-
-
-
-
-
-
 ## QC
 PCT_MITO=10
 MIN_FEATURE_RNA=1500
@@ -65,7 +54,7 @@ MIN_NCOUNT_RNA=5000
 
 doQCandFilter <- function(so) {
 
-    prjName=as.character(so@meta.data$orig.ident[1])
+    sampleId=as.character(so@meta.data$orig.ident[1])
 
     pg0=VlnPlot(so, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
 
@@ -87,8 +76,8 @@ doQCandFilter <- function(so) {
 
     pg1=VlnPlot(so, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
 
-    pdf(file=cc("seuratQC",prjName,"01.pdf"),height=8.5,width=11)
-    cat(cc("seuratQC",prjName,"01.pdf"),"\n")
+    pdf(file=cc("seuratQC",sampleId,"01.pdf"),height=8.5,width=11)
+    cat(cc("seuratQC",sampleId,"01.pdf"),"\n")
     print(pg0)
     print(plot1+plot2)
     print(pg1)
@@ -98,14 +87,14 @@ doQCandFilter <- function(so) {
 
 }
 
-# dmso=doQCandFilter(dmso)
-# ibr10=doQCandFilter(ibr10)
-
 cat("\nDoQCandFilter\n")
 for(ii in seq(d10X)) {
     print(ii)
     d10X[[ii]]=doQCandFilter(d10X[[ii]])
 }
+
+stop("##########################################################")
+
 
 if(args$DEBUG) {
 

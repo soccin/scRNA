@@ -9,7 +9,7 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
         cat("\n\n  cellRangerDir =",cellRangerDir,"not a valid CellRanger Directory\n\n")
         stop("FATAL ERROR")
     }
-    cmdline=scan(cmdlineFile,"")
+    cmdline=scan(cmdlineFile,"",quiet = TRUE)
 
     genomeFile=grep("--transcriptome=",cmdline,value=T) %>% basename
     genome=genomes[genomeFile]
