@@ -24,8 +24,8 @@ argv=grep("=",cArgs,value=T,invert=T)
 suppressPackageStartupMessages({
     library(Seurat)
     library(cowplot)
-    library(ggplot2)
     library(patchwork)
+    library(tidyverse)
 })
 
 source("seuratTools.R")
@@ -50,7 +50,16 @@ cat("digest=",digest::digest(d10X),"\n")
 ## QC
 PCT_MITO=10
 MIN_FEATURE_RNA=1500
-MIN_NCOUNT_RNA=5000
+MIN_NCOUNT_RNA=2500
+
+algoParams=list()
+algoParams$PCT_MITO=PCT_MITO
+algoParams$MIN_FEATURE_RNA=MIN_FEATURE_RNA
+algoParams$MIN_NCOUNT_RNA=MIN_NCOUNT_RNA
+
+# as_tibble(algoParams) %>% gather(param,Value)
+
+stats=list()
 
 doQCandFilter <- function(so) {
 
@@ -58,8 +67,33 @@ doQCandFilter <- function(so) {
 
     pg0=VlnPlot(so, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
 
-    plot1 <- FeatureScatter(so, feature1 = "nCount_RNA", feature2 = "percent.mt")
-    plot2 <- FeatureScatter(so, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+    max.nCount_RNA=max(so@meta.data$nCount_RNA)
+    max.nFeature_RNA=max(so@meta.data$nFeature_RNA)
+    max.pct.mito=max(so@meta.data$percent.mt)
+
+    tbl=so@meta.data %>% tibble %>%
+        count(
+            Count.RNA=nCount_RNA>MIN_NCOUNT_RNA,
+            Num.Features=nFeature_RNA>MIN_FEATURE_RNA,
+            PCT.MT=percent.mt<PCT_MITO
+            ) %>%
+        mutate(PCT=round(100*n/sum(n),1))
+
+
+    plot1 <- FeatureScatter(so, feature1 = "nCount_RNA", feature2 = "percent.mt") +
+                geom_hline(yintercept=PCT_MITO,col="grey",alpha=0.75) +
+                geom_vline(xintercept=MIN_NCOUNT_RNA,col="grey",alpha=0.75) +
+                annotation_custom(tableGrob(tbl,rows=NULL),
+                    xmin=max.nCount_RNA/2,ymin=50,xmax=max.nCount_RNA/2,ymax=50) +
+                scale_x_continuous(breaks=sort(c(MIN_NCOUNT_RNA,seq(0,1e6,by=20000)))) +
+                scale_y_continuous(breaks=sort(c(PCT_MITO,seq(0,100,by=20))))
+
+    plot2 <- FeatureScatter(so, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") +
+                geom_hline(yintercept=MIN_FEATURE_RNA,col="grey",alpha=0.75) +
+                geom_vline(xintercept=MIN_NCOUNT_RNA,col="grey",alpha=0.75) +
+                scale_x_continuous(breaks=sort(c(MIN_NCOUNT_RNA,seq(0,1e6,by=20000)))) +
+                scale_y_continuous(breaks=sort(c(MIN_FEATURE_RNA,seq(0,1e5,by=2000))))
+
     #CombinePlots(plots = list(plot1, plot2))
 
     keep=(
@@ -79,9 +113,11 @@ doQCandFilter <- function(so) {
     pdf(file=cc("seuratQC",sampleId,"01.pdf"),height=8.5,width=11)
     cat(cc("seuratQC",sampleId,"01.pdf"),"\n")
     print(pg0)
-    print(plot1+plot2)
-    print(pg1)
+    print(plot1)
+    print(plot2)
     dev.off()
+
+    stats[[sampleId]]=keep
 
     so
 
