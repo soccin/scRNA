@@ -141,7 +141,7 @@ plotCellCycle<-function(sc) {
 regressCellCycle <- function(so,saveVar=T) {
 
     checksum=digest::digest(so)
-    projName=as.character(so@meta.data$orig.ident[1])
+    projName=so@project.name
     cacheFile=cc("regressCellCycle",projName,checksum,".rda")
 
     if(file.exists(cacheFile)) {
@@ -164,6 +164,7 @@ regressCellCycle <- function(so,saveVar=T) {
     if(glbs$genome=="mm10") {
 
         cellCycle.genes=genes.cellCycle.mm10
+        rPlot.features=c("Pcna","Cdc20","Aurka")
 
     } else {
 
@@ -175,15 +176,17 @@ regressCellCycle <- function(so,saveVar=T) {
 
     so=CellCycleScoring(so,s.features=cellCycle.genes$s.genes,g2m.features=cellCycle.genes$g2m.genes,set.ident=T)
 
+    cc.plts=list()
+
     if("Phase" %in% colnames(so@meta.data)) {
 
-        RidgePlot(so, features=c("PCNA","CDC20","AURKA"),ncol=2)
+        cc.plts[[1]]=RidgePlot(so, features=rPlot.features,ncol=2)
         so=RunPCA(so, features=cc.features)
-        DimPlot(so) + ggtitle("Pre Cell Cycle Regression")
+        cc.plts[[2]]=DimPlot(so) + ggtitle("Pre Cell Cycle Regression")
 
         so <- ScaleData(so, vars.to.regress = c("S.Score", "G2M.Score"), features = rownames(so))
         so <- RunPCA(so, features=cc.features)
-        DimPlot(so) + ggtitle("Post Cell Cycle Regression")
+        cc.plts[[3]]=DimPlot(so) + ggtitle("Post Cell Cycle Regression")
 
 
     } else {
@@ -193,7 +196,7 @@ regressCellCycle <- function(so,saveVar=T) {
     if(saveVar) {
         saveRDS(so,cacheFile,compress=T)
     }
-    return(so)
+    return(list(so=so,cc.plts=cc.plts)
 
 }
 
