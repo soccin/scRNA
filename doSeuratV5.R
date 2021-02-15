@@ -1,7 +1,7 @@
 suppressPackageStartupMessages(require(stringr))
 
 cArgs=commandArgs(trailing=T)
-args=list(DEBUG=FALSE)
+args=list(DEBUG=FALSE,MERGE=TRUE,PROJNAME="scRNA")
 
 ii=grep("=",cArgs)
 if(len(ii)>0) {
@@ -15,6 +15,18 @@ cat(str(args))
 cat("\n")
 
 args$DEBUG=as.logical(args$DEBUG)
+
+if(args$PROJNAME=="scRNA") {
+    if(file.exists("PROJNAME")) {
+        args$PROJNAME=scan("PROJNAME","")
+        cat("\nProject Name =",args$PROJNAME,"\n\n")
+    } else {
+        cat("\n\n   Need to set a project name either on command line\n")
+        cat("     PROJNAME=<NAMAE>\n")
+        cat("   Or create a file PROJNAME in folder with name\n\n")
+        quit()
+    }
+}
 
 argv=grep("=",cArgs,value=T,invert=T)
 
@@ -45,6 +57,15 @@ for(ii in seq(len(dataFolders))) {
     d10X[[sampleName]] <- read10XDataFolderAsSeuratObj(dataFolders[ii],projectName)
     cat("\n")
 }
+d10X.orig=d10X
+
+if(args$MERGE) {
+    cat("\nMerging sample files...")
+    s.merge=merge(d10X[[1]],d10X[-1],project=args$PROJNAME)
+    d10X=list()
+    d10X[[args$PROJNAME]]=s.merge
+    cat("done\n\n")
+}
 
 glb.digest=digest::digest(d10X)
 cat("digest=",digest::digest(d10X),"\n")
@@ -65,7 +86,11 @@ stats=list()
 
 doQCandFilter <- function(so) {
 
-    sampleId=as.character(so@meta.data$orig.ident[1])
+
+    sampleId=unique(so@meta.data$orig.ident)
+    if(len(sampleId)>1) {
+        sampleId=cc("MERGE",so@project.name)
+    }
 
     pg0=VlnPlot(so, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
 
@@ -134,11 +159,12 @@ doQCandFilter <- function(so) {
 }
 
 cat("\nDoQCandFilter\n")
-d10X.orig=d10X
 for(ii in seq(d10X)) {
     print(ii)
     d10X[[ii]]=doQCandFilter(d10X[[ii]])
 }
+
+stop("DDDDD")
 
 if(args$DEBUG) {
 
@@ -185,7 +211,7 @@ for(ii in seq(nPages)) {
 }
 dev.off()
 
-save.image(cc("CHECKPOINT",DATE(),,".Rdata"),compress=T)
+save.image(cc("CHECKPOINT",DATE(),glb.digest,".Rdata"),compress=T)
 
 stop("## BREAK ##")
 
