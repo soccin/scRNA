@@ -1,29 +1,33 @@
 suppressPackageStartupMessages(require(stringr))
 
+usage="
+usage: doSeuratV5.R [DEBUG=${DEBUG}] [MERGE=${MERGE}] [PROJNAME=${PROJNAME}] 10XDir1 [10XDir2 ... ]
+
+    DEBUG        Set DEBUG mode (downsample to 10%)
+    MERGE        If True then merge samples with simple merge
+    PROJNAME     Set name of project. Must either be used or there
+                 must be a file PROJNAME in folder with name
+
+"
+
 cArgs=commandArgs(trailing=T)
 args=list(DEBUG=FALSE,MERGE=TRUE,PROJNAME="scRNA")
+usage=str_interp(usage,args)
 
 ii=grep("=",cArgs)
 if(len(ii)>0) {
     parseArgs=str_match(cArgs[ii],"(.*)=(.*)")
     aa=apply(parseArgs,1,function(x){args[[str_trim(x[2])]]<<-str_trim(x[3])})
 }
-args$DEBUG=as.logical(args$DEBUG)
-
-cat("\n=========================================================\n")
-cat(str(args))
-cat("\n")
 
 args$DEBUG=as.logical(args$DEBUG)
+args$MERGE=as.logical(args$MERGE)
 
 if(args$PROJNAME=="scRNA") {
     if(file.exists("PROJNAME")) {
-        args$PROJNAME=scan("PROJNAME","")
-        cat("\nProject Name =",args$PROJNAME,"\n\n")
+        args$PROJNAME=scan("PROJNAME","",quiet=T)
     } else {
-        cat("\n\n   Need to set a project name either on command line\n")
-        cat("     PROJNAME=<NAMAE>\n")
-        cat("   Or create a file PROJNAME in folder with name\n\n")
+        cat(usage)
         quit()
     }
 }
@@ -31,6 +35,14 @@ if(args$PROJNAME=="scRNA") {
 argv=grep("=",cArgs,value=T,invert=T)
 
 ##############################################################################
+if(len(argv)<1) {
+    cat(usage)
+    quit()
+}
+cat("\n=========================================================\n")
+args[["10XDirs"]]=paste0(argv,collapse=", ")
+cat(str(args))
+cat("\n")
 ##############################################################################
 
 suppressPackageStartupMessages({
@@ -182,8 +194,6 @@ if(args$DEBUG) {
 
 }
 
-stop("FIX CELL CYCLE GENOME")
-
 cat("\nScoreCellCycle\n")
 for(ii in seq(d10X)) {
     print(ii)
@@ -218,14 +228,13 @@ dev.off()
 save.image(cc("CHECKPOINT",DATE(),glb.digest,".Rdata"),compress=T)
 
 
-if(len(dX10)>1) {
+if(len(d10X)>1) {
     cat("\n\n The rest of this workflow only works on merged datasets\n\n")
     quit()
 }
 
 
-
-stop("## BREAK ##")
+stop("Continue workign")
 
 #
 # SCTransform Normalizes
@@ -292,7 +301,7 @@ print(p2)
 
 dev.off()
 
-save.image(cc("CHECKPOINT",DATE(),digest::digest(d10X),".Rdata"),compress=T)
+save.image(cc("CHECKPOINT",DATE(),glb.digest,".Rdata"),compress=T)
 
 ##
 ## Find Cluster Markers
