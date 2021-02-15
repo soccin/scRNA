@@ -196,7 +196,8 @@ regressCellCycle <- function(so,saveVar=T) {
     if(saveVar) {
         saveRDS(so,cacheFile,compress=T)
     }
-    return(list(so=so,cc.plts=cc.plts)
+
+    return(list(so=so,cc.plts=cc.plts))
 
 }
 
