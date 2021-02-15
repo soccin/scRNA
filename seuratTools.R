@@ -1,81 +1,17 @@
-require(fs)
+library(Seurat)
+library(fs)
+
+glbs=list()
 
 genomes=c("refdata-gex-mm10-2020-A"="mm10")
 
-read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
+genes.cellCycle.hg19=cc.genes.updated.2019
+delayedAssign("genes.cellCycle.mm10",loadCellCycleGenes())
 
-    cmdlineFile=dir_ls(cellRangerDir,regex="_cmd")
-    if(len(cmdlineFile)!=1) {
-        cat("\n\n  cellRangerDir =",cellRangerDir,"not a valid CellRanger Directory\n\n")
-        stop("FATAL ERROR")
-    }
-    cmdline=scan(cmdlineFile,"",quiet = TRUE)
+loadCellCycleGenes <- function() {
 
-    genomeFile=grep("--transcriptome=",cmdline,value=T) %>% basename
-    genome=genomes[genomeFile]
-    if(is.na(genome)) {
-        cat("\n\n  Unknown genomeFile =",genomeFile,"\n\n")
-        stop("FATAL ERROR")
-    }
+    lapply(cc.genes.updated.2019,function(x){convertGeneSymbolsHumanToMouse(x)})
 
-    dataDir=dir_ls(cellRangerDir,regex="outs/filtered_feature_bc_matrix$",recurs=T)
-    if(len(dataDir)!=1) {
-        cat("\n\n  Can not find bc_matrix folder\n\n")
-        stop("FATAL ERROR")
-    }
-
-    xx <- Read10X(dataDir)
-
-    so <- CreateSeuratObject(counts = xx, project=projName,)
-    so <- RenameCells(so,paste0(projName,"_",colnames(x=so)))
-    if(genome=="mm10") {
-        so[["percent.mt"]] <- PercentageFeatureSet(so, pattern = "^mt-")
-        attr(so,"genome")<-"mm10"
-    } else {
-        stop(paste("Unknown genome",genome,"Should not get here"))
-    }
-
-    sampleId=grep("--id=",cmdline,value=T) %>% gsub(".*id=","",.) %>% gsub("^s_","",.)
-
-    so@meta.data$orig.ident=sampleId
-    Idents(so)<-"orig.ident"
-
-    so
-
-}
-
-scoreCellCycle <- function(dorig) {
-
-    so <- dorig
-    so <- NormalizeData(so)
-    so <- FindVariableFeatures(so, selection.method="vst")
-    so <- ScaleData(so, features=rownames(so))
-
-    cc.genes=lapply(cc.genes.updated.2019,function(x){convertGeneSymbolsHumanToMouse(x)})
-
-    so=CellCycleScoring(so,s.features=cc.genes$s.genes,g2m.features=cc.genes$g2m.genes,set.ident=T)
-
-    cc.meta.data=so@meta.data[,c("S.Score","G2M.Score","Phase")]
-
-    dorig=AddMetaData(dorig,cc.meta.data$Phase,"Phase")
-    dorig=AddMetaData(dorig,cc.meta.data$G2M.Score,"G2M.Score")
-    dorig=AddMetaData(dorig,cc.meta.data$S.Score,"S.Score")
-
-    Idents(dorig)="Phase"
-    return(dorig)
-
-}
-
-preProcessSO<-function(so) {
-    so=NormalizeData(so);
-    so=FindVariableFeatures(so);
-    so=ScaleData(so,features=rownames(so))
-}
-
-plotCellCycle<-function(sc) {
-    sc=RunPCA(sc,features=c(cc.genes$s.genes,cc.genes$g2m.genes))
-    pg=DimPlot(sc,group.by="Phase") + ggtitle(paste(sc@project.name,unname(sc$orig.ident[1]),"Cell Cycle PCA Projection"))
-    pg
 }
 
 convertGeneSymbolsHumanToMouse <- function(hgg) {
@@ -99,10 +35,110 @@ convertGeneSymbolsHumanToMouse <- function(hgg) {
 
 }
 
+read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
+
+    cmdlineFile=dir_ls(cellRangerDir,regex="_cmd")
+    if(len(cmdlineFile)!=1) {
+        cat("\n\n  cellRangerDir =",cellRangerDir,"not a valid CellRanger Directory\n\n")
+        stop("FATAL ERROR")
+    }
+    cmdline=scan(cmdlineFile,"",quiet = TRUE)
+
+    genomeFile=grep("--transcriptome=",cmdline,value=T) %>% basename
+    genome=genomes[genomeFile]
+    glbs$genome <<- union(glbs$genome,genome)
+    if(is.na(genome)) {
+        cat("\n\n  Unknown genomeFile =",genomeFile,"\n\n")
+        stop("FATAL ERROR")
+    }
+
+    dataDir=dir_ls(cellRangerDir,regex="outs/filtered_feature_bc_matrix$",recurs=T)
+    if(len(dataDir)!=1) {
+        cat("\n\n  Can not find bc_matrix folder\n\n")
+        stop("FATAL ERROR")
+    }
+
+    xx <- Read10X(dataDir)
+
+    so <- CreateSeuratObject(counts = xx, project=projName,)
+    so <- RenameCells(so,paste0(projName,"_",colnames(x=so)))
+    if(genome=="mm10") {
+        so[["percent.mt"]] <- PercentageFeatureSet(so, pattern = "^mt-")
+    } else {
+        stop(paste("Unknown genome",genome,"Should not get here"))
+    }
+
+    sampleId=grep("--id=",cmdline,value=T) %>% gsub(".*id=","",.) %>% gsub("^s_","",.)
+
+    so@meta.data$orig.ident=sampleId
+    Idents(so)<-"orig.ident"
+
+    so
+
+}
+
+
+scoreCellCycle <- function(dorig) {
+
+    so <- dorig
+    so <- NormalizeData(so)
+    so <- FindVariableFeatures(so, selection.method="vst")
+    so <- ScaleData(so, features=rownames(so))
+
+    if(glbs$genome=="mm10") {
+
+        cellCycle.genes=genes.cellCycle.mm10
+
+    } else {
+
+       stop(paste("seuratTools::scoreCellCycle::Unknown genome",gbls$genome,"Need to implement"))
+
+    }
+
+    so=CellCycleScoring(so,
+                        s.features=cellCycle.genes$s.genes,
+                        g2m.features=cellCycle.genes$g2m.genes,
+                        set.ident=T
+                        )
+
+    cc.meta.data=so@meta.data[,c("S.Score","G2M.Score","Phase")]
+
+    dorig=AddMetaData(dorig,cc.meta.data$Phase,"Phase")
+    dorig=AddMetaData(dorig,cc.meta.data$G2M.Score,"G2M.Score")
+    dorig=AddMetaData(dorig,cc.meta.data$S.Score,"S.Score")
+
+    Idents(dorig)="Phase"
+    return(dorig)
+
+}
+
+preProcessSO<-function(so) {
+    so=NormalizeData(so);
+    so=FindVariableFeatures(so);
+    so=ScaleData(so,features=rownames(so))
+}
+
+plotCellCycle<-function(sc) {
+
+    if(glbs$genome=="mm10") {
+
+        cellCycle.genes=genes.cellCycle.mm10
+
+    } else {
+
+       stop(paste("seuratTools::scoreCellCycle::Unknown genome",gbls$genome,"Need to implement"))
+
+    }
+
+
+    sc=RunPCA(sc,features=c(cellCycle.genes$s.genes,cellCycle.genes$g2m.genes))
+    pg=DimPlot(sc,group.by="Phase") + ggtitle(paste(sc@project.name,unname(sc$orig.ident[1]),"Cell Cycle PCA Projection"))
+    pg
+}
+
+
 
 regressCellCycle <- function(so,saveVar=T) {
-
-    stop("Need to find MOUSE Cell Cycle Genes")
 
     checksum=digest::digest(so)
     projName=as.character(so@meta.data$orig.ident[1])
@@ -125,18 +161,28 @@ regressCellCycle <- function(so,saveVar=T) {
     ## Cell Cycle Analysis
     #
 
-    cc.genes=cc.genes.updated.2019
+    if(glbs$genome=="mm10") {
 
-    so=CellCycleScoring(so,s.features=cc.genes$s.genes,g2m.features=cc.genes$g2m.genes,set.ident=T)
+        cellCycle.genes=genes.cellCycle.mm10
+
+    } else {
+
+       stop(paste("seuratTools::scoreCellCycle::Unknown genome",gbls$genome,"Need to implement"))
+
+    }
+
+    cc.features=c(cellCycle.genes$s.genes,cellCycle.genes$g2m.genes)
+
+    so=CellCycleScoring(so,s.features=cellCycle.genes$s.genes,g2m.features=cellCycle.genes$g2m.genes,set.ident=T)
 
     if("Phase" %in% colnames(so@meta.data)) {
 
         RidgePlot(so, features=c("PCNA","CDC20","AURKA"),ncol=2)
-        so=RunPCA(so, features=c(cc.genes$s.genes,cc.genes$g2m.genes))
+        so=RunPCA(so, features=cc.features)
         DimPlot(so) + ggtitle("Pre Cell Cycle Regression")
 
         so <- ScaleData(so, vars.to.regress = c("S.Score", "G2M.Score"), features = rownames(so))
-        so <- RunPCA(so, features=c(cc.genes$s.genes,cc.genes$g2m.genes))
+        so <- RunPCA(so, features=cc.features)
         DimPlot(so) + ggtitle("Post Cell Cycle Regression")
 
 
