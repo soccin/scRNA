@@ -8,6 +8,15 @@ genomes=c("refdata-gex-mm10-2020-A"="mm10")
 genes.cellCycle.hg19=cc.genes.updated.2019
 delayedAssign("genes.cellCycle.mm10",loadCellCycleGenes())
 
+makeAutoIncrementor <- function() {
+    count <- 0
+    function() {
+        count <<- count + 1
+        count
+    }
+}
+
+
 loadCellCycleGenes <- function() {
 
     lapply(cc.genes.updated.2019,function(x){convertGeneSymbolsHumanToMouse(x)})
