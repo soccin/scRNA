@@ -4,6 +4,7 @@ usage="
 usage: doSeuratV5.R [DEBUG=${DEBUG}] [MERGE=${MERGE}] [PROJNAME=${PROJNAME}] 10XDir1 [10XDir2 ... ]
 
     DEBUG        Set DEBUG mode (downsample to 10%) [${DEBUG}]
+    DOWNSAMPLE   Set amount of DEBUG downsample [${DOWNSAMPLE}]
     MERGE        If True then merge samples with simple merge [${MERGE}]
     PROJNAME     Set name of project. Must either be used or there
                  must be a file PROJNAME in folder with name
@@ -11,7 +12,7 @@ usage: doSeuratV5.R [DEBUG=${DEBUG}] [MERGE=${MERGE}] [PROJNAME=${PROJNAME}] 10X
 "
 
 cArgs=commandArgs(trailing=T)
-args=list(DEBUG=FALSE,MERGE=TRUE,PROJNAME="scRNA")
+args=list(DEBUG=FALSE,MERGE=TRUE,PROJNAME="scRNA",DOWNSAMPLE=0.1)
 usage=str_interp(usage,args)
 
 ii=grep("=",cArgs)
@@ -22,6 +23,7 @@ if(len(ii)>0) {
 
 args$DEBUG=as.logical(args$DEBUG)
 args$MERGE=as.logical(args$MERGE)
+args$DOWNSAMPLE=as.numeric(args$DOWNSAMPLE)
 
 if(args$PROJNAME=="scRNA") {
     if(file.exists("PROJNAME")) {
@@ -54,6 +56,8 @@ suppressPackageStartupMessages({
 })
 
 source("seuratTools.R")
+
+plotNo<-makeAutoIncrementor()
 
 dataFolders=argv
 sampleIDs=gsub("_",".",gsub(".outs.*","",gsub(".*/s_","",dataFolders)))
@@ -157,7 +161,7 @@ doQCandFilter <- function(so) {
 
     pg1=VlnPlot(so, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
 
-    pdf(file=cc("seuratQC",sampleId,"01.pdf"),height=8.5,width=11)
+    pdf(file=cc("seuratQC",plotNo(),sampleId,"01.pdf"),height=8.5,width=11)
     cat(cc("seuratQC",sampleId,"01.pdf"),"\n")
     print(pg0)
     print(plot1)
@@ -187,7 +191,7 @@ if(args$DEBUG) {
     for(ii in seq(d10X)) {
         print(ii)
         xx=d10X[[ii]]
-        d10X[[ii]]=subset(xx,cells=Cells(xx)[runif(nrow(xx@meta.data))<.1])
+        d10X[[ii]]=subset(xx,cells=Cells(xx)[runif(nrow(xx@meta.data))<args$DOWNSAMPLE])
     }
 
     cat("digest=",digest::digest(d10X),"\n")
@@ -206,7 +210,7 @@ for(ii in seq(d10X)) {
     pcc[[ii]]=plotCellCycle(preProcessSO(d10X[[ii]]))
 }
 
-pdf(file="seuratQC_CellCycle.pdf",width=11,height=11)
+pdf(file=cc("seuratQC",plotNo(),"CellCycle.pdf"),width=11,height=11)
 
 if(len(pcc)>1) {
     nPages=ceiling(len(pcc)/4)
@@ -225,7 +229,6 @@ if(len(pcc)>1) {
 
 dev.off()
 
-save.image(cc("CHECKPOINT",DATE(),glb.digest,".Rdata"),compress=T)
 
 
 if(len(d10X)>1) {
@@ -234,48 +237,19 @@ if(len(d10X)>1) {
 }
 
 
-stop("Continue workign")
+s0=d10X[[1]]
 
-#
-# SCTransform Normalizes
-#
+ret=regressCellCycle(d10X[[1]])
 
-cat("\n\n  SCTransform and normalize\n")
+s1=ret$so
 
-d10X.list=d10X
-for (i in 1:length(d10X.list)) {
-    d10X.list[[i]] <- SCTransform(d10X.list[[i]], vars.to.regress = c('S.Score', 'G2M.Score'), verbose = T)
-}
+save.image(cc("CHECKPOINT",DATE(),glb.digest,".Rdata"),compress=T)
 
-d10X.features <- SelectIntegrationFeatures(object.list = d10X.list, nfeatures = 3000)
-d10X.list <- PrepSCTIntegration(object.list = d10X.list, anchor.features = d10X.features, verbose=T)
+stop("Continue working")
 
 
-d10X.anchors <- FindIntegrationAnchors(object.list = d10X.list, normalization.method = "SCT",
-    anchor.features = d10X.features, verbose = T)
-d10X.integrated <- IntegrateData(anchorset = d10X.anchors, normalization.method = "SCT",
-    verbose = T)
+pdf(file=cc("seuratQC",plotNo(),"PostCCRegress.pdf"),width=11,height=8.5)
 
-DefaultAssay(d10X.integrated) <- "integrated"
-
-# This shoudld not be needed here, data scaled prior to IntegrateData
-# see (https://satijalab.org/seurat/v3.0/integration.html)
-#
-#d10X.integrated <- ScaleData(d10X.integrated)
-
-d10X.integrated <- RunPCA(d10X.integrated,verbose=T)
-d10X.integrated <- RunUMAP(d10X.integrated, reduction = "pca", dims = 1:20)
-d10X.integrated <- FindNeighbors(d10X.integrated, reduction = "pca", dims = 1:20)
-d10X.integrated <- FindClusters(d10X.integrated, resolution = 0.2)
-
-p1 <- DimPlot(d10X.integrated, reduction = "umap", group.by = "orig.ident")
-p2 <- DimPlot(d10X.integrated, reduction = "umap", label = TRUE)
-
-pdf(file="seuratQC_PostMerge.pdf",width=11,height=8.5)
-
-plot_grid(p1, p2)
-
-d10X.integrated@project.name="p11206"
 plotCellCycle(d10X.integrated)
 
 p3=DimPlot(d10X.integrated, reduction = "umap", split.by = "orig.ident")
