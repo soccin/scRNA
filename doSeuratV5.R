@@ -3,8 +3,8 @@ suppressPackageStartupMessages(require(stringr))
 usage="
 usage: doSeuratV5.R [DEBUG=${DEBUG}] [MERGE=${MERGE}] [PROJNAME=${PROJNAME}] 10XDir1 [10XDir2 ... ]
 
-    DEBUG        Set DEBUG mode (downsample to 10%)
-    MERGE        If True then merge samples with simple merge
+    DEBUG        Set DEBUG mode (downsample to 10%) [${DEBUG}]
+    MERGE        If True then merge samples with simple merge [${MERGE}]
     PROJNAME     Set name of project. Must either be used or there
                  must be a file PROJNAME in folder with name
 
@@ -27,7 +27,7 @@ if(args$PROJNAME=="scRNA") {
     if(file.exists("PROJNAME")) {
         args$PROJNAME=scan("PROJNAME","",quiet=T)
     } else {
-        cat(usage)
+        cat(paste0(usage,"  You have not set a project name\n\n"))
         quit()
     }
 }
