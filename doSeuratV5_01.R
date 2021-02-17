@@ -1,13 +1,16 @@
 suppressPackageStartupMessages(require(stringr))
 
 usage="
-usage: doSeuratV5.R [DEBUG=${DEBUG}] [MERGE=${MERGE}] [PROJNAME=${PROJNAME}] 10XDir1 [10XDir2 ... ]
+usage: doSeuratV5_01.R [DEBUG=${DEBUG}] [MERGE=${MERGE}] [PROJNAME=${PROJNAME}] 10XDir1 [10XDir2 ... ]
 
     DEBUG        Set DEBUG mode (downsample to 10%) [${DEBUG}]
     DOWNSAMPLE   Set amount of DEBUG downsample [${DOWNSAMPLE}]
     MERGE        If True then merge samples with simple merge [${MERGE}]
     PROJNAME     Set name of project. Must either be used or there
                  must be a file PROJNAME in folder with name
+
+  Pass 1, check QC and filtering levels and also generate Cell Cycle
+  Regression plots to see if C.C. needs to be regressed out.
 
 "
 
@@ -198,8 +201,6 @@ if(args$DEBUG) {
 
 }
 
-stop("DDDDD")
-
 cat("\nScoreCellCycle\n")
 for(ii in seq(d10X)) {
     print(ii)
@@ -230,33 +231,3 @@ if(len(pcc)>1) {
 }
 
 dev.off()
-
-
-
-if(len(d10X)>1) {
-    cat("\n\n The rest of this workflow only works on merged datasets\n\n")
-    quit()
-}
-
-
-s0=d10X[[1]]
-
-ret=regressCellCycle(d10X[[1]])
-
-s1=ret$so
-
-save.image(cc("CHECKPOINT",DATE(),glb.digest,".Rdata"),compress=T)
-
-
-stop("Continue working")
-
-
-pdf(file=cc("seuratQC",plotNo(),"PostCCRegress.pdf"),width=11,height=8.5)
-
-plotCellCycle(s1,"Post CC Regression")
-
-p3=DimPlot(s1, reduction = "umap", split.by = "orig.ident")
-print(p3)
-
-dev.off()
-
