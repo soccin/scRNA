@@ -232,6 +232,8 @@ if(len(pcc)>1) {
 
 dev.off()
 
+source("gitTools.R")
+args$GIT.Describe=git.describe()
 args.digest.orig=digest::digest(args)
 args$PASS1.RDAFile=cc("PASS_01",args.digest.orig,"d10X.orig",".rda")
 saveRDS(d10X.orig,args$PASS1.RDAFile,compress=T)
