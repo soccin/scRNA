@@ -35,7 +35,7 @@ source("seuratTools.R")
 
 plotNo<-makeAutoIncrementor(10)
 
-d10X.orig=readRDS(args$PASS1.RDAFile)
+d10X=readRDS(args$PASS1.RDAFile)
 
 if(args$MERGE & len(d10X)>1) {
     cat("\nMerging sample files...")
@@ -160,65 +160,23 @@ if(args$DEBUG) {
 
 }
 
-stop("DDDDD")
-
-cat("\nScoreCellCycle\n")
-for(ii in seq(d10X)) {
-    print(ii)
-    d10X[[ii]]=scoreCellCycle(d10X[[ii]])
-}
-
-pcc=list()
-cat("\nPlotCellCycle\n")
-for(ii in seq(d10X)) {
-    pcc[[ii]]=plotCellCycle(preProcessSO(d10X[[ii]]))
-}
-
-pdf(file=cc("seuratQC",plotNo(),"CellCycle.pdf"),width=11,height=11)
-
-if(len(pcc)>1) {
-    nPages=ceiling(len(pcc)/4)
-    for(ii in seq(nPages)) {
-        jj=(1:4)+4*(ii-1)
-        jj=intersect(seq(pcc),jj)
-        pOut=pcc[jj]
-        if(len(pOut)<4){
-            pOut=c(pOut,rep(list(ggplot()+theme_void()),4-len(jj)))
-        }
-        print(wrap_plots(pOut,ncol=2))
-    }
-} else {
-    print(pcc[[1]])
-}
-
-dev.off()
-
-
-
 if(len(d10X)>1) {
     cat("\n\n The rest of this workflow only works on merged datasets\n\n")
     quit()
 }
 
-
-s0=d10X[[1]]
-
 ret=regressCellCycle(d10X[[1]])
 
 s1=ret$so
-
-save.image(cc("CHECKPOINT",DATE(),glb.digest,".Rdata"),compress=T)
-
-
-stop("Continue working")
-
 
 pdf(file=cc("seuratQC",plotNo(),"PostCCRegress.pdf"),width=11,height=8.5)
 
 plotCellCycle(s1,"Post CC Regression")
 
-p3=DimPlot(s1, reduction = "umap", split.by = "orig.ident")
-print(p3)
-
 dev.off()
+
+# PCA
+
+# https://satijalab.org/seurat/archive/v3.0/pbmc3k_tutorial.html
+# Perform linear dimensional reduction
 

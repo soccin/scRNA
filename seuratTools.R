@@ -165,6 +165,8 @@ regressCellCycle <- function(so,saveVar=T) {
 
     all.genes <- rownames(so)
 
+    so <- NormalizeData(so)
+    so <- FindVariableFeatures(so, selection.method="vst")
     so <- ScaleData(so, features = all.genes)
 
     #
@@ -184,7 +186,10 @@ regressCellCycle <- function(so,saveVar=T) {
 
     cc.features=c(cellCycle.genes$s.genes,cellCycle.genes$g2m.genes)
 
-    so=CellCycleScoring(so,s.features=cellCycle.genes$s.genes,g2m.features=cellCycle.genes$g2m.genes,set.ident=T)
+    so=CellCycleScoring(so,
+                    s.features=cellCycle.genes$s.genes,
+                    g2m.features=cellCycle.genes$g2m.genes,
+                    set.ident=T)
 
     cc.plts=list()
 
