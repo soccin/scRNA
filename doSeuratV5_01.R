@@ -52,14 +52,13 @@ cat("\n")
 
 suppressPackageStartupMessages({
     library(Seurat)
-    library(cowplot)
     library(patchwork)
     library(tidyverse)
-    library(gridExtra)
     library(yaml)
 })
 
 source("seuratTools.R")
+source("doQCandFilter.R")
 
 plotNo<-makeAutoIncrementor()
 
@@ -100,87 +99,15 @@ algoParams$MIN_NCOUNT_RNA=MIN_NCOUNT_RNA
 
 # as_tibble(algoParams) %>% gather(param,Value)
 
-stats=list()
-
-doQCandFilter <- function(so) {
-
-
-    sampleId=unique(so@meta.data$orig.ident)
-    if(len(sampleId)>1) {
-        sampleId=cc("MERGE",so@project.name)
-    }
-
-    pg0=VlnPlot(so, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
-
-    max.nCount_RNA=max(so@meta.data$nCount_RNA)
-    max.nFeature_RNA=max(so@meta.data$nFeature_RNA)
-    max.pct.mito=max(so@meta.data$percent.mt)
-
-    tbl=so@meta.data %>% tibble %>%
-        count(
-            Count.RNA=nCount_RNA>MIN_NCOUNT_RNA,
-            Num.Features=nFeature_RNA>MIN_FEATURE_RNA,
-            PCT.MT=percent.mt<PCT_MITO
-            ) %>%
-        mutate(PCT=round(100*n/sum(n),1))
-
-    tbl2=so@meta.data %>% tibble %>%
-        mutate(
-            nCount_RNA=nCount_RNA>MIN_NCOUNT_RNA,
-            nFeature_RNA=nFeature_RNA>MIN_FEATURE_RNA,
-            percent.mt=percent.mt<PCT_MITO
-            ) %>%
-        summarize_if(is.logical,~round(100*(1-sum(.)/n()),1)) %>%
-        gather(Metric,PCT.Fail)
-
-    plot1 <- FeatureScatter(so, feature1 = "nCount_RNA", feature2 = "percent.mt") +
-                geom_hline(yintercept=PCT_MITO,col="grey",alpha=0.75) +
-                geom_vline(xintercept=MIN_NCOUNT_RNA,col="grey",alpha=0.75) +
-                annotation_custom(tableGrob(tbl,rows=NULL),
-                    xmin=max.nCount_RNA/2,ymin=50,xmax=max.nCount_RNA/2,ymax=50) +
-                scale_x_continuous(breaks=sort(c(MIN_NCOUNT_RNA,seq(0,1e6,by=20000)))) +
-                scale_y_continuous(breaks=sort(c(PCT_MITO,seq(0,100,by=20))))
-
-    plot2 <- FeatureScatter(so, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") +
-                geom_hline(yintercept=MIN_FEATURE_RNA,col="grey",alpha=0.75) +
-                geom_vline(xintercept=MIN_NCOUNT_RNA,col="grey",alpha=0.75) +
-                scale_x_continuous(breaks=sort(c(MIN_NCOUNT_RNA,seq(0,1e6,by=20000)))) +
-                scale_y_continuous(breaks=sort(c(MIN_FEATURE_RNA,seq(0,1e5,by=2000)))) +
-                annotation_custom(tableGrob(tbl2,rows=NULL),xmin=max.nCount_RNA/3,ymin=max.nFeature_RNA/10)
-    #CombinePlots(plots = list(plot1, plot2))
-
-    keep=(
-        so@meta.data$nFeature_RNA > MIN_FEATURE_RNA &
-        so@meta.data$nCount_RNA > MIN_NCOUNT_RNA &
-        so@meta.data$percent.mt < PCT_MITO
-        )
-
-    knitr::kable(table(keep))
-
-    so <- subset(so,
-            subset = nFeature_RNA > MIN_FEATURE_RNA & nCount_RNA > MIN_NCOUNT_RNA & percent.mt < PCT_MITO
-            )
-
-    pg1=VlnPlot(so, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
-
-    pdf(file=cc("seuratQC",plotNo(),sampleId,"01.pdf"),height=8.5,width=11)
-    cat(cc("seuratQC",sampleId,"01.pdf"),"\n")
-    print(pg0)
-    print(plot1)
-    print(plot2)
-    dev.off()
-
-    stats[[sampleId]]=keep
-
-    so
-
-}
-
 cat("\nDoQCandFilter\n")
+pdf(file=cc("seuratQC",plotNo(),sampleId,"01.pdf"),height=8.5,width=11)
 for(ii in seq(d10X)) {
     print(ii)
-    d10X[[ii]]=doQCandFilter(d10X[[ii]])
+    ret=doQCandFilter(d10X[[ii]], MIN_NCOUNT_RNA, MIN_FEATURE_RNA, PCT_MITO)
+    d10X[[ii]]=ret$so
+    print(ret$plts)
 }
+dev.off()
 
 if(args$DEBUG) {
 
