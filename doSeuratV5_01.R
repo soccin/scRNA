@@ -233,6 +233,8 @@ dev.off()
 
 source("gitTools.R")
 
+args$genome=glbs$genomes
+
 args$GIT.Describe=git.describe()
 args.digest.orig=digest::digest(args)
 args$PASS1.RDAFile=cc("pass_01",args.digest.orig,"d10X.orig",".rda")
