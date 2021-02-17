@@ -25,11 +25,14 @@ loadCellCycleGenes <- function() {
 
 }
 
-convertGeneSymbolsHumanToMouse <- function(hgg) {
+library(memoise)
+m.cache=cache_filesystem("__R_CACHE")
+
+.convertGeneSymbolsHumanToMouse.RAW <- function(hgg) {
 
     require("biomaRt")
-    human = useMart("ensembl", dataset = "hsapiens_gene_ensembl")
-    mouse = useMart("ensembl", dataset = "mmusculus_gene_ensembl")
+    human = useMart("ensembl", dataset = "hsapiens_gene_ensembl", host="useast.ensembl.org")
+    mouse = useMart("ensembl", dataset = "mmusculus_gene_ensembl", host="useast.ensembl.org")
 
     genesV2 = getLDS(
         attributes = c("hgnc_symbol"),
@@ -45,6 +48,8 @@ convertGeneSymbolsHumanToMouse <- function(hgg) {
     mgg
 
 }
+
+convertGeneSymbolsHumanToMouse <- memoise(.convertGeneSymbolsHumanToMouse.RAW,cache=m.cache)
 
 read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
 
@@ -209,7 +214,7 @@ regressCellCycle <- function(so,saveVar=T) {
     }
 
     if(saveVar) {
-        saveRDS(so,cacheFile,compress=T)
+        saveRDS(list(so=so,cc.plts=cc.plts),cacheFile,compress=T)
     }
 
     return(list(so=so,cc.plts=cc.plts))
