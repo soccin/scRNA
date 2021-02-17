@@ -93,15 +93,9 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
 
 }
 
+getCellCycleGenes<-function(genome) {
 
-scoreCellCycle <- function(dorig) {
-
-    so <- dorig
-    so <- NormalizeData(so)
-    so <- FindVariableFeatures(so, selection.method="vst")
-    so <- ScaleData(so, features=rownames(so))
-
-    if(glbs$genome=="mm10") {
+    if(genome=="mm10") {
 
         cellCycle.genes=genes.cellCycle.mm10
 
@@ -110,6 +104,20 @@ scoreCellCycle <- function(dorig) {
        stop(paste("seuratTools::scoreCellCycle::Unknown genome",gbls$genome,"Need to implement"))
 
     }
+
+    cellCycle.genes
+
+}
+
+
+scoreCellCycle <- function(dorig) {
+
+    so <- dorig
+    so <- NormalizeData(so)
+    so <- FindVariableFeatures(so, selection.method="vst")
+    so <- ScaleData(so, features=rownames(so))
+
+    cellCycle.genes = getCellCycleGenes(glbs$genome)
 
     so=CellCycleScoring(so,
                         s.features=cellCycle.genes$s.genes,
