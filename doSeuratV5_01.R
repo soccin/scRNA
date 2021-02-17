@@ -100,7 +100,7 @@ algoParams$MIN_NCOUNT_RNA=MIN_NCOUNT_RNA
 # as_tibble(algoParams) %>% gather(param,Value)
 
 cat("\nDoQCandFilter\n")
-pdf(file=cc("seuratQC",plotNo(),sampleId,"01.pdf"),height=8.5,width=11)
+pdf(file=cc("seuratQC",plotNo(),args$PROJNAME,"01.pdf"),height=8.5,width=11)
 for(ii in seq(d10X)) {
     print(ii)
     ret=doQCandFilter(d10X[[ii]], MIN_NCOUNT_RNA, MIN_FEATURE_RNA, PCT_MITO)
