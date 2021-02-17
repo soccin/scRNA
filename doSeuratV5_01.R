@@ -198,6 +198,8 @@ if(args$DEBUG) {
 
 }
 
+stop("DDDDD")
+
 cat("\nScoreCellCycle\n")
 for(ii in seq(d10X)) {
     print(ii)
@@ -245,85 +247,16 @@ s1=ret$so
 
 save.image(cc("CHECKPOINT",DATE(),glb.digest,".Rdata"),compress=T)
 
+
 stop("Continue working")
 
 
 pdf(file=cc("seuratQC",plotNo(),"PostCCRegress.pdf"),width=11,height=8.5)
 
-plotCellCycle(d10X.integrated)
+plotCellCycle(s1,"Post CC Regression")
 
-p3=DimPlot(d10X.integrated, reduction = "umap", split.by = "orig.ident")
+p3=DimPlot(s1, reduction = "umap", split.by = "orig.ident")
 print(p3)
 
 dev.off()
 
-projectTag="p11206"
-d10X.integrated@project.name=projectTag
-DefaultAssay(d10X.integrated) <- "integrated"
-
-p0 <- DimPlot(d10X.integrated, reduction = "umap", label = TRUE)
-p1 <- DimPlot(d10X.integrated, reduction = "umap", group.by = "orig.ident")
-p2 <- DimPlot(d10X.integrated, reduction = "umap", split.by = "orig.ident",ncol=2)
-p3 <- plotCellCycle(d10X.integrated)
-
-pdf(file=cc("seuratAnalysis_PostMerge_UMAP",projectTag,".pdf"),width=11,height=8.5)
-
-print(p0)
-print(p0+p3)
-print(p0+p1)
-print(p2)
-
-dev.off()
-
-save.image(cc("CHECKPOINT",DATE(),glb.digest,".Rdata"),compress=T)
-
-##
-## Find Cluster Markers
-##
-
-cat("\n\n  Find Cluster Markers\n")
-
-so=d10X.integrated
-DefaultAssay(so)="RNA"
-so=NormalizeData(so)
-so=FindVariableFeatures(so)
-so=ScaleData(so)
-
-so@meta.data$Types=gsub("\\d$","",so@meta.data$orig.ident)
-
-clusterMarkers=FindAllMarkers(so,only.pos=TRUE,logfc.threshold=0.25,min.pct = 0.25)
-
-require(dplyr)
-
-top6ClusterMarkers=clusterMarkers %>%
-    tibble %>%
-    group_by(cluster) %>%
-    arrange(cluster,p_val_adj) %>%
-    mutate(N=row_number()) %>%
-    filter(N<=6)
-
-png(filename=cc("seuratAnalysis_ClusterMarkers",projectTag,"%03d.png"),
-    type="cairo",
-    units="in",
-    width=11,
-    height=8.5,
-    pointsize=12,
-    res=96)
-
-#pdf(file=cc("seuratAnalysis_ClusterMarkers",projectTag,".pdf"),width=11,height=8.5)
-
-for(cii in levels(clusterMarkers$cluster)) {
-    print(cii)
-    gene.ii=top6ClusterMarkers %>% filter(cluster==cii) %>% pull(gene)
-    p1=VlnPlot(so,features=gene.ii,pt.size=.25)
-    p2=DotPlot(so,features=gene.ii,split.by="Types",cols=RColorBrewer::brewer.pal(3,"Dark2"))
-    print(p1)
-    print(p2)
-}
-
-dev.off()
-
-save.image(cc("CHECKPOINT",DATE(),digest::digest(d10X),".Rdata"),compress=T)
-
-saveRDS(d10X.integrated,"obj__d10X.integrated.rda",compress=T)
-saveRDS(d10X.integrated@meta.data,"obj__d10X.integrated_meta.data.rda",compress=T)
