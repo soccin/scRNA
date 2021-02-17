@@ -161,6 +161,7 @@ dev.off()
 source("gitTools.R")
 
 args$glbs=glbs
+args$algoParams=algoParams
 
 args$GIT.Describe=git.describe()
 args.digest.orig=digest::digest(args)
