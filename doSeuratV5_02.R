@@ -1,48 +1,24 @@
 suppressPackageStartupMessages(require(stringr))
 
 usage="
-usage: doSeuratV5.R [DEBUG=${DEBUG}] [MERGE=${MERGE}] [PROJNAME=${PROJNAME}] 10XDir1 [10XDir2 ... ]
+usage: doSeuratV5_02.R PARAMS.yaml
 
-    DEBUG        Set DEBUG mode (downsample to 10%) [${DEBUG}]
-    DOWNSAMPLE   Set amount of DEBUG downsample [${DOWNSAMPLE}]
-    MERGE        If True then merge samples with simple merge [${MERGE}]
-    PROJNAME     Set name of project. Must either be used or there
-                 must be a file PROJNAME in folder with name
+    PARAMS.yaml     parameter file from pass1
 
 "
 
 cArgs=commandArgs(trailing=T)
-args=list(DEBUG=FALSE,MERGE=TRUE,PROJNAME="scRNA",DOWNSAMPLE=0.1)
-usage=str_interp(usage,args)
 
-ii=grep("=",cArgs)
-if(len(ii)>0) {
-    parseArgs=str_match(cArgs[ii],"(.*)=(.*)")
-    aa=apply(parseArgs,1,function(x){args[[str_trim(x[2])]]<<-str_trim(x[3])})
-}
-
-args$DEBUG=as.logical(args$DEBUG)
-args$MERGE=as.logical(args$MERGE)
-args$DOWNSAMPLE=as.numeric(args$DOWNSAMPLE)
-
-if(args$PROJNAME=="scRNA") {
-    if(file.exists("PROJNAME")) {
-        args$PROJNAME=scan("PROJNAME","",quiet=T)
-    } else {
-        cat(paste0(usage,"  You have not set a project name\n\n"))
-        quit()
-    }
-}
-
-argv=grep("=",cArgs,value=T,invert=T)
-
-##############################################################################
-if(len(argv)<1) {
+if(len(cArgs)!=1) {
     cat(usage)
     quit()
 }
+
+library(yaml)
+args=read_yaml(cArgs[1])
+
+##############################################################################
 cat("\n=========================================================\n")
-args[["10XDirs"]]=paste0(argv,collapse=", ")
 cat(str(args))
 cat("\n")
 ##############################################################################
@@ -57,23 +33,9 @@ suppressPackageStartupMessages({
 
 source("seuratTools.R")
 
-plotNo<-makeAutoIncrementor()
+plotNo<-makeAutoIncrementor(10)
 
-dataFolders=argv
-sampleIDs=gsub("_",".",gsub(".outs.*","",gsub(".*/s_","",dataFolders)))
-names(dataFolders)=sampleIDs
-
-d10X=list()
-
-projectName="p11533"
-
-for(ii in seq(len(dataFolders))) {
-    sampleName=sampleIDs[ii]
-    cat("Reading Sample =",sampleName,"...")
-    d10X[[sampleName]] <- read10XDataFolderAsSeuratObj(dataFolders[ii],projectName)
-    cat("\n")
-}
-d10X.orig=d10X
+d10X.orig=readRDS(args$PASS1.RDAFile)
 
 if(args$MERGE & len(d10X)>1) {
     cat("\nMerging sample files...")
