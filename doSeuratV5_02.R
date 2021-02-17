@@ -25,10 +25,8 @@ cat("\n")
 
 suppressPackageStartupMessages({
     library(Seurat)
-    library(cowplot)
     library(patchwork)
     library(tidyverse)
-    library(gridExtra)
 })
 
 source("seuratTools.R")
