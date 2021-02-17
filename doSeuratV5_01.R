@@ -233,10 +233,11 @@ dev.off()
 
 source("gitTools.R")
 
-args$genome=glbs$genomes
+args$glbs=glbs
 
 args$GIT.Describe=git.describe()
 args.digest.orig=digest::digest(args)
 args$PASS1.RDAFile=cc("pass_01",args.digest.orig,"d10X.orig",".rda")
-saveRDS(d10X.orig,args$PASS1.RDAFile,compress=T)
 write_yaml(args,cc("pass_01","PARAMS.yaml"))
+
+saveRDS(d10X.orig,args$PASS1.RDAFile,compress=T)
