@@ -129,7 +129,7 @@ preProcessSO<-function(so) {
     so=ScaleData(so,features=rownames(so))
 }
 
-plotCellCycle<-function(sc) {
+plotCellCycle<-function(sc,title="") {
 
     if(glbs$genome=="mm10") {
 
@@ -141,9 +141,8 @@ plotCellCycle<-function(sc) {
 
     }
 
-
     sc=RunPCA(sc,features=c(cellCycle.genes$s.genes,cellCycle.genes$g2m.genes))
-    pg=DimPlot(sc,group.by="Phase") + ggtitle(paste(sc@project.name,unname(sc$orig.ident[1]),"Cell Cycle PCA Projection"))
+    pg=DimPlot(sc,group.by="Phase") + ggtitle(paste("Cell Cycle PCA Projection",sc@project.name,title))
     pg
 }
 
