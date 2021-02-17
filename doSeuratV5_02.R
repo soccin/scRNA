@@ -32,6 +32,8 @@ suppressPackageStartupMessages({
 source("seuratTools.R")
 
 glbs=args$glbs
+ap=args$algoParams
+
 plotNo<-makeAutoIncrementor(10)
 
 d10X=readRDS(args$PASS1.RDAFile)
