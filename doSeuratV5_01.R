@@ -164,7 +164,7 @@ doQCandFilter <- function(so) {
 
     pg1=VlnPlot(so, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
 
-    pdf(file=cc("seuratQC",plotNo(),sampleId,"01.pdf"),height=8.5,width=11)
+    pdf(file=cc("seuratQC_A",plotNo(),sampleId,"01.pdf"),height=8.5,width=11)
     cat(cc("seuratQC",sampleId,"01.pdf"),"\n")
     print(pg0)
     print(plot1)
@@ -213,7 +213,7 @@ for(ii in seq(d10X)) {
     pcc[[ii]]=plotCellCycle(preProcessSO(d10X[[ii]]))
 }
 
-pdf(file=cc("seuratQC",plotNo(),"CellCycle.pdf"),width=11,height=11)
+pdf(file=cc("seuratQC_A",plotNo(),"CellCycle.pdf"),width=11,height=11)
 
 if(len(pcc)>1) {
     nPages=ceiling(len(pcc)/4)
@@ -231,3 +231,8 @@ if(len(pcc)>1) {
 }
 
 dev.off()
+
+args.digest.orig=digest::digest(args)
+args$PASS1.RDAFile=cc("PASS_01",args.digest.orig,"d10X.orig",".rda")
+saveRDS(d10X.orig,args$PASS1.RDAFile,compress=T)
+write_yaml(args,cc("PASS_01","PARAMS.yaml"))
