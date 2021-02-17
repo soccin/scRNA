@@ -69,12 +69,10 @@ names(dataFolders)=sampleIDs
 
 d10X=list()
 
-projectName="p11533"
-
 for(ii in seq(len(dataFolders))) {
     sampleName=sampleIDs[ii]
     cat("Reading Sample =",sampleName,"...")
-    d10X[[sampleName]] <- read10XDataFolderAsSeuratObj(dataFolders[ii],projectName)
+    d10X[[sampleName]] <- read10XDataFolderAsSeuratObj(dataFolders[ii],args$PROJNAME)
     cat("\n")
 }
 d10X.orig=d10X
@@ -165,7 +163,7 @@ doQCandFilter <- function(so) {
 
     pg1=VlnPlot(so, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
 
-    pdf(file=cc("seuratQC_A",plotNo(),sampleId,"01.pdf"),height=8.5,width=11)
+    pdf(file=cc("seuratQC",plotNo(),sampleId,"01.pdf"),height=8.5,width=11)
     cat(cc("seuratQC",sampleId,"01.pdf"),"\n")
     print(pg0)
     print(plot1)
@@ -214,7 +212,7 @@ for(ii in seq(d10X)) {
     pcc[[ii]]=plotCellCycle(preProcessSO(d10X[[ii]]))
 }
 
-pdf(file=cc("seuratQC_A",plotNo(),"CellCycle.pdf"),width=11,height=11)
+pdf(file=cc("seuratQC",plotNo(),"CellCycle.pdf"),width=11,height=11)
 
 if(len(pcc)>1) {
     nPages=ceiling(len(pcc)/4)
