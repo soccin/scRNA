@@ -96,6 +96,7 @@ algoParams=list()
 algoParams$PCT_MITO=PCT_MITO
 algoParams$MIN_FEATURE_RNA=MIN_FEATURE_RNA
 algoParams$MIN_NCOUNT_RNA=MIN_NCOUNT_RNA
+algoParams$SEED=101
 
 # as_tibble(algoParams) %>% gather(param,Value)
 
@@ -113,7 +114,7 @@ if(args$DEBUG) {
 
     c("\n\nDEBUG SET; Subset data\n\n")
 
-    set.seed(101)
+    set.seed(algoParams$SEED)
 
     cat("\nDEBUG::subset\n")
 
