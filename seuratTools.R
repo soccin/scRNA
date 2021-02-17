@@ -1,7 +1,9 @@
 library(Seurat)
 library(fs)
 
-glbs=list()
+if(!exists("glbs")) {
+    glbs=list()
+}
 
 genomes=c("refdata-gex-mm10-2020-A"="mm10")
 
