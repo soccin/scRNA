@@ -10,11 +10,11 @@ genomes=c("refdata-gex-mm10-2020-A"="mm10")
 genes.cellCycle.hg19=cc.genes.updated.2019
 delayedAssign("genes.cellCycle.mm10",loadCellCycleGenes())
 
-makeAutoIncrementor <- function() {
-    count <- 0
+makeAutoIncrementor <- function(init=0) {
+    count <- init
     function() {
         count <<- count + 1
-        count
+        sprintf("%02d",count)
     }
 }
 
