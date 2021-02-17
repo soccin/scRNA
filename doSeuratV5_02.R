@@ -30,6 +30,7 @@ suppressPackageStartupMessages({
 })
 
 source("seuratTools.R")
+source("doQCandFilter.R")
 
 glbs=args$glbs
 ap=args$algoParams
@@ -74,6 +75,14 @@ if(len(d10X)>1) {
     cat("\n\n The rest of this workflow only works on merged datasets\n\n")
     quit()
 }
+
+##
+# Cell-Cycle Scoring and Regression
+# https://satijalab.org/seurat/archive/v3.1/cell_cycle_vignette.html
+#
+
+so=d10X[[1]]
+
 
 stop("DDDDDDDDD")
 
