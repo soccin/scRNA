@@ -81,14 +81,38 @@ if(len(d10X)>1) {
 # https://satijalab.org/seurat/archive/v3.1/cell_cycle_vignette.html
 #
 
+ap$NFEATURES=5000
+
 so=d10X[[1]]
 
+cellCycle.genes = getCellCycleGenes(glbs$genome)
 
-stop("DDDDDDDDD")
+so <- NormalizeData(so)
+so <- FindVariableFeatures(so, selection.method="vst", nfeatures = ap$NFEATURES)
 
-ret=regressCellCycle(d10X[[1]])
 
-s1=ret$so
+pv1=VariableFeaturePlot(so)
+top10 <- head(VariableFeatures(so), 10)
+pv2 <- LabelPoints(plot = pv1, points = top10, repel = TRUE, xnudge=0, ynudge=0)
+pdf(file=cc("seuratQC",plotNo(),"VariableFeatures.pdf"),width=11,height=8.5)
+print(pv2)
+dev.off()
+
+so <- ScaleData(so, features=rownames(so))
+
+cellCycle.genes = getCellCycleGenes(glbs$genome)
+
+so=CellCycleScoring(so,
+                    s.features=cellCycle.genes$s.genes,
+                    g2m.features=cellCycle.genes$g2m.genes,
+                    set.ident=T
+                    )
+
+if(interactive()) {stop("BREAK")}
+
+s1=ScaleData(so, vars.to.regress = c("S.Score", "G2M.Score"), features = VariableFeatures(so))
+
+saveRDS(s1,cc("ccRegression","nFeat",len(VariableFeatures(so)),".rda"),compress=T)
 
 pdf(file=cc("seuratQC",plotNo(),"PostCCRegress.pdf"),width=11,height=8.5)
 
