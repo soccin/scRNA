@@ -81,7 +81,7 @@ if(len(d10X)>1) {
 # https://satijalab.org/seurat/archive/v3.1/cell_cycle_vignette.html
 #
 
-ap$NFEATURES=5000
+ap$NFEATURES=2000
 
 so=d10X[[1]]
 
@@ -108,9 +108,18 @@ so=CellCycleScoring(so,
                     set.ident=T
                     )
 
-if(interactive()) {stop("BREAK")}
+if(interactive()) {
+    #top("DDD");
+    #s1=readRDS("ccRegression_nFeat_5000_.rda");ap$NFEATURES=len(VariableFeatures(so));stop("BREAK")
+}
 
 s1=ScaleData(so, vars.to.regress = c("S.Score", "G2M.Score"), features = VariableFeatures(so))
+
+#
+# After Cell Cycle regression Ident -> Phase reset to orig.ident
+#
+s1 <- SetIdent(s1,value="orig.ident")
+
 
 saveRDS(s1,cc("ccRegression","nFeat",len(VariableFeatures(so)),".rda"),compress=T)
 
@@ -122,6 +131,69 @@ dev.off()
 
 # PCA
 
-# https://satijalab.org/seurat/archive/v3.0/pbmc3k_tutorial.html
+# https://satijalab.org/seurat/archive/v3.0/s13k_tutorial.html
 # Perform linear dimensional reduction
 
+s1=RunPCA(s1,features=VariableFeatures(s1))
+
+# # Determine the ‘dimensionality’ of the dataset
+
+# To overcome the extensive technical noise in any single feature for scRNA-seq data,
+# Seurat clusters cells based on their PCA scores, with each PC essentially representing
+# a ‘metafeature’ that combines information across a correlated feature set. The top
+# 3 principal components therefore represent a robust compression of the dataset. However,
+# how many componenets should we choose to include? 10? 20? 100?
+
+# In Macosko et al, (http://www.cell.com/abstract/S0092-8674(15)00549-8)
+# we implemented a resampling test inspired by the JackStraw procedure. We randomly permute
+# a subset of the data (1% by default) and rerun PCA, constructing a ‘null distribution’ of
+# feature scores, and repeat this procedure. We identify ‘significant’ PCs as those who
+# have a strong enrichment of low p-value features.
+
+nReps=100
+nDims=50 # Default
+s1 <- JackStraw(s1, num.replicate = nReps, dims=nDims)
+
+saveRDS(s1,cc("jsSampling","nReps",nReps,"Dims",nDims,".rda"),compress=T)
+
+s1 <- ScoreJackStraw(s1, dims = 1:nDims)
+
+p.js1=JackStrawPlot(s1, dims = 1:nDims)
+p.elbow=ElbowPlot(s1,ndims=nDims) + geom_hline(yintercept=0,color="grey",size=2)
+pdf(file=cc("seuratQC",plotNo(),"PCADimMetric.pdf"),width=11,height=8.5)
+print(p.js1)
+print(p.elbow)
+dev.off()
+
+stop("CONTINUE")
+nDims=40
+
+s1 <- FindNeighbors(s1, dims = 1:nDims)
+s1 <- FindClusters(s1, resolution = c(0.1,0.2,0.5,0.8))
+s1 <- RunUMAP(s1, dims = 1:nDims)
+
+
+pum.1=DimPlot(s1, reduction = "umap",label=T)
+pum.2=DimPlot(s1, reduction = "umap", group.by="orig.ident")
+pum.3=DimPlot(s1, reduction = "umap", group.by="Phase")
+pnull=ggplot()+theme_void()
+
+pdf(file=cc("seuratQC",plotNo(),"UMAP",nDims,".pdf"),width=11,height=8.5)
+print((pum.1+pum.2)/(pum.3+pnull))
+dev.off()
+
+pum.1=DimPlot(fcs1, reduction = "umap", label=T)
+pum.2=DimPlot(fcs1, reduction = "umap", group.by="orig.ident")
+pum.3=DimPlot(fcs1, reduction = "umap", group.by="Phase")
+print((pum.1+pum.2)/(pum.3+pnull))
+
+#s1@meta.data %>% tibble %>% count(seurat_clusters,Phase) %>% group_by(Phase) %>% mutate(PCT=n/sum(n)) %>% select(-n) %>% spread(Phase,PCT)
+
+s1 <- RunUMAP(s1, dims = 1:nDims, spread=1, min.dist=0.6);
+p1=DimPlot(s1, reduction = "umap", label=T) + ggtitle(paste("Spread=1 min.dist=0.6"));
+s1 <- RunUMAP(s1, dims = 1:nDims, spread=1, min.dist=0.3);
+p2=DimPlot(s1, reduction = "umap", label=T) + ggtitle(paste("Spread=1 min.dist=0.3"));
+s1 <- RunUMAP(s1, dims = 1:nDims, spread=1, min.dist=0.1);
+p3=DimPlot(s1, reduction = "umap", label=T) + ggtitle(paste("Spread=1 min.dist=0.1"));
+s1 <- RunUMAP(s1, dims = 1:nDims, spread=1, min.dist=0.05);
+p4=DimPlot(s1, reduction = "umap", label=T) + ggtitle(paste("Spread=1 min.dist=0.05"));
