@@ -134,7 +134,7 @@ dev.off()
 # https://satijalab.org/seurat/archive/v3.0/s13k_tutorial.html
 # Perform linear dimensional reduction
 
-s1=RunPCA(s1,features=VariableFeatures(s1))
+s1=RunPCA(s1,features=VariableFeatures(s1),approx=FALSE)
 
 # # Determine the ‘dimensionality’ of the dataset
 
