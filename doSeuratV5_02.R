@@ -94,7 +94,7 @@ so <- FindVariableFeatures(so, selection.method="vst", nfeatures = ap$NFEATURES)
 pv1=VariableFeaturePlot(so)
 top10 <- head(VariableFeatures(so), 10)
 pv2 <- LabelPoints(plot = pv1, points = top10, repel = TRUE, xnudge=0, ynudge=0)
-pdf(file=cc("seuratQC",plotNo(),"VariableFeatures.pdf"),width=11,height=8.5)
+pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"VariableFeatures.pdf"),width=11,height=8.5)
 print(pv2)
 dev.off()
 
@@ -123,7 +123,7 @@ s1 <- SetIdent(s1,value="orig.ident")
 
 saveRDS(s1,cc("ccRegression","nFeat",len(VariableFeatures(so)),".rda"),compress=T)
 
-pdf(file=cc("seuratQC",plotNo(),"PostCCRegress.pdf"),width=11,height=8.5)
+pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"PostCCRegress.pdf"),width=11,height=8.5)
 
 plotCellCycle(s1,"Post CC Regression")
 
@@ -160,7 +160,7 @@ s1 <- ScoreJackStraw(s1, dims = 1:nDims)
 
 p.js1=JackStrawPlot(s1, dims = 1:nDims)
 p.elbow=ElbowPlot(s1,ndims=nDims) + geom_hline(yintercept=0,color="grey",size=2)
-pdf(file=cc("seuratQC",plotNo(),"PCADimMetric.pdf"),width=11,height=8.5)
+pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"PCADimMetric.pdf"),width=11,height=8.5)
 print(p.js1)
 print(p.elbow)
 dev.off()
@@ -178,7 +178,7 @@ pum.2=DimPlot(s1, reduction = "umap", group.by="orig.ident")
 pum.3=DimPlot(s1, reduction = "umap", group.by="Phase")
 pnull=ggplot()+theme_void()
 
-pdf(file=cc("seuratQC",plotNo(),"UMAP",nDims,".pdf"),width=11,height=8.5)
+pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"UMAP",nDims,".pdf"),width=11,height=8.5)
 print((pum.1+pum.2)/(pum.3+pnull))
 dev.off()
 

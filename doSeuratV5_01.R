@@ -101,7 +101,7 @@ algoParams$SEED=101
 # as_tibble(algoParams) %>% gather(param,Value)
 
 cat("\nDoQCandFilter\n")
-pdf(file=cc("seuratQC",plotNo(),args$PROJNAME,"01.pdf"),height=8.5,width=11)
+pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"01.pdf"),height=8.5,width=11)
 for(ii in seq(d10X)) {
     print(ii)
     ret=doQCandFilter(d10X[[ii]], MIN_NCOUNT_RNA, MIN_FEATURE_RNA, PCT_MITO)
@@ -140,7 +140,7 @@ for(ii in seq(d10X)) {
     pcc[[ii]]=plotCellCycle(preProcessSO(d10X[[ii]]))
 }
 
-pdf(file=cc("seuratQC",plotNo(),"CellCycle.pdf"),width=11,height=11)
+pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"CellCycle.pdf"),width=11,height=11)
 
 if(len(pcc)>1) {
     nPages=ceiling(len(pcc)/4)
