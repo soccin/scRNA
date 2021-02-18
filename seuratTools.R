@@ -154,7 +154,9 @@ plotCellCycle<-function(sc,title="") {
 
     }
 
-    sc=RunPCA(sc,features=c(cellCycle.genes$s.genes,cellCycle.genes$g2m.genes))
+    cc.features=intersect(unlist(cellCycle.genes),VariableFeatures(sc))
+
+    sc=RunPCA(sc,features=cc.features)
     pg=DimPlot(sc,group.by="Phase") + ggtitle(paste("Cell Cycle PCA Projection",sc@project.name,title))
     pg
 }
