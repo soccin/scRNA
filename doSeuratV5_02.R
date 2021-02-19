@@ -27,6 +27,7 @@ suppressPackageStartupMessages({
     library(Seurat)
     library(patchwork)
     library(tidyverse)
+    library(openxlsx)
 })
 
 source("seuratTools.R")
@@ -109,7 +110,7 @@ so=CellCycleScoring(so,
                     )
 
 if(interactive()) {
-    #top("DDD");
+    stop("reload from RDS");
     #s1=readRDS("ccRegression_nFeat_5000_.rda");ap$NFEATURES=len(VariableFeatures(so));stop("BREAK")
 }
 
@@ -165,35 +166,80 @@ print(p.js1)
 print(p.elbow)
 dev.off()
 
-stop("CONTINUE")
+# stop("CONTINUE")
+# if(interactive()) {s1=readRDS("jsSampling_nReps_100_Dims_50_.rda")}
+
+#
+# Look at PCADimMetric.pdf to decided
+#
 nDims=40
 
 s1 <- FindNeighbors(s1, dims = 1:nDims)
 s1 <- FindClusters(s1, resolution = c(0.1,0.2,0.5,0.8))
 s1 <- RunUMAP(s1, dims = 1:nDims)
 
+library(pals)
+pal1=kelly(19)[c(-1,-2)]
+pu=list()
+pu[[1]]=DimPlot(s1, reduction = "umap", label=T, group.by="RNA_snn_res.0.1", label.size=6) + scale_color_manual(values=pal1)
+pu[[2]]=DimPlot(s1, reduction = "umap", label=T, group.by="RNA_snn_res.0.2", label.size=6) + scale_color_manual(values=pal1)
+pu[[3]]=DimPlot(s1, reduction = "umap", label=T, group.by="RNA_snn_res.0.5", label.size=6) + scale_color_manual(values=pal1)
+pu[[4]]=DimPlot(s1, reduction = "umap", group.by="orig.ident") + scale_color_brewer(palette="Dark2")
+pu[[5]]=DimPlot(s1, reduction = "umap", group.by="Phase")
 
-pum.1=DimPlot(s1, reduction = "umap",label=T)
-pum.2=DimPlot(s1, reduction = "umap", group.by="orig.ident")
-pum.3=DimPlot(s1, reduction = "umap", group.by="Phase")
-pnull=ggplot()+theme_void()
+
 
 pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"UMAP",nDims,".pdf"),width=11,height=8.5)
-print((pum.1+pum.2)/(pum.3+pnull))
+print(pu)
 dev.off()
 
-pum.1=DimPlot(fcs1, reduction = "umap", label=T)
-pum.2=DimPlot(fcs1, reduction = "umap", group.by="orig.ident")
-pum.3=DimPlot(fcs1, reduction = "umap", group.by="Phase")
-print((pum.1+pum.2)/(pum.3+pnull))
+s1=SetIdent(s1,value="RNA_snn_res.0.2")
 
-#s1@meta.data %>% tibble %>% count(seurat_clusters,Phase) %>% group_by(Phase) %>% mutate(PCT=n/sum(n)) %>% select(-n) %>% spread(Phase,PCT)
+clusterMarkers=FindAllMarkers(s1,only.pos=TRUE,logfc.threshold=0.25,min.pct = 0.25)
 
-s1 <- RunUMAP(s1, dims = 1:nDims, spread=1, min.dist=0.6);
-p1=DimPlot(s1, reduction = "umap", label=T) + ggtitle(paste("Spread=1 min.dist=0.6"));
-s1 <- RunUMAP(s1, dims = 1:nDims, spread=1, min.dist=0.3);
-p2=DimPlot(s1, reduction = "umap", label=T) + ggtitle(paste("Spread=1 min.dist=0.3"));
-s1 <- RunUMAP(s1, dims = 1:nDims, spread=1, min.dist=0.1);
-p3=DimPlot(s1, reduction = "umap", label=T) + ggtitle(paste("Spread=1 min.dist=0.1"));
-s1 <- RunUMAP(s1, dims = 1:nDims, spread=1, min.dist=0.05);
-p4=DimPlot(s1, reduction = "umap", label=T) + ggtitle(paste("Spread=1 min.dist=0.05"));
+pct=c(clusterMarkers$pct.1,clusterMarkers$pct.2)
+ps=min(min(pct[pct>0]),min(1-pct[pct<1]))/2
+
+FDR.cut=0.05
+logFC.cut=1
+filterCLTable<-function(clm) {
+    tibble(clm) %>%
+        mutate(lor.1=log((pct.1+ps)/(1-pct.1+ps))) %>%
+        mutate(lor.2=log((pct.2+ps)/(1-pct.2+ps))) %>%
+        mutate(lOR=lor.1-lor.2) %>%
+        arrange(desc(avg_logFC))
+}
+
+cl=filterCLTable(clusterMarkers) %>%
+    dplyr::select(cluster,gene,p_val_adj,avg_logFC,pct.1,pct.2,lOR) %>%
+    filter(p_val_adj<FDR.cut & avg_logFC>logFC.cut)
+
+clusters=cl %>% distinct(cluster) %>% arrange(cluster) %>% pull %>% levels
+
+
+clusterMarkerTbl=list()
+for(ci in clusters) {
+    clusterMarkerTbl[[ci]]=cl %>% filter(cluster==ci)
+}
+
+geneCounts=cl %>% count(cluster)
+
+ll=c(list(GeneCounts=geneCounts,AllCluster=cl),clusterMarkerTbl)
+
+xfile=cc("tblClusterMarkers","","FDR",FDR.cut,"logFC",logFC.cut)
+
+write.xlsx(ll,paste0(xfile,".xlsx"))
+
+cl.genes=cl %>% distinct(cluster,.keep_all=T) %>% pull(gene)
+cl.genes2=cl %>% filter(!gene %in% cl.genes) %>% arrange(desc(avg_logFC)) %>% slice(1:(12-len(cl.genes))) %>% pull(gene)
+
+pvv1=VlnPlot(s1,features=c(cl.genes, cl.genes2)[1:6], pt.size=.025, ncol=3, cols=pal1)
+pvv2=VlnPlot(s1,features=c(cl.genes, cl.genes2)[1:6+6], pt.size=.025, ncol=3, cols=pal1)
+
+pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"MarkerGenes",".pdf"),width=11,height=8.5)
+print(pvv1)
+print(pvv2)
+dev.off()
+
+
+
