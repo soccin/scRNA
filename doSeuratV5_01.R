@@ -176,11 +176,28 @@ doQCandFilter <- function(so) {
 
 }
 
+stop("DDDDD")
+
 cat("\nDoQCandFilter\n")
 for(ii in seq(d10X)) {
     print(ii)
     d10X[[ii]]=doQCandFilter(d10X[[ii]])
 }
+
+plotFeaturesBySample<-function(so,feature) {
+
+    tibble(so@meta.data) %>%
+        ggplot(aes_string("orig.ident",feature,fill="orig.ident")) +
+        geom_violin() +
+        theme_bw(base_size=18) + ylab("") + xlab("") + ggtitle(feature)
+
+}
+
+pdf(file=cc("seuratQC",plotNo(),"FeatureQC","01.pdf"),height=8.5,width=11)
+print(plotFeaturesBySample(d10X[[1]],"nCount_RNA"))
+print(plotFeaturesBySample(d10X[[1]],"nFeature_RNA"))
+print(plotFeaturesBySample(d10X[[1]],"percent.mt"))
+dev.off()
 
 if(args$DEBUG) {
 
