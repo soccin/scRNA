@@ -111,7 +111,7 @@ so=CellCycleScoring(so,
 
 if(interactive()) {
     stop("reload from RDS");
-    #s1=readRDS("ccRegression_nFeat_5000_.rda");ap$NFEATURES=len(VariableFeatures(so));stop("BREAK")
+    #s1=readRDS("ccRegression_nFeat_2000_.rda");ap$NFEATURES=len(VariableFeatures(so));stop("BREAK")
 }
 
 s1=ScaleData(so, vars.to.regress = c("S.Score", "G2M.Score"), features = VariableFeatures(so))
@@ -179,21 +179,24 @@ s1 <- FindClusters(s1, resolution = c(0.1,0.2,0.5,0.8))
 s1 <- RunUMAP(s1, dims = 1:nDims)
 
 library(pals)
-pal1=kelly(19)[c(-1,-2)]
+maxClusters=s1@meta.data %>% tibble %>% distinct(RNA_snn_res.0.8) %>% pull %>% len
+pal1=kelly(maxClusters)[c(-1,-2)]
 pu=list()
-pu[[1]]=DimPlot(s1, reduction = "umap", label=T, group.by="RNA_snn_res.0.1", label.size=6) + scale_color_manual(values=pal1)
-pu[[2]]=DimPlot(s1, reduction = "umap", label=T, group.by="RNA_snn_res.0.2", label.size=6) + scale_color_manual(values=pal1)
-pu[[3]]=DimPlot(s1, reduction = "umap", label=T, group.by="RNA_snn_res.0.5", label.size=6) + scale_color_manual(values=pal1)
+pu[[1]]=DimPlot(s1, reduction = "umap", label=T, group.by="RNA_snn_res.0.1", label.size=6) + scale_color_manual(values=pal1) + ggtitle("RNA_snn_res.0.1")
+pu[[2]]=DimPlot(s1, reduction = "umap", label=T, group.by="RNA_snn_res.0.2", label.size=6) + scale_color_manual(values=pal1) + ggtitle("RNA_snn_res.0.2")
+pu[[3]]=DimPlot(s1, reduction = "umap", label=T, group.by="RNA_snn_res.0.5", label.size=6) + scale_color_manual(values=pal1) + ggtitle("RNA_snn_res.0.5")
 pu[[4]]=DimPlot(s1, reduction = "umap", group.by="orig.ident") + scale_color_brewer(palette="Dark2")
 pu[[5]]=DimPlot(s1, reduction = "umap", group.by="Phase")
 
 
 
-pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"UMAP",nDims,".pdf"),width=11,height=8.5)
+pdf(file=cc("seuratQC",args$PROJNAME,plotNo(13),"UMAP",nDims,".pdf"),width=11,height=8.5)
 print(pu)
 dev.off()
 
-s1=SetIdent(s1,value="RNA_snn_res.0.2")
+clusterRes="RNA_snn_res.0.5"
+#s1=SetIdent(s1,value="RNA_snn_res.0.2")
+s1=SetIdent(s1,value=clusterRes)
 
 clusterMarkers=FindAllMarkers(s1,only.pos=TRUE,logfc.threshold=0.25,min.pct = 0.25)
 
@@ -226,7 +229,7 @@ geneCounts=cl %>% count(cluster)
 
 ll=c(list(GeneCounts=geneCounts,AllCluster=cl),clusterMarkerTbl)
 
-xfile=cc("tblClusterMarkers","","FDR",FDR.cut,"logFC",logFC.cut)
+xfile=cc("tblClusterMarkers","",clusterRes,"FDR",FDR.cut,"logFC",logFC.cut)
 
 write.xlsx(ll,paste0(xfile,".xlsx"))
 
@@ -236,10 +239,7 @@ cl.genes2=cl %>% filter(!gene %in% cl.genes) %>% arrange(desc(avg_logFC)) %>% sl
 pvv1=VlnPlot(s1,features=c(cl.genes, cl.genes2)[1:6], pt.size=.025, ncol=3, cols=pal1)
 pvv2=VlnPlot(s1,features=c(cl.genes, cl.genes2)[1:6+6], pt.size=.025, ncol=3, cols=pal1)
 
-pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"MarkerGenes",".pdf"),width=11,height=8.5)
+pdf(file=cc("seuratQC",args$PROJNAME,clusterRes,plotNo(),"MarkerGenes",".pdf"),width=11,height=8.5)
 print(pvv1)
 print(pvv2)
 dev.off()
-
-
-
