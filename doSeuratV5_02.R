@@ -82,7 +82,7 @@ if(len(d10X)>1) {
 # https://satijalab.org/seurat/archive/v3.1/cell_cycle_vignette.html
 #
 
-ap$NFEATURES=2000
+ap$NFEATURES=5000
 
 so=d10X[[1]]
 
@@ -110,8 +110,8 @@ so=CellCycleScoring(so,
                     )
 
 if(interactive()) {
-    stop("reload from RDS");
-    #s1=readRDS("ccRegression_nFeat_2000_.rda");ap$NFEATURES=len(VariableFeatures(so));stop("BREAK")
+#    stop("reload from RDS");
+    #s1=readRDS("ccRegression_nFeat_{{ap$NFEATURES}}_.rda");ap$NFEATURES=len(VariableFeatures(so));stop("BREAK")
 }
 
 s1=ScaleData(so, vars.to.regress = c("S.Score", "G2M.Score"), features = VariableFeatures(so))
@@ -190,7 +190,7 @@ pu[[5]]=DimPlot(s1, reduction = "umap", group.by="Phase")
 
 
 
-pdf(file=cc("seuratQC",args$PROJNAME,plotNo(13),"UMAP",nDims,".pdf"),width=11,height=8.5)
+pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"UMAP",nDims,".pdf"),width=11,height=8.5)
 print(pu)
 dev.off()
 
