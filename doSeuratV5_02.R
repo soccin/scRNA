@@ -118,7 +118,7 @@ so=CellCycleScoring(so,
                     )
 
 if(interactive()) {
-    #stop("reload from RDS");
+    stop("\n\nreload from RDS\n\n");
     #s1=readRDS("ccRegression_nFeat_{{ap$NFEATURES}}_.rda");ap$NFEATURES=len(VariableFeatures(so));stop("BREAK")
 }
 
@@ -183,10 +183,13 @@ dev.off()
 
 #stop("\n\n CHECK PCA AND CONTINUE\n\n")
 
+ap$NDIMS=40
 nDims=40
 
+ap$ClusterResolutions=c(0.1,0.2,0.5,0.8)
+
 s1 <- FindNeighbors(s1, dims = 1:nDims)
-s1 <- FindClusters(s1, resolution = c(0.1,0.2,0.5,0.8))
+s1 <- FindClusters(s1, resolution = ap$ClusterResolutions)
 s1 <- RunUMAP(s1, dims = 1:nDims)
 
 library(pals)
@@ -249,19 +252,58 @@ xfile=cc("tblClusterMarkers","",clusterRes,"FDR",FDR.cut,"logFC",logFC.cut)
 
 write.xlsx(ll,paste0(xfile,".xlsx"))
 
-##
-# Plot cluster specific genes
-#
+args$algoParams=ap
+obj=list(
+    args=args,
+    s1=s1,
+    clusterMarkers=clusterMarkers,
+    cl=cl
+    )
+
+args.digest.orig=digest::digest(obj)
+args$PASS2.RDAFile=cc("pass_02",args.digest.orig,"OBJ",".rda")
+obj$args=args
+
+saveRDS(obj,args$PASS2.RDAFile,compress=T)
 
 
+plt.cmark=cl %>% group_split(cluster) %>% map(plotClusterMarkers,s1,pal1)
 
-# cl.genes=cl %>% distinct(cluster,.keep_all=T) %>% pull(gene)
-# cl.genes2=cl %>% filter(!gene %in% cl.genes) %>% arrange(desc(avg_logFC)) %>% slice(1:(-len(cl.genes))) %>% pull(gene)
+cmFile=cc("seuratQC",args$PROJNAME,plotNo(),"ClusterMarkers","%03d",".png")
 
-# pvv1=VlnPlot(s1,features=c(cl.genes, cl.genes2)[1:6], pt.size=.025, ncol=3, cols=pal1)
-# pvv2=VlnPlot(s1,features=c(cl.genes, cl.genes2)[1:6+6], pt.size=.025, ncol=3, cols=pal1)
+png(filename=cmFile,
+    type="cairo",
+    units="in",
+    width=14,
+    height=8.5,
+    pointsize=12,
+    res=96)
 
-# pdf(file=cc("seuratQC",args$PROJNAME,clusterRes,plotNo(),"MarkerGenes",".pdf"),width=11,height=8.5)
-# print(pvv1)
-# print(pvv2)
-# dev.off()
+print(plt.cmark)
+
+dev.off()
+
+g1=cl %>% distinct(cluster,.keep_all=T) %>% pull(gene)
+g2=cl %>% filter(!(gene %in% g1)) %>% distinct(cluster,.keep_all=T) %>% pull(gene)
+
+dot.gene.lOR=cl %>%
+    filter(gene %in% c(g1,g2)) %>%
+    arrange(desc(lOR)) %>%
+    distinct(gene,.keep_all=T) %>%
+    head(12) %>%
+    pull(gene)
+
+dot.gene.lFC=cl %>%
+    filter(gene %in% c(g1,g2)) %>%
+    arrange(desc(avg_logFC)) %>%
+    distinct(gene,.keep_all=T) %>%
+    head(12) %>%
+    pull(gene)
+
+pc1=DotPlot(s1,features=dot.gene.lOR)
+pc2=DotPlot(s1,features=dot.gene.lFC)
+
+pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"ClusterMarkersDot",".pdf"),width=11,height=8.5)
+print(pc1)
+print(pc2)
+dev.off()

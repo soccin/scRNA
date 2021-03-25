@@ -1,4 +1,4 @@
-paginatePlots<-function(plts,pRows,pCols) {
+paginatePlots<-function(plts.o,pRows,pCols,oneLegend=T) {
 
     nPlots=pRows*pCols
 
@@ -6,6 +6,14 @@ paginatePlots<-function(plts,pRows,pCols) {
     page=1
     currPlot=1
     pa=NULL
+
+    if(oneLegend) {
+        plts=map(plts.o,~.+theme(legend.position = "none"))
+        plts[[pCols]]=plts.o[[min(pCols,len(plts.o))]]
+    } else {
+        plts=plts.o
+    }
+
 
     for(ii in seq(len(plts))) {
         if(is.null(pa)) {
@@ -25,3 +33,4 @@ paginatePlots<-function(plts,pRows,pCols) {
     pp
 
 }
+

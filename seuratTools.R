@@ -1,5 +1,6 @@
 library(Seurat)
 library(fs)
+library(ggpubr)
 
 if(!exists("glbs")) {
     glbs=list()
@@ -161,3 +162,27 @@ plotCellCycle<-function(sc,title="") {
     pg
 }
 
+plotClusterMarkers<-function(cli,s0,clusterColors) {
+    # High Quality Genes First
+    cli=cli %>% arrange(desc(avg_logFC+lOR))
+    gHQ=cli %>% filter(lOR>2 & avg_logFC>2) %>% pull(gene)
+    gMQ=cli %>% filter(lOR>2) %>% pull(gene)
+    gLQ=pull(cli,gene)
+
+    gg=union(gHQ,gMQ) %>% union(.,gLQ) %>% unique(.)
+    gg=head(gg,10)
+    tbl=cli %>%
+        filter(gene %in% gg) %>%
+        arrange(factor(gene,levels=gg)) %>%
+        select(-lOR) %>%
+        mutate_if(is.numeric,~round(.,2)) %>%
+        rename(No=1,p.val=3,logFC=4)
+
+    p0=ggtexttable(tbl,rows=NULL)
+    vv=VlnPlot(s0,features=gg,pt.size=.025, cols=clusterColors, combine=F)
+
+    pg=paginatePlots(c(list(p0),vv),2,3)
+
+    return(pg)
+
+}
