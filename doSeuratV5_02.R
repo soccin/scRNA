@@ -110,7 +110,7 @@ so=CellCycleScoring(so,
                     )
 
 if(interactive()) {
-#    stop("reload from RDS");
+    stop("reload from RDS");
     #s1=readRDS("ccRegression_nFeat_{{ap$NFEATURES}}_.rda");ap$NFEATURES=len(VariableFeatures(so));stop("BREAK")
 }
 
@@ -180,7 +180,7 @@ s1 <- RunUMAP(s1, dims = 1:nDims)
 
 library(pals)
 maxClusters=s1@meta.data %>% tibble %>% distinct(RNA_snn_res.0.8) %>% pull %>% len
-pal1=kelly(maxClusters)[c(-1,-2)]
+pal1=kelly(maxClusters+2)[c(-1,-2)]
 pu=list()
 pu[[1]]=DimPlot(s1, reduction = "umap", label=T, group.by="RNA_snn_res.0.1", label.size=6) + scale_color_manual(values=pal1) + ggtitle("RNA_snn_res.0.1")
 pu[[2]]=DimPlot(s1, reduction = "umap", label=T, group.by="RNA_snn_res.0.2", label.size=6) + scale_color_manual(values=pal1) + ggtitle("RNA_snn_res.0.2")
