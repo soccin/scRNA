@@ -1,0 +1,5 @@
+time Rscript --no-save doSeuratV5_01.R DEBUG=T DOWNSAMPLE=0.05 ../s_wildtype ../s_Lztr1KO
+echo
+echo
+echo
+md5sum -c unit/unit01.md5 
