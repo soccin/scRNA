@@ -82,7 +82,7 @@ if(len(d10X)>1) {
 # https://satijalab.org/seurat/archive/v3.1/cell_cycle_vignette.html
 #
 
-ap$NFEATURES=5000
+ap$NFEATURES=2000
 
 so=d10X[[1]]
 
