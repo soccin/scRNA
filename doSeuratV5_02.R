@@ -31,12 +31,20 @@ suppressPackageStartupMessages({
 })
 
 source("seuratTools.R")
+source("tools.R")
 source("doQCandFilter.R")
 
 glbs=args$glbs
 ap=args$algoParams
 
 plotNo<-makeAutoIncrementor(10)
+
+##########################################################################
+#
+# INCLUDE BREAK
+#
+##########################################################################
+
 
 d10X=readRDS(args$PASS1.RDAFile)
 
@@ -82,7 +90,7 @@ if(len(d10X)>1) {
 # https://satijalab.org/seurat/archive/v3.1/cell_cycle_vignette.html
 #
 
-ap$NFEATURES=2000
+ap$NFEATURES=5000
 
 so=d10X[[1]]
 
@@ -110,7 +118,7 @@ so=CellCycleScoring(so,
                     )
 
 if(interactive()) {
-    stop("reload from RDS");
+    #stop("reload from RDS");
     #s1=readRDS("ccRegression_nFeat_{{ap$NFEATURES}}_.rda");ap$NFEATURES=len(VariableFeatures(so));stop("BREAK")
 }
 
@@ -172,6 +180,9 @@ dev.off()
 #
 # Look at PCADimMetric.pdf to decided
 #
+
+#stop("\n\n CHECK PCA AND CONTINUE\n\n")
+
 nDims=40
 
 s1 <- FindNeighbors(s1, dims = 1:nDims)
@@ -180,15 +191,18 @@ s1 <- RunUMAP(s1, dims = 1:nDims)
 
 library(pals)
 maxClusters=s1@meta.data %>% tibble %>% distinct(RNA_snn_res.0.8) %>% pull %>% len
-pal1=kelly(maxClusters+2)[c(-1,-2)]
+if(maxClusters>25) {
+    save.image(cc("CHECKPOINT",DATE(),".RData"),compress=T)
+    stop("\n\nTOO MANY CLUSTERS\n\n")
+}
+
+pal1=cols25(maxClusters)
 pu=list()
 pu[[1]]=DimPlot(s1, reduction = "umap", label=T, group.by="RNA_snn_res.0.1", label.size=6) + scale_color_manual(values=pal1) + ggtitle("RNA_snn_res.0.1")
 pu[[2]]=DimPlot(s1, reduction = "umap", label=T, group.by="RNA_snn_res.0.2", label.size=6) + scale_color_manual(values=pal1) + ggtitle("RNA_snn_res.0.2")
 pu[[3]]=DimPlot(s1, reduction = "umap", label=T, group.by="RNA_snn_res.0.5", label.size=6) + scale_color_manual(values=pal1) + ggtitle("RNA_snn_res.0.5")
 pu[[4]]=DimPlot(s1, reduction = "umap", group.by="orig.ident") + scale_color_brewer(palette="Dark2")
 pu[[5]]=DimPlot(s1, reduction = "umap", group.by="Phase")
-
-
 
 pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"UMAP",nDims,".pdf"),width=11,height=8.5)
 print(pu)
@@ -213,6 +227,8 @@ filterCLTable<-function(clm) {
         arrange(desc(avg_logFC))
 }
 
+#
+
 cl=filterCLTable(clusterMarkers) %>%
     dplyr::select(cluster,gene,p_val_adj,avg_logFC,pct.1,pct.2,lOR) %>%
     filter(p_val_adj<FDR.cut & avg_logFC>logFC.cut)
@@ -233,13 +249,19 @@ xfile=cc("tblClusterMarkers","",clusterRes,"FDR",FDR.cut,"logFC",logFC.cut)
 
 write.xlsx(ll,paste0(xfile,".xlsx"))
 
-cl.genes=cl %>% distinct(cluster,.keep_all=T) %>% pull(gene)
-cl.genes2=cl %>% filter(!gene %in% cl.genes) %>% arrange(desc(avg_logFC)) %>% slice(1:(12-len(cl.genes))) %>% pull(gene)
+##
+# Plot cluster specific genes
+#
 
-pvv1=VlnPlot(s1,features=c(cl.genes, cl.genes2)[1:6], pt.size=.025, ncol=3, cols=pal1)
-pvv2=VlnPlot(s1,features=c(cl.genes, cl.genes2)[1:6+6], pt.size=.025, ncol=3, cols=pal1)
 
-pdf(file=cc("seuratQC",args$PROJNAME,clusterRes,plotNo(),"MarkerGenes",".pdf"),width=11,height=8.5)
-print(pvv1)
-print(pvv2)
-dev.off()
+
+# cl.genes=cl %>% distinct(cluster,.keep_all=T) %>% pull(gene)
+# cl.genes2=cl %>% filter(!gene %in% cl.genes) %>% arrange(desc(avg_logFC)) %>% slice(1:(-len(cl.genes))) %>% pull(gene)
+
+# pvv1=VlnPlot(s1,features=c(cl.genes, cl.genes2)[1:6], pt.size=.025, ncol=3, cols=pal1)
+# pvv2=VlnPlot(s1,features=c(cl.genes, cl.genes2)[1:6+6], pt.size=.025, ncol=3, cols=pal1)
+
+# pdf(file=cc("seuratQC",args$PROJNAME,clusterRes,plotNo(),"MarkerGenes",".pdf"),width=11,height=8.5)
+# print(pvv1)
+# print(pvv2)
+# dev.off()
