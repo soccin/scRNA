@@ -6,9 +6,10 @@ if(!exists("glbs")) {
     glbs=list()
 }
 
-genomes=c("refdata-gex-mm10-2020-A"="mm10")
+genomes=c("refdata-gex-mm10-2020-A"="mm10","refdata-gex-GRCh38-2020-A"="hg38")
 
 genes.cellCycle.hg19=cc.genes.updated.2019
+genes.cellCycle.hg38=cc.genes.updated.2019
 delayedAssign("genes.cellCycle.mm10",loadCellCycleGenes())
 
 makeAutoIncrementor <- function(init=0) {
@@ -81,6 +82,8 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
     so <- RenameCells(so,paste0(projName,"_",colnames(x=so)))
     if(genome=="mm10") {
         so[["percent.mt"]] <- PercentageFeatureSet(so, pattern = "^mt-")
+    } else if(genome=="hg38") {
+        so[["percent.mt"]] <- PercentageFeatureSet(so, pattern = "^MT-")
     } else {
         stop(paste("Unknown genome",genome,"Should not get here"))
     }
@@ -99,6 +102,10 @@ getCellCycleGenes<-function(genome) {
     if(genome=="mm10") {
 
         cellCycle.genes=genes.cellCycle.mm10
+
+    } else if(genome=="hg38") {
+
+        cellCycle.genes=genes.cellCycle.hg38
 
     } else {
 
@@ -148,6 +155,10 @@ plotCellCycle<-function(sc,title="") {
     if(glbs$genome=="mm10") {
 
         cellCycle.genes=genes.cellCycle.mm10
+
+    } else if(glbs$genome=="hg38") {
+
+        cellCycle.genes=genes.cellCycle.hg38
 
     } else {
 
