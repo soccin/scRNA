@@ -1,6 +1,6 @@
 # scRNA Version 4
 
-## Branch dev/regressCC
+## Branch proj/10317_B (From MASTER: f8e48d2d9)
 
 10X data
 
