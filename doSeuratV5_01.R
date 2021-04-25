@@ -93,8 +93,8 @@ cat("digest=",digest::digest(d10X),"\n")
 # MIN_NCOUNT_RNA=2500
 
 PCT_MITO=10
-MIN_FEATURE_RNA=1500
-MIN_NCOUNT_RNA=5000
+MIN_FEATURE_RNA=1000
+MIN_NCOUNT_RNA=2500
 
 
 algoParams=list()
