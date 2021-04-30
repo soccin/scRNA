@@ -257,7 +257,8 @@ obj=list(
     args=args,
     s1=s1,
     clusterMarkers=clusterMarkers,
-    cl=cl
+    cl=cl,
+    clusterRes=clusterRes
     )
 
 args.digest.orig=digest::digest(obj)
@@ -265,6 +266,7 @@ args$PASS2.RDAFile=cc("pass_02",args.digest.orig,"OBJ",".rda")
 obj$args=args
 
 saveRDS(obj,args$PASS2.RDAFile,compress=T)
+write_yaml(args,cc("pass_02","PARAMS.yaml"))
 
 
 plt.cmark=cl %>% group_split(cluster) %>% map(plotClusterMarkers,s1,pal1)
