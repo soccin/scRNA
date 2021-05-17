@@ -183,8 +183,8 @@ dev.off()
 
 #stop("\n\n CHECK PCA AND CONTINUE\n\n")
 
-ap$NDIMS=40
-nDims=40
+ap$NDIMS=20
+nDims=20
 
 ap$ClusterResolutions=c(0.1,0.2,0.5,0.8)
 
@@ -211,7 +211,7 @@ pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"UMAP",nDims,".pdf"),width=11,heig
 print(pu)
 dev.off()
 
-clusterRes="RNA_snn_res.0.5"
+clusterRes="RNA_snn_res.0.2"
 #s1=SetIdent(s1,value="RNA_snn_res.0.2")
 s1=SetIdent(s1,value=clusterRes)
 
