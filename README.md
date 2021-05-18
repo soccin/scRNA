@@ -1,6 +1,6 @@
 # scRNA Version 4
 
-## Branch proj/10317_B (From MASTER: f8e48d2d9)
+## Branch MASTER
 
 10X data
 
