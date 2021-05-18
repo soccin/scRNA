@@ -99,6 +99,8 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
 
 getCellCycleGenes<-function(genome) {
 
+    browser()
+
     if(genome=="mm10") {
 
         cellCycle.genes=genes.cellCycle.mm10
@@ -155,6 +157,13 @@ plotCellCycle<-function(sc,title="") {
     if(glbs$genome=="mm10") {
 
         cellCycle.genes=genes.cellCycle.mm10
+        #
+        # For project p11206 add gene
+        #   Pclaf
+        # to cell cycle genes (g2m list)
+        #
+        cat("\n\nAdding Pclaf to cc.genes$g2m\n\n")
+        cellCycle.genes$g2m=c(cellCycle.genes$g2m,"Pclaf")
 
     } else if(glbs$genome=="hg38") {
 
