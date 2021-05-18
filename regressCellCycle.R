@@ -25,6 +25,8 @@ regressCellCycle <- function(so,saveVar=T) {
 
     if(glbs$genome=="mm10") {
 
+        stop("\n\nIs this code still used?]\nProbably not a good idea-custom genomes\n\n")
+
         cellCycle.genes=genes.cellCycle.mm10
         rPlot.features=c("Pcna","Cdc20","Aurka")
 
