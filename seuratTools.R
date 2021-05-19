@@ -99,8 +99,6 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
 
 getCellCycleGenes<-function(genome) {
 
-    browser()
-
     if(genome=="mm10") {
 
         cellCycle.genes=genes.cellCycle.mm10
