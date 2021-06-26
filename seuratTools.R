@@ -53,6 +53,19 @@ m.cache=cache_filesystem("__R_CACHE")
 
 convertGeneSymbolsHumanToMouse <- memoise(.convertGeneSymbolsHumanToMouse.RAW,cache=m.cache)
 
+extractProjNoFromPath<-function(pp) {
+
+    pnum=grep("Project_",strsplit(pp,"/")[[1]],value=T) %>%
+        unique %>%
+        gsub("Project_","",.) %>% paste0(.,collapse=",")
+    if(len(pnum)>0) {
+        return(paste0("p",pnum))
+    } else {
+        return("")
+    }
+
+}
+
 read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
 
     cmdlineFile=dir_ls(cellRangerDir,regex="_cmd")
@@ -78,8 +91,16 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
 
     xx <- Read10X(dataDir)
 
-    so <- CreateSeuratObject(counts = xx, project=projName,)
-    so <- RenameCells(so,paste0(projName,"_",colnames(x=so)))
+    so <- CreateSeuratObject(counts = xx, project=projName)
+
+    cell.barcode=basename(colnames(so)) %>% gsub("filtered_feature_bc_matrix_","",.)
+    sampleId=grep("--id=",cmdline,value=T) %>% gsub(".*id=","",.) %>% gsub("^s_","",.)
+    pNum=extractProjNoFromPath(grep("--fastq",cmdline,value=T))
+
+    if(pNum!="") {projName=pNum}
+
+    so <- RenameCells(so,new.names=paste0(projName,":s:",sampleId,":bc:",cell.barcode))
+
     if(genome=="mm10") {
         so[["percent.mt"]] <- PercentageFeatureSet(so, pattern = "^mt-")
     } else if(genome=="hg38") {
@@ -88,7 +109,6 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
         stop(paste("Unknown genome",genome,"Should not get here"))
     }
 
-    sampleId=grep("--id=",cmdline,value=T) %>% gsub(".*id=","",.) %>% gsub("^s_","",.)
 
     so@meta.data$orig.ident=sampleId
     Idents(so)<-"orig.ident"
