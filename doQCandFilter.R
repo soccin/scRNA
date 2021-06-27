@@ -8,11 +8,17 @@ suppressPackageStartupMessages({
 doQCandFilter <- function(so,MIN_NCOUNT_RNA,MIN_FEATURE_RNA,PCT_MITO) {
 
     sampleId=unique(so@meta.data$orig.ident)
-    if(len(sampleId)>1) {
+    n.samples=len(sampleId)
+    if(n.samples>1) {
         sampleId=cc("MERGE",so@project.name)
     }
 
     pg0=VlnPlot(so, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), pt.size=.1,combine=F)
+
+# ll=(ggplot_build(pg0[[1]])$layout)
+# ly=ll$panel_scales_y[[1]]
+# break.delta=max(unique(diff(ly$break_positions())),na.rm=T)
+# ly$break_positions()
 
     pg0[[1]]=pg0[[1]]+geom_hline(yintercept=c(2,1,.5)*MIN_FEATURE_RNA,col="#BEBEBEBE",size=2) + NoLegend()
     pg0[[2]]=pg0[[2]]+geom_hline(yintercept=c(2,1,.5)*MIN_NCOUNT_RNA,col="#BEBEBEBE",size=2) + NoLegend()
