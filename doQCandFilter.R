@@ -22,9 +22,9 @@ doQCandFilter <- function(so,MIN_NCOUNT_RNA,MIN_FEATURE_RNA,PCT_MITO) {
 
     pg0[[1]]=pg0[[1]]+geom_hline(yintercept=c(2,1,.5)*MIN_FEATURE_RNA,col="#BEBEBEBE",size=2) + NoLegend()
     pg0[[2]]=pg0[[2]]+geom_hline(yintercept=c(2,1,.5)*MIN_NCOUNT_RNA,col="#BEBEBEBE",size=2) + NoLegend()
-    pg0[[3]]=pg0[[3]]+geom_hline(yintercept=c(2,1,.5)*PCT_MITO,col="#BEBEBEBE",size=2)
+    pg0[[3]]=pg0[[3]]+geom_hline(yintercept=c(2,1,.5)*PCT_MITO,col="#BEBEBEBE",size=2) + NoLegend()
 
-    pg0=wrap_plots(pg0, ncol = 3)
+    #pg0=wrap_plots(pg0, ncol = 3)
 
     max.nCount_RNA=max(so@meta.data$nCount_RNA)
     max.nFeature_RNA=max(so@meta.data$nFeature_RNA)
