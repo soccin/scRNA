@@ -58,6 +58,7 @@ suppressPackageStartupMessages({
 })
 
 source("seuratTools.R")
+source("plotTools.R")
 source("doQCandFilter.R")
 
 plotNo<-makeAutoIncrementor()
