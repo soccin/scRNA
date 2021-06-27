@@ -61,6 +61,10 @@ source("seuratTools.R")
 source("plotTools.R")
 source("doQCandFilter.R")
 
+if(file.exists("pass_00_PARAMS.yaml")) {
+    args00=read_yaml("pass_00_PARAMS.yaml")
+}
+
 plotNo<-makeAutoIncrementor()
 
 dataFolders=argv
@@ -93,9 +97,19 @@ cat("digest=",digest::digest(d10X),"\n")
 # MIN_FEATURE_RNA=1000
 # MIN_NCOUNT_RNA=2500
 
+getDefault<-function(ll,key) {
+    ifelse(is.null(ll[[key]]),get(key),ll[[key]])
+}
+
 MIN_FEATURE_RNA=1500
 MIN_NCOUNT_RNA=5000
 PCT_MITO=10
+
+if(exists("args00")) {
+    MIN_FEATURE_RNA=getDefault(args00$algoParams,"MIN_FEATURE_RNA")
+    MIN_NCOUNT_RNA=getDefault(args00$algoParams,"MIN_NCOUNT_RNA")
+    PCT_MITO=getDefault(args00$algoParams,"PCT_MITO")
+}
 
 algoParams=list()
 algoParams$PCT_MITO=PCT_MITO
