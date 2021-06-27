@@ -31,7 +31,7 @@ suppressPackageStartupMessages({
 })
 
 source("seuratTools.R")
-source("tools.R")
+source("plotTools.R")
 source("doQCandFilter.R")
 
 glbs=args$glbs

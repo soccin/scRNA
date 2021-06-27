@@ -15,7 +15,7 @@ if(len(cArgs)!=1) {
 }
 
 source("seuratTools.R")
-source("tools.R")
+source("plotTools.R")
 source("doQCandFilter.R")
 
 library(yaml)
