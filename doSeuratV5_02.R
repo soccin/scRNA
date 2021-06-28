@@ -194,12 +194,12 @@ s1 <- RunUMAP(s1, dims = 1:nDims)
 
 library(pals)
 maxClusters=s1@meta.data %>% tibble %>% distinct(RNA_snn_res.0.8) %>% pull %>% len
-if(maxClusters>25) {
+if(maxClusters>33) {
     save.image(cc("CHECKPOINT",DATE(),".RData"),compress=T)
     stop("\n\nTOO MANY CLUSTERS\n\n")
 }
 
-pal1=cols25(maxClusters)
+pal1=c(cols25(maxClusters),brewer.dark2(8))
 pu=list()
 pu[[1]]=DimPlot(s1, reduction = "umap", label=T, group.by="RNA_snn_res.0.1", label.size=6) + scale_color_manual(values=pal1) + ggtitle("RNA_snn_res.0.1")
 pu[[2]]=DimPlot(s1, reduction = "umap", label=T, group.by="RNA_snn_res.0.2", label.size=6) + scale_color_manual(values=pal1) + ggtitle("RNA_snn_res.0.2")
