@@ -34,6 +34,10 @@ paginatePlots<-function(plts.o,pRows,pCols,oneLegend=T) {
 
 }
 
+minor.breaks.log10 <- function(major) {
+    map(major,function(x){(0:9)*(10^x)}) %>% unlist
+}
+
 transformVlnPlot<-function(gg,qcFilterLevels,maxValue=NA) {
 
     if(is.na(maxValue)) {
