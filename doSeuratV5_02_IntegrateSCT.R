@@ -91,8 +91,7 @@ d10X.integrate <- IntegrateData(anchorset = anchors, normalization.method = "SCT
 d10X.integrate <- RunPCA(d10X.integrate, verbose = FALSE)
 d10X.integrate <- RunUMAP(d10X.integrate, reduction = "pca", dims = 1:30)
 
-DimPlot(d10X.integrate,reduction="umap") + theme(legend.position="top")
-
+DimPlot(d10X.integrate,reduction="umap") + scale_color_brewer(palette="Paired")
 so=d10X.integrate
 cellCycle.genes = getCellCycleGenes(glbs$genome)
 so=CellCycleScoring(so,
@@ -101,7 +100,7 @@ so=CellCycleScoring(so,
                     set.ident=T
                     )
 
-DimPlot(so,reduction="umap",group.by="Phase") + theme(legend.position="top")
+DimPlot(so,reduction="umap",group.by="Phase")
 
 dev.off()
 stop("BREAK-POINT 101")
