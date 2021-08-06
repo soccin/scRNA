@@ -13,7 +13,7 @@ doQCandFilter <- function(so,MIN_NCOUNT_RNA,MIN_FEATURE_RNA,PCT_MITO) {
         sampleId=cc("MERGE",so@project.name)
     }
 
-    pg0=VlnPlot(so, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), pt.size=.1,combine=F)
+    pg0=VlnPlot(so, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), pt.size=0,combine=F)
 
     pg0[[1]]=transformVlnPlot(pg0[[1]],MIN_FEATURE_RNA)
     pg0[[2]]=transformVlnPlot(pg0[[2]],MIN_NCOUNT_RNA)

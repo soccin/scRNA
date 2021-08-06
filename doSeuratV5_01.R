@@ -120,7 +120,10 @@ algoParams$SEED=101
 # as_tibble(algoParams) %>% gather(param,Value)
 
 cat("\nDoQCandFilter\n")
-pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"01.pdf"),height=8.5,width=11)
+
+#pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"01.pdf"),height=8.5,width=11)
+pFile=cc("seuratQC",args$PROJNAME,plotNo(),"Filter_%03d.png")
+pngCairo(file=pFile,height=8.5,width=11)
 for(ii in seq(d10X)) {
     print(ii)
     ret=doQCandFilter(d10X[[ii]], MIN_NCOUNT_RNA, MIN_FEATURE_RNA, PCT_MITO)
@@ -128,6 +131,7 @@ for(ii in seq(d10X)) {
     print(ret$plts)
 }
 dev.off()
+mergePNGs(pFile)
 
 if(args$DEBUG) {
 

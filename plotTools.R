@@ -1,3 +1,16 @@
+pngCairo<-function(filename,width=14,height=8.5,pointsize=12,res=150) {
+
+    png(filename,type="cairo",units="in",
+        width=width,height=height,pointsize=pointsize,res=res)
+
+}
+
+mergePNGs<-function(fileSpec) {
+    fileRe=gsub("_%\\d+d",".*",fileSpec)
+    pdfFile=gsub("_%\\d+d.*",".pdf",fileSpec)
+    system2("convert",c(sort(dir_ls(regex=fileRe)),pdfFile))
+}
+
 paginatePlots<-function(plts.o,pRows,pCols,oneLegend=T) {
 
     nPlots=pRows*pCols
@@ -53,6 +66,7 @@ transformVlnPlot<-function(gg,qcFilterLevels,maxValue=NA) {
     xLabels=str_wrap(gsub("[-_.]"," ",levels(gg$data[[2]])),15)
 
     gret=gg +
+        geom_jitter(alpha=0.1,size=0.25) +
         geom_hline(yintercept=c(2,1,.5)*qcFilterLevels,col="#BEBEBEBE",size=c(1,1.4,1)) +
         scale_y_continuous(limit=c(minValue,maxValue), breaks=newBreaks) +
         scale_x_discrete(labels=xLabels) +
