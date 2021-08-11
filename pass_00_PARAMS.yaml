@@ -8,6 +8,3 @@
 #  MIN_FEATURE_RNA: 1500
 #  MIN_NCOUNT_RNA: 5000
 #  PCT_MITO: 10
-
-algoParams:
-  PCT_MITO: 10
