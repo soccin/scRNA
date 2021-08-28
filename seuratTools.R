@@ -87,7 +87,7 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
 
 genes.cellCycle.hg19=cc.genes.updated.2019
 genes.cellCycle.hg38=cc.genes.updated.2019
-data(cc.genes.mouse.v2)
+load(file.path(SDIR,"data/cc.genes.mouse.v2.rda"))
 genes.cellCycle.mm10=cc.genes.mouse.v2
 
 getCellCycleGenes<-function(genome) {
