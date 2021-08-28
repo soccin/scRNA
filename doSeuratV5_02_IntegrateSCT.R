@@ -126,7 +126,7 @@ DimPlot(d10X.integrate,reduction="umap") + scale_color_brewer(palette="Paired")
 
 cellCycle.genes = getCellCycleGenes(glbs$genome)
 
-so=CellCycleScoring(so,
+so=CellCycleScoring(d10X.integrate,
                     s.features=cellCycle.genes$s.genes,
                     g2m.features=cellCycle.genes$g2m.genes,
                     set.ident=T
