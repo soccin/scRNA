@@ -39,6 +39,12 @@ if(args$PROJNAME=="scRNA") {
 
 argv=grep("=",cArgs,value=T,invert=T)
 
+if(Sys.getenv("SDIR")=="") {
+    SDIR="."
+} else {
+    SDIR=Sys.getenv("SDIR")
+}
+
 ##############################################################################
 if(len(argv)<1) {
     cat(usage)
@@ -57,9 +63,10 @@ suppressPackageStartupMessages({
     library(yaml)
 })
 
-source("seuratTools.R")
-source("plotTools.R")
-source("doQCandFilter.R")
+source(file.path(SDIR,"seuratTools.R"))
+source(file.path(SDIR,"plotTools.R"))
+source(file.path(SDIR,"doQCandFilter.R"))
+source(file.path(SDIR,"gitTools.R"))
 
 if(file.exists("pass_00_PARAMS.yaml")) {
     args00=read_yaml("pass_00_PARAMS.yaml")
@@ -181,8 +188,6 @@ if(len(pcc)>1) {
 }
 
 dev.off()
-
-source("gitTools.R")
 
 args$glbs=glbs
 args$algoParams=algoParams
