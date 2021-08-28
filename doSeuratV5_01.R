@@ -211,7 +211,7 @@ mergePNGs(pFile)
 args$glbs=glbs
 args$algoParams=algoParams
 
-args$GIT.Describe=git.describe()
+args$GIT.Describe=git.describe(SDIR)
 args.digest.orig=digest::digest(args)
 args$PASS1.RDAFile=cc("pass_01",args.digest.orig,"d10X.orig",".rda")
 write_yaml(args,cc("pass_01","PARAMS.yaml"))

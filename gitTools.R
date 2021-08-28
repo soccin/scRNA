@@ -1,9 +1,12 @@
 
-git.describe<-function(){
+git.describe<-function(REPO="."){
 
     system2(
         "git",
-        c("describe", "--tags", "--always", "--long", "--dirty='-UNCOMMITED'"),
+        c(
+            paste0("--git-dir=",file.path(REPO,".git")),
+            paste0("--work-tree=",REPO),
+            "describe","--tags", "--always", "--long", "--dirty='-UNCOMMITED'"),
         stdout=T
         )
 
