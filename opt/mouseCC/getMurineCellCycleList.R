@@ -40,5 +40,6 @@ res=select(gene.list, Gene=Human) %>%
 
 cc.genes.mouse.v2=split(res,res$Group) %>% map(.,"mouse")
 
-write_yaml(cc.genes.mouse.v2,"cc.gene.mouse.v2.yaml")
+write_yaml(cc.genes.mouse.v2,"cc.genes.mouse.v2.yaml")
+save(cc.genes.mouse.v2,file="cc.genes.mouse.v2.rda")
 
