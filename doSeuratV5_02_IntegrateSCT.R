@@ -17,6 +17,12 @@ if(len(cArgs)!=1) {
 library(yaml)
 args=read_yaml(cArgs[1])
 
+if(Sys.getenv("SDIR")=="") {
+    SDIR="."
+} else {
+    SDIR=Sys.getenv("SDIR")
+}
+
 ##############################################################################
 cat("\n=========================================================\n")
 cat(str(args))
@@ -30,16 +36,15 @@ suppressPackageStartupMessages({
     library(openxlsx)
 })
 
-source("seuratTools.R")
-source("plotTools.R")
-source("doQCandFilter.R")
+source(file.path(SDIR,"seuratTools.R"))
+source(file.path(SDIR,"plotTools.R"))
+source(file.path(SDIR,"doQCandFilter.R"))
 
 glbs=args$glbs
 ap=args$algoParams
 
 plotNo<-makeAutoIncrementor(10)
 
-pdf(file="debug.pdf",width=14,height=8.5)
 ##########################################################################
 #
 # INCLUDE BREAK
@@ -59,7 +64,17 @@ for(ii in seq(d10X)) {
     d10X[[ii]]=ret$so
 }
 
-halt("")
+
+##############################################################################
+# Check Cell Cycle
+#
+cat("\nScoreCellCycle\n")
+
+for(ii in seq(d10X)) {
+    print(ii)
+    d10X[[ii]]=scoreCellCycle(d10X[[ii]])
+}
+
 
 if(args$DEBUG) {
 
@@ -76,7 +91,23 @@ if(args$DEBUG) {
 }
 
 
-d10X.int = lapply(d10X,FUN=SCTransform)
+
+##############################################################################
+# Do SCTransform
+#
+cat("\nSCTransform\n")
+
+d10X.int=list()
+for(ii in seq(d10X)) {
+    print(ii)
+    d10X.int[[ii]]=SCTransform(d10X[[ii]],vars.to.regress = c('S.Score', 'G2M.Score'))
+}
+
+##############################################################################
+# Do Integration0
+#
+cat("\nSCTransform\n")
+
 features <- SelectIntegrationFeatures(object.list = d10X.int, nfeatures = 3000)
 d10X.int <- PrepSCTIntegration(object.list = d10X.int, anchor.features = features)
 
@@ -92,33 +123,32 @@ d10X.integrate <- RunPCA(d10X.integrate, verbose = FALSE)
 d10X.integrate <- RunUMAP(d10X.integrate, reduction = "pca", dims = 1:30)
 
 DimPlot(d10X.integrate,reduction="umap") + scale_color_brewer(palette="Paired")
-so=d10X.integrate
+
 cellCycle.genes = getCellCycleGenes(glbs$genome)
+
 so=CellCycleScoring(so,
                     s.features=cellCycle.genes$s.genes,
                     g2m.features=cellCycle.genes$g2m.genes,
                     set.ident=T
                     )
 
-DimPlot(so,reduction="umap",group.by="Phase")
+cc.meta.data=so@meta.data[,c("S.Score","G2M.Score","Phase")]
 
+d10X.integrate=AddMetaData(d10X.integrate,cc.meta.data$Phase,"Phase")
+d10X.integrate=AddMetaData(d10X.integrate,cc.meta.data$G2M.Score,"G2M.Score")
+d10X.integrate=AddMetaData(d10X.integrate,cc.meta.data$S.Score,"S.Score")
+d10X.integrate=AddMetaData(d10X.integrate,cc.meta.data$S.Score-cc.meta.data$G2M.Score,"CC.Difference")
+
+Idents(d10X.integrate)="Phase"
+
+pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"PostIntegrateCC.pdf"),width=11,height=8.5)
+plotCellCycle(d10X.integrate,"Post Integration CC Regression")
+DimPlot(d10X.integrate,reduction="umap",group.by="Phase")
 dev.off()
-stop("BREAK-POINT 101")
 
-##
-# Cell-Cycle Scoring and Regression
-# https://satijalab.org/seurat/archive/v3.1/cell_cycle_vignette.html
-#
+halt("BREAK-POINT 149")
 
-ap$NFEATURES=5000
-
-so=d10X[[1]]
-
-cellCycle.genes = getCellCycleGenes(glbs$genome)
-
-so <- NormalizeData(so)
-so <- FindVariableFeatures(so, selection.method="vst", nfeatures = ap$NFEATURES)
-
+so=d10X.integrate
 
 pv1=VariableFeaturePlot(so)
 top10 <- head(VariableFeatures(so), 10)
@@ -127,42 +157,12 @@ pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"VariableFeatures.pdf"),width=11,h
 print(pv2)
 dev.off()
 
-so <- ScaleData(so, features=rownames(so))
-
-cellCycle.genes = getCellCycleGenes(glbs$genome)
-
-so=CellCycleScoring(so,
-                    s.features=cellCycle.genes$s.genes,
-                    g2m.features=cellCycle.genes$g2m.genes,
-                    set.ident=T
-                    )
-
-if(interactive()) {
-    stop("\n\nreload from RDS\n\n");
-    #s1=readRDS("ccRegression_nFeat_{{ap$NFEATURES}}_.rda");ap$NFEATURES=len(VariableFeatures(so));stop("BREAK")
-}
-
-s1=ScaleData(so, vars.to.regress = c("S.Score", "G2M.Score"), features = VariableFeatures(so))
-
-#
-# After Cell Cycle regression Ident -> Phase reset to orig.ident
-#
-s1 <- SetIdent(s1,value="orig.ident")
-
-
-saveRDS(s1,cc("ccRegression","nFeat",len(VariableFeatures(so)),".rda"),compress=T)
-
-pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"PostCCRegress.pdf"),width=11,height=8.5)
-
-plotCellCycle(s1,"Post CC Regression")
-
-dev.off()
-
 # PCA
 
 # https://satijalab.org/seurat/archive/v3.0/s13k_tutorial.html
 # Perform linear dimensional reduction
 
+s1=so
 s1=RunPCA(s1,features=VariableFeatures(s1),approx=FALSE)
 
 # # Determine the ‘dimensionality’ of the dataset
