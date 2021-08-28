@@ -8,7 +8,6 @@ pngCairo<-function(filename,width=14,height=8.5,pointsize=12,res=150) {
 mergePNGs<-function(fileSpec) {
     fileRe=gsub("_%\\d+d",".*",fileSpec)
     pdfFile=gsub("_%\\d+d.*",".pdf",fileSpec)
-    browser()
     system2("convert",c(sort(dir_ls(regex=fileRe)),pdfFile),stderr=cc("stderr","mergePNGs","convert",DATE()))
 }
 

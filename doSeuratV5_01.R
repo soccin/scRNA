@@ -155,8 +155,9 @@ for(ii in seq(d10X)) {
 
 pcc=list()
 cat("\nPlotCellCycle\n")
+
 for(ii in seq(d10X)) {
-    pcc[[ii]]=plotCellCycle(preProcessSO(d10X[[ii]]))
+    pcc[[ii]]=plotCellCycle(preProcessSO(d10X[[ii]]),names(d10X)[ii])
 }
 
 pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"CellCycle.pdf"),width=11,height=8.5)
