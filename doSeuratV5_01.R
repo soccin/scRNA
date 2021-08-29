@@ -197,7 +197,7 @@ if(args$MERGE & len(d10X)>1) {
 #
 cat("\nDoQCandFilter\n")
 
-Idents(d10X)<-"orig.ident"
+Idents(d10X[[1]])<-"orig.ident"
 
 pFile=cc("seuratQC",args$PROJNAME,plotNo(),"Filter_%03d.png")
 pngCairo(file=pFile,height=8.5,width=11)
