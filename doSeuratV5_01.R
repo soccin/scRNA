@@ -162,20 +162,20 @@ for(ii in seq(d10X)) {
 
 pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"CellCycle.pdf"),width=11,height=8.5)
 
-if(len(pcc)>1) {
-    nPages=ceiling(len(pcc)/4)
-    for(ii in seq(nPages)) {
-        jj=(1:4)+4*(ii-1)
-        jj=intersect(seq(pcc),jj)
-        pOut=pcc[jj]
-        if(len(pOut)<4){
-            pOut=c(pOut,rep(list(ggplot()+theme_void()),4-len(jj)))
-        }
-        print(wrap_plots(pOut,ncol=2))
-    }
-} else {
-    print(pcc[[1]])
-}
+# if(len(pcc)>1) {
+#     nPages=ceiling(len(pcc)/4)
+#     for(ii in seq(nPages)) {
+#         jj=(1:4)+4*(ii-1)
+#         jj=intersect(seq(pcc),jj)
+#         pOut=pcc[jj]
+#         if(len(pOut)<4){
+#             pOut=c(pOut,rep(list(ggplot()+theme_void()),4-len(jj)))
+#         }
+#         print(wrap_plots(pOut,ncol=2))
+#     }
+# } else {
+    print(pcc)
+#}
 
 dev.off()
 
@@ -196,6 +196,8 @@ if(args$MERGE & len(d10X)>1) {
 # Do Stage-I QC
 #
 cat("\nDoQCandFilter\n")
+
+Idents(d10X)<-"orig.ident"
 
 pFile=cc("seuratQC",args$PROJNAME,plotNo(),"Filter_%03d.png")
 pngCairo(file=pFile,height=8.5,width=11)
