@@ -122,8 +122,6 @@ d10X.integrate <- IntegrateData(anchorset = anchors, normalization.method = "SCT
 d10X.integrate <- RunPCA(d10X.integrate, verbose = FALSE)
 d10X.integrate <- RunUMAP(d10X.integrate, reduction = "pca", dims = 1:30)
 
-DimPlot(d10X.integrate,reduction="umap") + scale_color_brewer(palette="Paired")
-
 cellCycle.genes = getCellCycleGenes(glbs$genome)
 
 so=CellCycleScoring(d10X.integrate,
@@ -146,8 +144,9 @@ plotCellCycle(d10X.integrate,"Post Integration CC Regression")
 DimPlot(d10X.integrate,reduction="umap",group.by="Phase")
 dev.off()
 
-halt("BREAK-POINT 149")
+stop("BREAK-POINT 149")
 
+Idents(d10X.integrate)<-"orig.ident"
 so=d10X.integrate
 
 pv1=VariableFeaturePlot(so)
