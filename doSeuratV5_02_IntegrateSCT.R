@@ -144,11 +144,9 @@ plotCellCycle(d10X.integrate,"Post Integration CC Regression")
 DimPlot(d10X.integrate,reduction="umap",group.by="Phase")
 dev.off()
 
-stop("BREAK-POINT 149")
-
 Idents(d10X.integrate)<-"orig.ident"
-so=d10X.integrate
 
+so=FindVariableFeatures(d10X.integrate)
 pv1=VariableFeaturePlot(so)
 top10 <- head(VariableFeatures(so), 10)
 pv2 <- LabelPoints(plot = pv1, points = top10, repel = TRUE, xnudge=0, ynudge=0)
@@ -172,38 +170,17 @@ s1=RunPCA(s1,features=VariableFeatures(s1),approx=FALSE)
 # 3 principal components therefore represent a robust compression of the dataset. However,
 # how many componenets should we choose to include? 10? 20? 100?
 
-# In Macosko et al, (http://www.cell.com/abstract/S0092-8674(15)00549-8)
-# we implemented a resampling test inspired by the JackStraw procedure. We randomly permute
-# a subset of the data (1% by default) and rerun PCA, constructing a ‘null distribution’ of
-# feature scores, and repeat this procedure. We identify ‘significant’ PCs as those who
-# have a strong enrichment of low p-value features.
-
-nReps=100
 nDims=50 # Default
-s1 <- JackStraw(s1, num.replicate = nReps, dims=nDims)
 
-saveRDS(s1,cc("jsSampling","nReps",nReps,"Dims",nDims,".rda"),compress=T)
-
-s1 <- ScoreJackStraw(s1, dims = 1:nDims)
-
-p.js1=JackStrawPlot(s1, dims = 1:nDims)
 p.elbow=ElbowPlot(s1,ndims=nDims) + geom_hline(yintercept=0,color="grey",size=2)
 pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"PCADimMetric.pdf"),width=11,height=8.5)
-print(p.js1)
 print(p.elbow)
 dev.off()
 
-# stop("CONTINUE")
-# if(interactive()) {s1=readRDS("jsSampling_nReps_100_Dims_50_.rda")}
-
-#
-# Look at PCADimMetric.pdf to decided
-#
-
 #stop("\n\n CHECK PCA AND CONTINUE\n\n")
 
-ap$NDIMS=40
-nDims=40
+ap$NDIMS=20
+nDims=20
 
 ap$ClusterResolutions=c(0.1,0.2,0.5,0.8)
 
@@ -212,7 +189,7 @@ s1 <- FindClusters(s1, resolution = ap$ClusterResolutions)
 s1 <- RunUMAP(s1, dims = 1:nDims)
 
 library(pals)
-maxClusters=s1@meta.data %>% tibble %>% distinct(RNA_snn_res.0.8) %>% pull %>% len
+maxClusters=s1@meta.data %>% tibble %>% distinct(integrated_snn_res.0.8) %>% pull %>% len
 if(maxClusters>33) {
     save.image(cc("CHECKPOINT",DATE(),".RData"),compress=T)
     stop("\n\nTOO MANY CLUSTERS\n\n")
@@ -220,9 +197,9 @@ if(maxClusters>33) {
 
 pal1=c(cols25(maxClusters),brewer.dark2(8))
 pu=list()
-pu[[1]]=DimPlot(s1, reduction = "umap", label=T, group.by="RNA_snn_res.0.1", label.size=6) + scale_color_manual(values=pal1) + ggtitle("RNA_snn_res.0.1")
-pu[[2]]=DimPlot(s1, reduction = "umap", label=T, group.by="RNA_snn_res.0.2", label.size=6) + scale_color_manual(values=pal1) + ggtitle("RNA_snn_res.0.2")
-pu[[3]]=DimPlot(s1, reduction = "umap", label=T, group.by="RNA_snn_res.0.5", label.size=6) + scale_color_manual(values=pal1) + ggtitle("RNA_snn_res.0.5")
+pu[[1]]=DimPlot(s1, reduction = "umap", label=T, group.by="integrated_snn_res.0.1", label.size=6) + scale_color_manual(values=pal1) + ggtitle("integrated_snn_res.0.1")
+pu[[2]]=DimPlot(s1, reduction = "umap", label=T, group.by="integrated_snn_res.0.2", label.size=6) + scale_color_manual(values=pal1) + ggtitle("integrated_snn_res.0.2")
+pu[[3]]=DimPlot(s1, reduction = "umap", label=T, group.by="integrated_snn_res.0.5", label.size=6) + scale_color_manual(values=pal1) + ggtitle("integrated_snn_res.0.5")
 pu[[4]]=DimPlot(s1, reduction = "umap", group.by="orig.ident") + scale_color_brewer(palette="Paired")
 pu[[5]]=DimPlot(s1, reduction = "umap", group.by="Phase")
 
@@ -230,8 +207,7 @@ pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"UMAP",nDims,".pdf"),width=11,heig
 print(pu)
 dev.off()
 
-clusterRes="RNA_snn_res.0.5"
-#s1=SetIdent(s1,value="RNA_snn_res.0.2")
+clusterRes="integrated_snn_res.0.5"
 s1=SetIdent(s1,value=clusterRes)
 
 clusterMarkers=FindAllMarkers(s1,only.pos=TRUE,logfc.threshold=0.25,min.pct = 0.25)
