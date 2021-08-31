@@ -281,6 +281,7 @@ png(filename=cmFile,
 print(plt.cmark)
 
 dev.off()
+mergePNGs(cmFile)
 
 g1=cl %>% distinct(cluster,.keep_all=T) %>% pull(gene)
 g2=cl %>% filter(!(gene %in% g1)) %>% distinct(cluster,.keep_all=T) %>% pull(gene)
