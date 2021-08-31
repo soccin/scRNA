@@ -247,7 +247,7 @@ ll=c(list(GeneCounts=geneCounts,AllCluster=cl),clusterMarkerTbl)
 
 xfile=cc("tblClusterMarkers","",clusterRes,"FDR",FDR.cut,"logFC",logFC.cut)
 
-write.xlsx(ll,paste0(xfile,".xlsx"))
+write.xlsx(ll,paste0(xfile,".xlsx"),overwrite=T)
 
 args$algoParams=ap
 obj=list(
