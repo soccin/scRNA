@@ -167,8 +167,8 @@ plotCellCycle<-function(sc,title="") {
 
 plotClusterMarkers<-function(cli,s0,clusterColors) {
     # High Quality Genes First
-    cli=cli %>% arrange(desc(avg_logFC+lOR))
-    gHQ=cli %>% filter(lOR>2 & avg_logFC>2) %>% pull(gene)
+    cli=cli %>% arrange(desc(avg_log2FC+lOR))
+    gHQ=cli %>% filter(lOR>2 & avg_log2FC>2) %>% pull(gene)
     gMQ=cli %>% filter(lOR>2) %>% pull(gene)
     gLQ=pull(cli,gene)
 

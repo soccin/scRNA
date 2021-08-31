@@ -222,14 +222,16 @@ filterCLTable<-function(clm) {
         mutate(lor.1=log((pct.1+ps)/(1-pct.1+ps))) %>%
         mutate(lor.2=log((pct.2+ps)/(1-pct.2+ps))) %>%
         mutate(lOR=lor.1-lor.2) %>%
-        arrange(desc(avg_logFC))
+        arrange(desc(avg_log2FC))
 }
 
 #
 
+halt("BUG")
+
 cl=filterCLTable(clusterMarkers) %>%
-    dplyr::select(cluster,gene,p_val_adj,avg_logFC,pct.1,pct.2,lOR) %>%
-    filter(p_val_adj<FDR.cut & avg_logFC>logFC.cut)
+    dplyr::select(cluster,gene,p_val_adj,avg_log2FC,pct.1,pct.2,lOR) %>%
+    filter(p_val_adj<FDR.cut & avg_log2FC>logFC.cut)
 
 clusters=cl %>% distinct(cluster) %>% arrange(cluster) %>% pull %>% levels
 
@@ -292,7 +294,7 @@ dot.gene.lOR=cl %>%
 
 dot.gene.lFC=cl %>%
     filter(gene %in% c(g1,g2)) %>%
-    arrange(desc(avg_logFC)) %>%
+    arrange(desc(avg_log2FC)) %>%
     distinct(gene,.keep_all=T) %>%
     head(12) %>%
     pull(gene)
