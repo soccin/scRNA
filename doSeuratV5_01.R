@@ -14,6 +14,7 @@ usage: doSeuratV5_01.R [DEBUG=${DEBUG}] [MERGE=${MERGE}] [PROJNAME=${PROJNAME}] 
 
 "
 
+
 cArgs=commandArgs(trailing=T)
 args=list(DEBUG=FALSE,MERGE=TRUE,PROJNAME="scRNA",DOWNSAMPLE=0.1)
 usage=str_interp(usage,args)
@@ -50,6 +51,14 @@ if(len(argv)<1) {
     cat(usage)
     quit()
 }
+
+if(R.Version()$major<4) {
+    cat(usage)
+    cat("\n\nThis script needs version(R).major>=4\n\n")
+    quit()
+}
+
+
 cat("\n=========================================================\n")
 args[["10XDirs"]]=paste0(argv,collapse=", ")
 cat(str(args))
