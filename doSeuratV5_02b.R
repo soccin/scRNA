@@ -7,13 +7,30 @@
 suppressPackageStartupMessages(require(stringr))
 
 usage="
-usage: doSeuratV5_02b.R PARAMS.yaml
+usage: doSeuratV5_02b.R [MODULE_FILE=file] PARAMS.yaml
 
     PARAMS.yaml     parameter file from pass2[integration]
+
+    OPTIONAL:
+        MODULE_FILE     TSV file with list of genes for modules
 
 "
 
 cArgs=commandArgs(trailing=T)
+
+#
+# Separate out any options arguments
+#
+optionals=grep("=",cArgs,value=T)
+
+oArgs=list(MODULE_FILE=NULL)
+if(len(optionals)>0) {
+    require(stringr, quietly = T, warn.conflicts=F)
+    parseArgs=str_match(optionals,"(.*)=(.*)")
+    aa=apply(parseArgs,1,function(x){oArgs[[str_trim(x[2])]]<<-str_trim(x[3])})
+}
+
+cArgs=grep("=",cArgs,value=T,invert=T)
 
 if(len(cArgs)!=1) {
     cat(usage)
@@ -61,8 +78,9 @@ plotNo<-makeAutoIncrementor(20)
 #
 ##########################################################################
 
-
+cat("\nLoading pass2 RDA file ...")
 d10X.integrate=readRDS(args$PASS2.RDAFile)
+cat(" done\n\n")
 cat("digest=",digest::digest(d10X.integrate),"\n")
 
 ##########################################################################
@@ -71,7 +89,7 @@ cat("digest=",digest::digest(d10X.integrate),"\n")
 # https://satijalab.org/seurat/archive/v3.0/s13k_tutorial.html
 # Perform linear dimensional reduction
 
-s1=so
+s1=d10X.integrate
 s1=RunPCA(s1,features=VariableFeatures(s1),approx=FALSE)
 
 # # Determine the ‘dimensionality’ of the dataset
@@ -119,9 +137,26 @@ pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"UMAP",nDims,".pdf"),width=11,heig
 print(pu)
 dev.off()
 
+if(!is.null(is.null(oArgs$MODULE_FILE))) {
+    tmp=read_tsv(oArgs$MODULE_FILE)
+    modules=split(tmp$gene,tmp$celltype)
+    s1=AddModuleScore(s1,features=modules,name="Modules")
+    pm=list()
+}
+
 #
 # Collect any changes in globals and parameters
 #
 
 args$algoParams=ap
 args$glbs=glbs
+args$optionals=oArgs
+args$GIT.Describe=git.describe(SDIR)
+args.digest.orig=digest::digest(args)
+
+args$PASS2b.RDAFile=cc("pass_02b",args.digest.orig,"s1",".rda")
+write_yaml(args,cc("pass_02b","PARAMS.yaml"))
+
+saveRDS(s1,args$PASS2b.RDAFile,compress=T)
+
+
