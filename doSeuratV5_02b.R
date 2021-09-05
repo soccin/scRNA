@@ -1,7 +1,7 @@
 suppressPackageStartupMessages(require(stringr))
 
 usage="
-usage: doSeuratV5_02.R PARAMS.yaml
+usage: doSeuratV5_02b.R PARAMS.yaml
 
     PARAMS.yaml     parameter file from pass1
 
@@ -39,17 +39,15 @@ suppressPackageStartupMessages({
     library(Seurat)
     library(patchwork)
     library(tidyverse)
-    library(openxlsx)
 })
 
 source(file.path(SDIR,"seuratTools.R"))
 source(file.path(SDIR,"plotTools.R"))
-source(file.path(SDIR,"doQCandFilter.R"))
 
 glbs=args$glbs
 ap=args$algoParams
 
-plotNo<-makeAutoIncrementor(10)
+plotNo<-makeAutoIncrementor(20)
 
 ##########################################################################
 #
@@ -58,112 +56,12 @@ plotNo<-makeAutoIncrementor(10)
 ##########################################################################
 
 
-d10X=readRDS(args$PASS1.RDAFile)
+###d10X=readRDS(args$PASS1.RDAFile)
 
 glb.digest=digest::digest(d10X)
 cat("digest=",digest::digest(d10X),"\n")
 
-cat("\nDoQCandFilter\n")
-for(ii in seq(d10X)) {
-    print(ii)
-    ret=doQCandFilter(d10X[[ii]], ap$MIN_NCOUNT_RNA, ap$MIN_FEATURE_RNA, ap$PCT_MITO)
-    d10X[[ii]]=ret$so
-}
-
-
-##############################################################################
-# Check Cell Cycle
-#
-cat("\nScoreCellCycle\n")
-
-for(ii in seq(d10X)) {
-    print(ii)
-    d10X[[ii]]=scoreCellCycle(d10X[[ii]])
-}
-
-
-if(args$DEBUG) {
-
-    c("\n\nDEBUG SET; Subset data\n\n")
-    set.seed(ap$SEED)
-    cat("\nDEBUG::subset\n")
-    for(ii in seq(d10X)) {
-        print(ii)
-        xx=d10X[[ii]]
-        d10X[[ii]]=subset(xx,cells=Cells(xx)[runif(nrow(xx@meta.data))<args$DOWNSAMPLE])
-    }
-    cat("digest=",digest::digest(d10X),"\n")
-
-}
-
-
-
-##############################################################################
-# Do SCTransform
-# - This is where the cell cycle gets regressed out
-#
-cat("\nSCTransform\n")
-
-d10X.int=list()
-for(ii in seq(d10X)) {
-    print(ii)
-    d10X.int[[ii]]=SCTransform(d10X[[ii]],vars.to.regress = c('S.Score', 'G2M.Score'))
-}
-
-##############################################################################
-# Do Integration
-#
-cat("\nSCTransform\n")
-
-features <- SelectIntegrationFeatures(object.list = d10X.int, nfeatures = 3000)
-d10X.int <- PrepSCTIntegration(object.list = d10X.int, anchor.features = features)
-
-anchors <- FindIntegrationAnchors(
-        object.list = d10X.int,
-        normalization.method = "SCT",
-        anchor.features = features
-        )
-
-d10X.integrate <- IntegrateData(anchorset = anchors, normalization.method = "SCT")
-
-d10X.integrate <- RunPCA(d10X.integrate, verbose = FALSE)
-d10X.integrate <- RunUMAP(d10X.integrate, reduction = "pca", dims = 1:30)
-
-cellCycle.genes = getCellCycleGenes(glbs$genome)
-
-so=CellCycleScoring(d10X.integrate,
-                    s.features=cellCycle.genes$s.genes,
-                    g2m.features=cellCycle.genes$g2m.genes,
-                    set.ident=T
-                    )
-
-cc.meta.data=so@meta.data[,c("S.Score","G2M.Score","Phase")]
-
-d10X.integrate=AddMetaData(d10X.integrate,cc.meta.data$Phase,"Phase")
-d10X.integrate=AddMetaData(d10X.integrate,cc.meta.data$G2M.Score,"G2M.Score")
-d10X.integrate=AddMetaData(d10X.integrate,cc.meta.data$S.Score,"S.Score")
-d10X.integrate=AddMetaData(d10X.integrate,cc.meta.data$S.Score-cc.meta.data$G2M.Score,"CC.Difference")
-
-Idents(d10X.integrate)="Phase"
-
-pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"PostIntegrateCC.pdf"),width=11,height=8.5)
-plotCellCycle(d10X.integrate,"Post Integration CC Regression")
-DimPlot(d10X.integrate,reduction="umap",group.by="Phase")
-dev.off()
-
-Idents(d10X.integrate)<-"orig.ident"
-
-
-
-
-so=FindVariableFeatures(d10X.integrate)
-pv1=VariableFeaturePlot(so)
-top10 <- head(VariableFeatures(so), 10)
-pv2 <- LabelPoints(plot = pv1, points = top10, repel = TRUE, xnudge=0, ynudge=0)
-pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"VariableFeatures.pdf"),width=11,height=8.5)
-print(pv2)
-dev.off()
-
+##########################################################################
 # PCA
 
 # https://satijalab.org/seurat/archive/v3.0/s13k_tutorial.html
