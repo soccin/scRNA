@@ -170,7 +170,7 @@ args$algoParams=ap
 args$GIT.Describe=git.describe(SDIR)
 args.digest.orig=digest::digest(args)
 
-args$PASS2.RDAFile=cc("pass_01",args.digest.orig,"d10X.integrate",".rda")
+args$PASS2.RDAFile=cc("pass_02a",args.digest.orig,"d10X.integrate",".rda")
 write_yaml(args,cc("pass_02","PARAMS.yaml"))
 
 saveRDS(d10X.integrate,args$PASS2.RDAFile,compress=T)
