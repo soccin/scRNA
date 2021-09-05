@@ -2,6 +2,19 @@ library(Seurat)
 library(fs)
 library(ggpubr)
 
+git.describe<-function(REPO="."){
+
+    system2(
+        "git",
+        c(
+            paste0("--git-dir=",file.path(REPO,".git")),
+            paste0("--work-tree=",REPO),
+            "describe","--tags", "--always", "--long", "--dirty='-UNCOMMITED'"),
+        stdout=T
+        )
+
+}
+
 if(!exists("glbs")) {
     glbs=list()
 }

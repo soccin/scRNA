@@ -20,9 +20,8 @@ if(R.Version()$major<4) {
     quit()
 }
 
-source("seuratTools.R")
-source("plotTools.R")
-source("doQCandFilter.R")
+source(file.path(SDIR,"seuratTools.R"))
+source(file.path(SDIR,"plotTools.R"))
 
 library(yaml)
 args=read_yaml(cArgs[1])

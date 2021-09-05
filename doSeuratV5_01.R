@@ -75,7 +75,6 @@ suppressPackageStartupMessages({
 source(file.path(SDIR,"seuratTools.R"))
 source(file.path(SDIR,"plotTools.R"))
 source(file.path(SDIR,"doQCandFilter.R"))
-source(file.path(SDIR,"gitTools.R"))
 
 ##############################################################################
 # Set up global variables, parameters and defaults
