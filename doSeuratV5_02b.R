@@ -166,9 +166,11 @@ if(!is.null(oArgs$MODULE_FILE)) {
         pm[[ii]]=pp[[1]] + ggtitle(names(modules)[ii])
     }
     cat(" done\n\n")
-    pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"ModuleScores",".pdf"),width=11,height=8.5)
+    pfile=cc("seuratQC",args$PROJNAME,plotNo(),"ModuleScores_%03d.png")
+    pngCairo(pfile,width=11,height=8.5)
     print(paginatePlots(pm,2,3,FALSE))
     dev.off()
+    mergePNGs(pfile)
 
 }
 
