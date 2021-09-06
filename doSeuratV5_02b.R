@@ -47,7 +47,12 @@ library(yaml)
 args=read_yaml(cArgs[1])
 
 if(Sys.getenv("SDIR")=="") {
-    SDIR="."
+    file.arg=grep("--file=",commandArgs(),value=T)
+    if(len(file.arg)>0) {
+        SDIR=dirname(gsub(".*=","",file.arg))
+    } else {
+        SDIR="."
+    }
 } else {
     SDIR=Sys.getenv("SDIR")
 }
@@ -89,8 +94,10 @@ cat("digest=",digest::digest(d10X.integrate),"\n")
 # https://satijalab.org/seurat/archive/v3.0/s13k_tutorial.html
 # Perform linear dimensional reduction
 
+cat("\nComputing PCA ...")
 s1=d10X.integrate
 s1=RunPCA(s1,features=VariableFeatures(s1),approx=FALSE)
+cat(" done\n\n")
 
 # # Determine the ‘dimensionality’ of the dataset
 
@@ -114,6 +121,7 @@ nDims=20
 
 ap$ClusterResolutions=c(0.1,0.2,0.5,0.8)
 
+cat("\nClustering ...")
 s1 <- FindNeighbors(s1, dims = 1:nDims)
 s1 <- FindClusters(s1, resolution = ap$ClusterResolutions)
 s1 <- RunUMAP(s1, dims = 1:nDims)
@@ -136,17 +144,39 @@ pu[[5]]=DimPlot(s1, reduction = "umap", group.by="Phase")
 pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"UMAP",nDims,".pdf"),width=11,height=8.5)
 print(pu)
 dev.off()
+cat(" done\n\n")
 
 if(!is.null(is.null(oArgs$MODULE_FILE))) {
-    tmp=read_tsv(oArgs$MODULE_FILE)
-    modules=split(tmp$gene,tmp$celltype)
+    oArgs$MODULE_FILE=normalizePath(oArgs$MODULE_FILE)
+    DefaultAssay(s1)="SCT"
+    moduleTbl=read_tsv(oArgs$MODULE_FILE)
+    colnames(moduleTbl)=c("Module","Gene")
+    modules=split(moduleTbl$Gene,moduleTbl$Module)
     s1=AddModuleScore(s1,features=modules,name="Modules")
+
+    cat("\nPlot modules ...")
     pm=list()
+    for(ii in seq(len(modules))) {
+        print(ii)
+        pp=FeaturePlot(s1,
+            features=paste0("Modules",ii),
+            max.cutoff="q95",min.cutoff="q05",
+            combine=F)
+
+        pm[[ii]]=pp[[1]] + ggtitle(names(modules)[ii])
+    }
+    cat(" done\n\n")
+    pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"ModuleScores",".pdf"),width=11,height=8.5)
+    paginatePlots(pm,2,3,FALSE)
+    dev.off()
+
 }
 
 #
 # Collect any changes in globals and parameters
 #
+
+DefaultAssay(s1)="integrated"
 
 args$algoParams=ap
 args$glbs=glbs
@@ -157,6 +187,7 @@ args.digest.orig=digest::digest(args)
 args$PASS2b.RDAFile=cc("pass_02b",args.digest.orig,"s1",".rda")
 write_yaml(args,cc("pass_02b","PARAMS.yaml"))
 
+cat("\nSaving rda object ...")
 saveRDS(s1,args$PASS2b.RDAFile,compress=T)
-
+cat(" done\n\n")
 
