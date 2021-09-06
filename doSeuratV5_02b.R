@@ -146,7 +146,7 @@ print(pu)
 dev.off()
 cat(" done\n\n")
 
-if(!is.null(is.null(oArgs$MODULE_FILE))) {
+if(!is.null(oArgs$MODULE_FILE)) {
     oArgs$MODULE_FILE=normalizePath(oArgs$MODULE_FILE)
     DefaultAssay(s1)="SCT"
     moduleTbl=read_tsv(oArgs$MODULE_FILE)
@@ -167,7 +167,7 @@ if(!is.null(is.null(oArgs$MODULE_FILE))) {
     }
     cat(" done\n\n")
     pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"ModuleScores",".pdf"),width=11,height=8.5)
-    paginatePlots(pm,2,3,FALSE)
+    print(paginatePlots(pm,2,3,FALSE))
     dev.off()
 
 }
