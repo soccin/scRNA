@@ -134,11 +134,12 @@ if(maxClusters>33) {
 }
 
 pal1=c(cols25(maxClusters),brewer.dark2(8))
+pal2=c(brewer.paired(20))
 pu=list()
 pu[[1]]=DimPlot(s1, reduction = "umap", label=T, group.by="integrated_snn_res.0.1", label.size=6) + scale_color_manual(values=pal1) + ggtitle("integrated_snn_res.0.1")
 pu[[2]]=DimPlot(s1, reduction = "umap", label=T, group.by="integrated_snn_res.0.2", label.size=6) + scale_color_manual(values=pal1) + ggtitle("integrated_snn_res.0.2")
 pu[[3]]=DimPlot(s1, reduction = "umap", label=T, group.by="integrated_snn_res.0.5", label.size=6) + scale_color_manual(values=pal1) + ggtitle("integrated_snn_res.0.5")
-pu[[4]]=DimPlot(s1, reduction = "umap", group.by="orig.ident") + scale_color_brewer(palette="Paired")
+pu[[4]]=DimPlot(s1, reduction = "umap", group.by="orig.ident") + scale_color_manual(values=pal2)
 pu[[5]]=DimPlot(s1, reduction = "umap", group.by="Phase")
 
 pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"UMAP",nDims,".pdf"),width=11,height=8.5)
@@ -168,7 +169,7 @@ if(!is.null(oArgs$MODULE_FILE)) {
     cat(" done\n\n")
     pfile=cc("seuratQC",args$PROJNAME,plotNo(),"ModuleScores_%03d.png")
     pngCairo(pfile,width=11,height=8.5)
-    print(paginatePlots(pm,2,3,FALSE))
+    print(paginatePlots(pm,2,2,FALSE))
     dev.off()
     mergePNGs(pfile)
 
