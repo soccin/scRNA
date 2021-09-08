@@ -20,6 +20,17 @@ if(R.Version()$major<4) {
     quit()
 }
 
+if(Sys.getenv("SDIR")=="") {
+    file.arg=grep("--file=",commandArgs(),value=T)
+    if(len(file.arg)>0) {
+        SDIR=dirname(gsub(".*=","",file.arg))
+    } else {
+        SDIR="."
+    }
+} else {
+    SDIR=Sys.getenv("SDIR")
+}
+
 source(file.path(SDIR,"seuratTools.R"))
 source(file.path(SDIR,"plotTools.R"))
 
@@ -47,7 +58,7 @@ suppressPackageStartupMessages({
 #
 ##########################################################################
 
-obj=readRDS(args$PASS2.RDAFile)
+obj=readRDS(args$PASS2b.RDAFile)
 
 
 
