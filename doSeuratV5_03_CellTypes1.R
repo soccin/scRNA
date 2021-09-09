@@ -91,6 +91,36 @@ s1=AddMetaData(object=s1,metadata=factor(ss$Module),col.name="Module")
 s1=AddMetaData(object=s2,metadata=ss$Score,col.name="Module.Score")
 
 
+require(ggforce)
 
+pcc=list()
+pltClusterModules<-function(dd,pageI) {
+    ggplot(dd,aes(Module,PCT,fill=Module)) +
+        geom_bar(stat="identity") +
+        facet_wrap_paginate(~Cluster,ncol=3,nrow=2,page=pageI) +
+        scale_fill_manual(values=cols25()) +
+        theme_light() +
+        theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+        ggtitle(paste("Cluster Resolution",clusterI))
+}
+for(clusterI in grep("integrated_snn",colnames(s1@meta.data),value=T)) {
+    print(clusterI)
+    sc=s1@meta.data %>%
+        count(.data[[clusterI]],Module,.drop=F) %>%
+        tibble %>%
+        rename(Cluster=1) %>%
+        group_by(Cluster) %>%
+        mutate(PCT=n/sum(n)) %>%
+        ungroup
+    pg=list()
+    pg[[1]]=pltClusterModules(sc,1)
+    for(jj in 2:n_pages(pg[[1]])) {
+        print(jj)
+        pg[[jj]]=pltClusterModules(sc,jj)
+    }
+    pcc=c(pcc,pg)
+}
 
-
+pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"ModuleCluster",args$algoParams$NDIMS,".pdf"),width=14,height=8.5)
+print(pcc)
+dev.off()
