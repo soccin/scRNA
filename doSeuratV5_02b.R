@@ -168,7 +168,7 @@ if(!is.null(oArgs$MODULE_FILE)) {
     cat(" done\n\n")
     pfile=cc("seuratQC",args$PROJNAME,plotNo(),"ModuleScores_%03d.png")
     pngCairo(pfile,width=11,height=8.5)
-    print(paginatePlots(pm,2,3,FALSE))
+    print(paginatePlots(pm,2,2,FALSE))
     dev.off()
     mergePNGs(pfile)
 
