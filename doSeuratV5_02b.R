@@ -134,17 +134,31 @@ if(maxClusters>33) {
 }
 
 pal1=c(cols25(maxClusters),brewer.dark2(8))
+pal2=c(brewer.paired(20))
 pu=list()
 pu[[1]]=DimPlot(s1, reduction = "umap", label=T, group.by="integrated_snn_res.0.1", label.size=6) + scale_color_manual(values=pal1) + ggtitle("integrated_snn_res.0.1")
 pu[[2]]=DimPlot(s1, reduction = "umap", label=T, group.by="integrated_snn_res.0.2", label.size=6) + scale_color_manual(values=pal1) + ggtitle("integrated_snn_res.0.2")
 pu[[3]]=DimPlot(s1, reduction = "umap", label=T, group.by="integrated_snn_res.0.5", label.size=6) + scale_color_manual(values=pal1) + ggtitle("integrated_snn_res.0.5")
-pu[[4]]=DimPlot(s1, reduction = "umap", group.by="orig.ident") + scale_color_brewer(palette="Paired")
+pu[[4]]=DimPlot(s1, reduction = "umap", group.by="orig.ident") + scale_color_manual(values=cols25())
 pu[[5]]=DimPlot(s1, reduction = "umap", group.by="Phase")
 
 pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"UMAP",nDims,".pdf"),width=11,height=8.5)
 print(pu)
 dev.off()
 cat(" done\n\n")
+
+md=s1@meta.data %>% rownames_to_column("CellID") %>% tibble
+pc=list()
+for(clusterI in grep("integrated_snn_res",colnames(md),value=T)) {
+    cLevels=sort(as.numeric(levels(md[[clusterI]])))
+    cTbl=md %>% count(orig.ident,.data[[clusterI]]) %>% rename(Clusters=all_of(clusterI)) %>% mutate(Clusters=factor(Clusters,levels=cLevels))
+    pc[[len(pc)+1]]=ggplot(cTbl,aes(y=Clusters,x=n,fill=orig.ident)) + geom_bar(position="fill", stat="identity") + scale_fill_manual(values=cols25()) + theme_light(base_size=18) + ggtitle(clusterI)
+    pc[[len(pc)+1]]=ggplot(cTbl,aes(fill=Clusters,x=n,y=orig.ident)) + geom_bar(position="fill", stat="identity") + scale_fill_manual(values=pal1) + theme_light(base_size=18) + ggtitle(clusterI)
+}
+
+pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"ClusterChart",nDims,".pdf"),width=14,height=8.5)
+print(pc)
+dev.off()
 
 if(!is.null(oArgs$MODULE_FILE)) {
     oArgs$MODULE_FILE=normalizePath(oArgs$MODULE_FILE)
