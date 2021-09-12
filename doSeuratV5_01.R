@@ -205,7 +205,7 @@ if(args$MERGE & len(d10X)>1) {
 # use that for the id's otherwise make them orig.ident
 #
 md=d10X[[1]]@meta.data
-if(is.null(ifargs00$algoParams$SAMPLE_MANIFEST)) {
+if(is.null(args00$algoParams$SAMPLE_MANIFEST)) {
     md$SampleID=md$orig.ident
 } else {
     manifest=read_csv(args00$algoParams$SAMPLE_MANIFEST)
