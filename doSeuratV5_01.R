@@ -83,9 +83,11 @@ source(file.path(SDIR,"doQCandFilter.R"))
 plotNo<-makeAutoIncrementor()
 
 if(file.exists("pass_00_PARAMS.yaml")) {
+    cat("\n   Loading defaults from pass_00_PARAMS.yaml\n\n\n")
     args00=read_yaml("pass_00_PARAMS.yaml")
 } else {
-    cat("\n   Using default pass_00 PARAMS\n\n\n")
+    args00=list()
+    cat("\n   No pass_00_PARAMS file; using default PARAMS\n\n\n")
 }
 
 dataFolders=argv
@@ -204,11 +206,13 @@ if(args$MERGE & len(d10X)>1) {
 # Add SampleID metadata, if there is a manifest
 # use that for the id's otherwise make them orig.ident
 #
+
 md=d10X[[1]]@meta.data
-if(is.null(args00$algoParams$SAMPLE_MANIFEST)) {
+if(is.null(args00$SAMPLE_MANIFEST)) {
     md$SampleID=md$orig.ident
 } else {
-    manifest=read_csv(args00$algoParams$SAMPLE_MANIFEST)
+    args$SAMPLE_MANIFEST=args00$SAMPLE_MANIFEST
+    manifest=read_csv(args00$SAMPLE_MANIFEST)
     md=md %>% rownames_to_column("CELLID") %>% left_join(manifest,by="orig.ident") %>% column_to_rownames("CELLID")
 }
 d10X[[1]]@meta.data=md
