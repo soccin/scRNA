@@ -200,12 +200,25 @@ if(args$MERGE & len(d10X)>1) {
     cat("done\n\n")
 }
 
+#
+# Add SampleID metadata, if there is a manifest
+# use that for the id's otherwise make them orig.ident
+#
+md=d10X[[1]]@meta.data
+if(is.null(ifargs00$algoParams$SAMPLE_MANIFEST)) {
+    md$SampleID=md$orig.ident
+} else {
+    manifest=read_csv(args00$algoParams$SAMPLE_MANIFEST)
+    md=md %>% rownames_to_column("CELLID") %>% left_join(manifest,by="orig.ident") %>% column_to_rownames("CELLID")
+}
+d10X[[1]]@meta.data=md
+
 ##############################################################################
 # Do Stage-I QC
 #
 cat("\nDoQCandFilter\n")
 
-Idents(d10X[[1]])<-"orig.ident"
+Idents(d10X[[1]])<-"SampleID"
 
 pFile=cc("seuratQC",args$PROJNAME,plotNo(),"Filter_%03d.png")
 pngCairo(file=pFile,height=8.5,width=11)

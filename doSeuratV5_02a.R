@@ -148,6 +148,19 @@ d10X.integrate=AddMetaData(d10X.integrate,cc.meta.data$G2M.Score,"G2M.Score")
 d10X.integrate=AddMetaData(d10X.integrate,cc.meta.data$S.Score,"S.Score")
 d10X.integrate=AddMetaData(d10X.integrate,cc.meta.data$S.Score-cc.meta.data$G2M.Score,"CC.Difference")
 
+#
+# Add SampleID metadata, if there is a manifest
+# use that for the id's otherwise make them orig.ident
+#
+md=d10X.integrate@meta.data
+if(is.null(ifargs00$algoParams$SAMPLE_MANIFEST)) {
+    md$SampleID=md$orig.ident
+} else {
+    manifest=read_csv(args00$algoParams$SAMPLE_MANIFEST)
+    md=md %>% rownames_to_column("CELLID") %>% left_join(manifest,by="orig.ident") %>% column_to_rownames("CELLID")
+}
+d10X.integrate@meta.data=md
+
 Idents(d10X.integrate)="Phase"
 
 pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"PostIntegrateCC.pdf"),width=11,height=8.5)
@@ -155,7 +168,7 @@ plotCellCycle(d10X.integrate,"Post Integration CC Regression")
 DimPlot(d10X.integrate,reduction="umap",group.by="Phase")
 dev.off()
 
-Idents(d10X.integrate)<-"orig.ident"
+Idents(d10X.integrate)<-"SampleID"
 
 so=FindVariableFeatures(d10X.integrate)
 pv1=VariableFeaturePlot(so)
