@@ -153,10 +153,11 @@ d10X.integrate=AddMetaData(d10X.integrate,cc.meta.data$S.Score-cc.meta.data$G2M.
 # use that for the id's otherwise make them orig.ident
 #
 md=d10X.integrate@meta.data
-if(is.null(ifargs00$algoParams$SAMPLE_MANIFEST)) {
+if(is.null(args$SAMPLE_MANIFEST)) {
     md$SampleID=md$orig.ident
 } else {
-    manifest=read_csv(args00$algoParams$SAMPLE_MANIFEST)
+    cat("\n\n  Fixing sample names\n\n")
+    manifest=read_csv(args$SAMPLE_MANIFEST)
     md=md %>% rownames_to_column("CELLID") %>% left_join(manifest,by="orig.ident") %>% column_to_rownames("CELLID")
 }
 d10X.integrate@meta.data=md
