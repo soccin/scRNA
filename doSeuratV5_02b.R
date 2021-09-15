@@ -135,12 +135,20 @@ if(maxClusters>33) {
 
 pal1=c(cols25(maxClusters),brewer.dark2(8))
 pal2=c(brewer.paired(20))
+
 pu=list()
-pu[[1]]=DimPlot(s1, reduction = "umap", label=T, group.by="integrated_snn_res.0.1", label.size=6) + scale_color_manual(values=pal1) + ggtitle("integrated_snn_res.0.1")
-pu[[2]]=DimPlot(s1, reduction = "umap", label=T, group.by="integrated_snn_res.0.2", label.size=6) + scale_color_manual(values=pal1) + ggtitle("integrated_snn_res.0.2")
-pu[[3]]=DimPlot(s1, reduction = "umap", label=T, group.by="integrated_snn_res.0.5", label.size=6) + scale_color_manual(values=pal1) + ggtitle("integrated_snn_res.0.5")
-pu[[4]]=DimPlot(s1, reduction = "umap", group.by="SampleID") + scale_color_manual(values=cols25())
-pu[[5]]=DimPlot(s1, reduction = "umap", group.by="Phase")
+for(ci in grep("integrated_snn_",colnames(s1@meta.data),value=T)) {
+
+    clusterLevels=s1@meta.data[[ci]]
+
+    s1@meta.data[[ci]]=factor(as.numeric(as.character(clusterLevels))+1,levels=sort(as.numeric(levels(clusterLevels)))+1)
+
+    pu[[len(pu)+1]] <- DimPlot(s1, reduction = "umap", label=T, group.by=ci, label.size=6) + scale_color_manual(values=pal1) + ggtitle(ci)
+
+}
+
+pu[[len(pu)+1]] <- DimPlot(s1, reduction = "umap", group.by="SampleID") + scale_color_manual(values=cols25())
+pu[[len(pu)+1]] <- DimPlot(s1, reduction = "umap", group.by="Phase")
 
 pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"UMAP",nDims,".pdf"),width=11,height=8.5)
 print(pu)
