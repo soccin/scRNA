@@ -1,15 +1,15 @@
 suppressPackageStartupMessages(require(stringr))
 
 usage="
-usage: doSeuratV5_02.R pass_02b_PARAMS.yaml
+usage: doSeuratV5_02.R pass_02b_PARAMS.yaml PCA_DIMS
 
-    pass_02b_PARAMS.yaml     parameter file from pass2 post PCA
-
+    pass_02b_PARAMS.yaml        Parameter file from pass2 post PCA
+    PCA_DIMS                    Number of PCA Dimensions to use
 "
 
 cArgs=commandArgs(trailing=T)
 
-if(len(cArgs)!=1) {
+if(len(cArgs)!=2) {
     cat(usage)
     quit()
 }
@@ -36,9 +36,12 @@ source(file.path(SDIR,"plotTools.R"))
 
 library(yaml)
 args=read_yaml(cArgs[1])
+nDims=as.numeric(cArgs[2])
 
 glbs=args$glbs
 ap=args$algoParams
+ap$NDIMS=nDims
+ap$ClusterResolutions=c(0.1,0.2,0.5,0.8)
 
 plotNo<-makeAutoIncrementor(20)
 
@@ -60,10 +63,6 @@ suppressPackageStartupMessages({
 
 s1=readRDS(args$PASS2b.RDAFile)
 
-nDims=40
-ap$NDIMS=nDims
-
-ap$ClusterResolutions=c(0.1,0.2,0.5,0.8)
 
 cat("\nClustering ...")
 s1 <- FindNeighbors(s1, dims = 1:nDims)
