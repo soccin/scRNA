@@ -1,21 +1,21 @@
 #'
-#' Phase-II.b
+#' Phase-II.c
 #'
-#' Do ???
+#' Do Find Cluster Markers
 #'
 
 suppressPackageStartupMessages(require(stringr))
 
 usage="
-usage: doSeuratV5_02b.R PARAMS.yaml
+usage: doSeuratV5_02c.R PARAMS.yaml
 
-    PARAMS.yaml     parameter file from pass1
-
+    PARAMS.yaml     parameter file from pass2b
+    ClusterRes      Resolution value of clusters to use
 "
 
 cArgs=commandArgs(trailing=T)
 
-if(len(cArgs)!=1) {
+if(len(cArgs)<1) {
     cat(usage)
     quit()
 }
@@ -45,6 +45,8 @@ suppressPackageStartupMessages({
     library(Seurat)
     library(patchwork)
     library(tidyverse)
+    library(openxlsx)
+    library(pals)
 })
 
 source(file.path(SDIR,"seuratTools.R"))
@@ -62,9 +64,21 @@ plotNo<-makeAutoIncrementor(20)
 ##########################################################################
 
 
-d10X.????=readRDS(args$????)
+s1=readRDS(args$PASS2b.RDAFile)
 
-clusterRes="integrated_snn_res.0.5"
+if(len(cArgs)>1) {
+    cResValue=cArgs[2]
+    clusterRes=paste0("integrated_snn_res.",cResValue)
+} else {
+    clusterRes="integrated_snn_res.0.5"
+}
+
+if(!clusterRes %in% colnames(s1@meta.data)) {
+    cat(paste("\n\n", "Invalid Cluster Resolution",clusterRes, "\n"))
+    cat("Valid values\n\t",paste(grep("integrated_snn_res.",colnames(s1@meta.data),value=T),collapse="; "),"\n\n")
+    rlang::abort("\n\nInvalid Cluster Resolution\n\n")
+}
+
 s1=SetIdent(s1,value=clusterRes)
 
 clusterMarkers=FindAllMarkers(s1,only.pos=TRUE,logfc.threshold=0.25,min.pct = 0.25)
@@ -84,8 +98,6 @@ filterCLTable<-function(clm) {
 
 #
 
-halt("BUG")
-
 cl=filterCLTable(clusterMarkers) %>%
     dplyr::select(cluster,gene,p_val_adj,avg_log2FC,pct.1,pct.2,lOR) %>%
     filter(p_val_adj<FDR.cut & avg_log2FC>logFC.cut)
@@ -102,30 +114,17 @@ geneCounts=cl %>% count(cluster)
 
 ll=c(list(GeneCounts=geneCounts,AllCluster=cl),clusterMarkerTbl)
 
-xfile=cc("tblClusterMarkers","",clusterRes,"FDR",FDR.cut,"logFC",logFC.cut)
+clustTag=gsub("inte.*res.","cRes_",clusterRes)
+
+xfile=cc("tblClusterMarkers",clustTag,"FDR",FDR.cut,"logFC",logFC.cut)
 
 write.xlsx(ll,paste0(xfile,".xlsx"),overwrite=T)
 
-args$algoParams=ap
-obj=list(
-    args=args,
-    s1=s1,
-    clusterMarkers=clusterMarkers,
-    cl=cl,
-    clusterRes=clusterRes
-    )
-
-args.digest.orig=digest::digest(obj)
-args$PASS2.RDAFile=cc("pass_02",args.digest.orig,"OBJ",".rda")
-obj$args=args
-
-saveRDS(obj,args$PASS2.RDAFile,compress=T)
-write_yaml(args,cc("pass_02","PARAMS.yaml"))
-
+pal1=c(cols25(25),brewer.dark2(8))
 
 plt.cmark=cl %>% group_split(cluster) %>% map(plotClusterMarkers,s1,pal1)
 
-cmFile=cc("seuratQC",args$PROJNAME,plotNo(),"ClusterMarkers","%03d",".png")
+cmFile=cc("seuratQC",args$PROJNAME,paste0(plotNo(),"c"),"ClusterMarkers",clustTag,"%03d",".png")
 
 png(filename=cmFile,
     type="cairo",
@@ -157,10 +156,12 @@ dot.gene.lFC=cl %>%
     head(12) %>%
     pull(gene)
 
-pc1=DotPlot(s1,features=dot.gene.lOR)
-pc2=DotPlot(s1,features=dot.gene.lFC)
+halt("Fix x -axis")
 
-pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"ClusterMarkersDot",".pdf"),width=11,height=8.5)
+pc1=DotPlot(s1,features=dot.gene.lOR) + scale_x_discrete(guide = guide_axis(n.dodge = 2))
+pc2=DotPlot(s1,features=dot.gene.lFC) + scale_x_discrete(guide = guide_axis(n.dodge = 2))
+
+pdf(file=cc("seuratQC",args$PROJNAME,paste0(plotNo(),"c"),"ClusterMarkersDot",clustTag,".pdf"),width=11,height=8.5)
 print(pc1)
 print(pc2)
 dev.off()
