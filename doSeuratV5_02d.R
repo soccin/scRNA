@@ -7,7 +7,7 @@
 suppressPackageStartupMessages(require(stringr))
 
 usage="
-usage: doSeuratV5_02c.R PARAMS.yaml
+usage: doSeuratV5_02d.R PARAMS.yaml
 
     PARAMS.yaml     parameter file from pass2b
     ClusterRes      Resolution value of clusters to use
