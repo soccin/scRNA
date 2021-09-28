@@ -40,7 +40,7 @@ args=read_yaml(cArgs[1])
 glbs=args$glbs
 ap=args$algoParams
 
-plotNo<-makeAutoIncrementor(20)
+plotNo<-makeAutoIncrementor(30)
 
 suppressPackageStartupMessages({
     library(Seurat)
