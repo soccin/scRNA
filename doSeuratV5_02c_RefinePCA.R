@@ -21,12 +21,10 @@ if(R.Version()$major<4) {
 }
 
 if(Sys.getenv("SDIR")=="") {
-    file.arg=grep("--file=",commandArgs(),value=T)
-    if(len(file.arg)>0) {
-        SDIR=dirname(gsub(".*=","",file.arg))
-    } else {
-        SDIR="."
-    }
+    #
+    # getSDIR defined in .Rprofile
+    #
+    SDIR=getSDIR()
 } else {
     SDIR=Sys.getenv("SDIR")
 }

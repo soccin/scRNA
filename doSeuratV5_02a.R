@@ -30,7 +30,10 @@ library(yaml)
 args=read_yaml(cArgs[1])
 
 if(Sys.getenv("SDIR")=="") {
-    SDIR="."
+    #
+    # getSDIR defined in .Rprofile
+    #
+    SDIR=getSDIR()
 } else {
     SDIR=Sys.getenv("SDIR")
 }
