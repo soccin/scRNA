@@ -206,7 +206,7 @@ args$optionals=oArgs
 args$GIT.Describe=git.describe(SDIR)
 args.digest.orig=digest::digest(args)
 
-args$PASS2b.RDAFile=cc("pass_02b",args.digest.orig,"s1",".rda")
+args$PASS2b.RDAFile=cc("pass_02b","SObj",args.digest.orig,"s1",".rda")
 write_yaml(args,cc("pass_02b","PARAMS.yaml"))
 
 cat("\nSaving rda object ...")

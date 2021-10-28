@@ -273,7 +273,7 @@ obj=list(
     )
 
 args.digest.orig=digest::digest(obj)
-args$PASS2.RDAFile=cc("pass_02",args.digest.orig,"OBJ",".rda")
+args$PASS2.RDAFile=cc("pass_02","SObj",args.digest.orig,".rda")
 obj$args=args
 
 saveRDS(obj,args$PASS2.RDAFile,compress=T)

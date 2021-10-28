@@ -243,7 +243,7 @@ args$algoParams=algoParams
 
 args$GIT.Describe=git.describe(SDIR)
 args.digest.orig=digest::digest(args)
-args$PASS1.RDAFile=cc("pass_01",args.digest.orig,"d10X.orig",".rda")
+args$PASS1.RDAFile=cc("pass_01","SObj",args.digest.orig,"d10X.orig",".rda")
 write_yaml(args,cc("pass_01","PARAMS.yaml"))
 
 saveRDS(d10X.orig,args$PASS1.RDAFile,compress=T)
