@@ -14,6 +14,12 @@ if(len(cArgs)!=1) {
     quit()
 }
 
+if(R.Version()$major<4) {
+    cat(usage)
+    cat("\n\nThis script needs version(R).major>=4\n\n")
+    quit()
+}
+
 library(yaml)
 args=read_yaml(cArgs[1])
 

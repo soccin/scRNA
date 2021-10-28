@@ -1,8 +1,8 @@
 # scRNA Version 4
 
-## Branch MASTER
+## Branch ver/Seurat4
 
-10X data
+Needs R>=4.x. Run `CMD.Setup_R-4.x` to load it
 
 ## Current pipeline
 

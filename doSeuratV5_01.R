@@ -14,6 +14,7 @@ usage: doSeuratV5_01.R [DEBUG=${DEBUG}] [MERGE=${MERGE}] [PROJNAME=${PROJNAME}] 
 
 "
 
+
 cArgs=commandArgs(trailing=T)
 args=list(DEBUG=FALSE,MERGE=TRUE,PROJNAME="scRNA",DOWNSAMPLE=0.1)
 usage=str_interp(usage,args)
@@ -39,11 +40,28 @@ if(args$PROJNAME=="scRNA") {
 
 argv=grep("=",cArgs,value=T,invert=T)
 
+if(Sys.getenv("SDIR")=="") {
+    #
+    # getSDIR defined in .Rprofile
+    #
+    SDIR=getSDIR()
+} else {
+    SDIR=Sys.getenv("SDIR")
+}
+
 ##############################################################################
 if(len(argv)<1) {
     cat(usage)
     quit()
 }
+
+if(R.Version()$major<4) {
+    cat(usage)
+    cat("\n\nThis script needs version(R).major>=4\n\n")
+    quit()
+}
+
+
 cat("\n=========================================================\n")
 args[["10XDirs"]]=paste0(argv,collapse=", ")
 cat(str(args))
@@ -57,53 +75,36 @@ suppressPackageStartupMessages({
     library(yaml)
 })
 
-source("seuratTools.R")
-source("plotTools.R")
-source("doQCandFilter.R")
+source(file.path(SDIR,"seuratTools.R"))
+source(file.path(SDIR,"plotTools.R"))
+source(file.path(SDIR,"doQCandFilter.R"))
 
-if(file.exists("pass_00_PARAMS.yaml")) {
-    args00=read_yaml("pass_00_PARAMS.yaml")
-}
+##############################################################################
+# Set up global variables, parameters and defaults
+#
 
 plotNo<-makeAutoIncrementor()
+
+if(file.exists("pass_00_PARAMS.yaml")) {
+    cat("\n   Loading defaults from pass_00_PARAMS.yaml\n\n\n")
+    args00=read_yaml("pass_00_PARAMS.yaml")
+} else {
+    args00=list()
+    cat("\n   No pass_00_PARAMS file; using default PARAMS\n\n\n")
+}
 
 dataFolders=argv
 sampleIDs=gsub("_",".",gsub(".outs.*","",gsub(".*/s_","",dataFolders)))
 names(dataFolders)=sampleIDs
 
-d10X=list()
-
-for(ii in seq(len(dataFolders))) {
-    sampleName=sampleIDs[ii]
-    cat("Reading Sample =",sampleName,"...")
-    d10X[[sampleName]] <- read10XDataFolderAsSeuratObj(dataFolders[ii],args$PROJNAME)
-    cat("\n")
-}
-d10X.orig=d10X
-
-if(args$MERGE & len(d10X)>1) {
-    cat("\nMerging sample files...")
-    s.merge=merge(d10X[[1]],d10X[-1],project=args$PROJNAME)
-    d10X=list()
-    d10X[[args$PROJNAME]]=s.merge
-    cat("done\n\n")
-}
-
-glb.digest=digest::digest(d10X)
-cat("digest=",digest::digest(d10X),"\n")
-
-## QC
-# PCT_MITO=10
-# MIN_FEATURE_RNA=1000
-# MIN_NCOUNT_RNA=2500
-
-getDefault<-function(ll,key) {
-    ifelse(is.null(ll[[key]]),get(key),ll[[key]])
-}
-
+#
+# QC Defaults
+#
 MIN_FEATURE_RNA=1500
 MIN_NCOUNT_RNA=5000
 PCT_MITO=10
+
+getDefault<-function(ll,key) ifelse(is.null(ll[[key]]),get(key),ll[[key]])
 
 if(exists("args00")) {
     MIN_FEATURE_RNA=getDefault(args00$algoParams,"MIN_FEATURE_RNA")
@@ -117,21 +118,25 @@ algoParams$MIN_FEATURE_RNA=MIN_FEATURE_RNA
 algoParams$MIN_NCOUNT_RNA=MIN_NCOUNT_RNA
 algoParams$SEED=101
 
-# as_tibble(algoParams) %>% gather(param,Value)
 
-cat("\nDoQCandFilter\n")
+##############################################################################
+# Read 10X data
+#
 
-#pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"01.pdf"),height=8.5,width=11)
-pFile=cc("seuratQC",args$PROJNAME,plotNo(),"Filter_%03d.png")
-pngCairo(file=pFile,height=8.5,width=11)
-for(ii in seq(d10X)) {
-    print(ii)
-    ret=doQCandFilter(d10X[[ii]], MIN_NCOUNT_RNA, MIN_FEATURE_RNA, PCT_MITO)
-    d10X[[ii]]=ret$so
-    print(ret$plts)
+d10X=list()
+for(ii in seq(len(dataFolders))) {
+    sampleName=sampleIDs[ii]
+    cat("Reading Sample =",sampleName,"...")
+    d10X[[sampleName]] <- read10XDataFolderAsSeuratObj(dataFolders[ii],args$PROJNAME)
+    cat("\n")
 }
-dev.off()
-mergePNGs(pFile)
+d10X.orig=d10X
+glb.digest=digest::digest(d10X)
+cat("digest=",digest::digest(d10X),"\n")
+
+##############################################################################
+# Downsample if DEBUG set
+#
 
 if(args$DEBUG) {
 
@@ -151,7 +156,11 @@ if(args$DEBUG) {
 
 }
 
+##############################################################################
+# Check Cell Cycle
+#
 cat("\nScoreCellCycle\n")
+
 for(ii in seq(d10X)) {
     print(ii)
     d10X[[ii]]=scoreCellCycle(d10X[[ii]])
@@ -159,35 +168,80 @@ for(ii in seq(d10X)) {
 
 pcc=list()
 cat("\nPlotCellCycle\n")
+
 for(ii in seq(d10X)) {
-    pcc[[ii]]=plotCellCycle(preProcessSO(d10X[[ii]]))
+    pcc[[ii]]=plotCellCycle(preProcessSO(d10X[[ii]]),names(d10X)[ii])
 }
 
-pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"CellCycle.pdf"),width=11,height=11)
+pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"CellCycle.pdf"),width=11,height=8.5)
 
-if(len(pcc)>1) {
-    nPages=ceiling(len(pcc)/4)
-    for(ii in seq(nPages)) {
-        jj=(1:4)+4*(ii-1)
-        jj=intersect(seq(pcc),jj)
-        pOut=pcc[jj]
-        if(len(pOut)<4){
-            pOut=c(pOut,rep(list(ggplot()+theme_void()),4-len(jj)))
-        }
-        print(wrap_plots(pOut,ncol=2))
-    }
-} else {
-    print(pcc[[1]])
-}
+# if(len(pcc)>1) {
+#     nPages=ceiling(len(pcc)/4)
+#     for(ii in seq(nPages)) {
+#         jj=(1:4)+4*(ii-1)
+#         jj=intersect(seq(pcc),jj)
+#         pOut=pcc[jj]
+#         if(len(pOut)<4){
+#             pOut=c(pOut,rep(list(ggplot()+theme_void()),4-len(jj)))
+#         }
+#         print(wrap_plots(pOut,ncol=2))
+#     }
+# } else {
+    print(pcc)
+#}
 
 dev.off()
 
-source("gitTools.R")
+##############################################################################
+# Merge samples if MERGE set
+#
+cat("\nMERGE Samples\n")
+
+if(args$MERGE & len(d10X)>1) {
+    cat("\nMerging sample files...")
+    s.merge=merge(d10X[[1]],d10X[-1],project=args$PROJNAME)
+    d10X=list()
+    d10X[[args$PROJNAME]]=s.merge
+    cat("done\n\n")
+}
+
+#
+# Add SampleID metadata, if there is a manifest
+# use that for the id's otherwise make them orig.ident
+#
+
+md=d10X[[1]]@meta.data
+if(is.null(args00$SAMPLE_MANIFEST)) {
+    md$SampleID=md$orig.ident
+} else {
+    args$SAMPLE_MANIFEST=args00$SAMPLE_MANIFEST
+    manifest=read_csv(args00$SAMPLE_MANIFEST)
+    md=md %>% rownames_to_column("CELLID") %>% left_join(manifest,by="orig.ident") %>% column_to_rownames("CELLID")
+}
+d10X[[1]]@meta.data=md
+
+##############################################################################
+# Do Stage-I QC
+#
+cat("\nDoQCandFilter\n")
+
+Idents(d10X[[1]])<-"SampleID"
+
+pFile=cc("seuratQC",args$PROJNAME,plotNo(),"Filter_%03d.png")
+pngCairo(file=pFile,height=8.5,width=11)
+for(ii in seq(d10X)) {
+    print(ii)
+    ret=doQCandFilter(d10X[[ii]], MIN_NCOUNT_RNA, MIN_FEATURE_RNA, PCT_MITO)
+    d10X[[ii]]=ret$so
+    print(ret$plts)
+}
+dev.off()
+mergePNGs(pFile)
 
 args$glbs=glbs
 args$algoParams=algoParams
 
-args$GIT.Describe=git.describe()
+args$GIT.Describe=git.describe(SDIR)
 args.digest.orig=digest::digest(args)
 args$PASS1.RDAFile=cc("pass_01",args.digest.orig,"d10X.orig",".rda")
 write_yaml(args,cc("pass_01","PARAMS.yaml"))

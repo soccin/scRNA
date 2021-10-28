@@ -8,7 +8,7 @@ pngCairo<-function(filename,width=14,height=8.5,pointsize=12,res=150) {
 mergePNGs<-function(fileSpec) {
     fileRe=gsub("_%\\d+d",".*",fileSpec)
     pdfFile=gsub("_%\\d+d.*",".pdf",fileSpec)
-    system2("convert",c(sort(dir_ls(regex=fileRe)),pdfFile))
+    system2("convert",c(sort(dir_ls(regex=fileRe)),pdfFile),stderr=cc("stderr","mergePNGs","convert",DATE()))
 }
 
 paginatePlots<-function(plts.o,pRows,pCols,oneLegend=T) {

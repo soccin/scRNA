@@ -2,15 +2,22 @@ library(Seurat)
 library(fs)
 library(ggpubr)
 
+git.describe<-function(REPO="."){
+
+    system2(
+        "git",
+        c(
+            paste0("--git-dir=",file.path(REPO,".git")),
+            paste0("--work-tree=",REPO),
+            "describe","--tags", "--always", "--long", "--dirty='-UNCOMMITED'"),
+        stdout=T
+        )
+
+}
+
 if(!exists("glbs")) {
     glbs=list()
 }
-
-genomes=c("refdata-gex-mm10-2020-A"="mm10","refdata-gex-GRCh38-2020-A"="hg38")
-
-genes.cellCycle.hg19=cc.genes.updated.2019
-genes.cellCycle.hg38=cc.genes.updated.2019
-delayedAssign("genes.cellCycle.mm10",loadCellCycleGenes())
 
 makeAutoIncrementor <- function(init=0) {
     count <- init
@@ -20,38 +27,7 @@ makeAutoIncrementor <- function(init=0) {
     }
 }
 
-
-loadCellCycleGenes <- function() {
-
-    lapply(cc.genes.updated.2019,function(x){convertGeneSymbolsHumanToMouse(x)})
-
-}
-
-library(memoise)
-m.cache=cache_filesystem("__R_CACHE")
-
-.convertGeneSymbolsHumanToMouse.RAW <- function(hgg) {
-
-    require("biomaRt")
-    human = useMart("ensembl", dataset = "hsapiens_gene_ensembl", host="useast.ensembl.org")
-    mouse = useMart("ensembl", dataset = "mmusculus_gene_ensembl", host="useast.ensembl.org")
-
-    genesV2 = getLDS(
-        attributes = c("hgnc_symbol"),
-        filters = "hgnc_symbol",
-        values = hgg,
-        mart = human,
-        attributesL = c("mgi_symbol"),
-        martL = mouse,
-        uniqueRows=T)
-
-    mgg <- unique(genesV2[, 2])
-
-    mgg
-
-}
-
-convertGeneSymbolsHumanToMouse <- memoise(.convertGeneSymbolsHumanToMouse.RAW,cache=m.cache)
+genomes=c("refdata-gex-mm10-2020-A"="mm10","refdata-gex-GRCh38-2020-A"="hg38")
 
 extractProjNoFromPath<-function(pp) {
 
@@ -117,6 +93,16 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
 
 }
 
+
+##############################################################################
+# Cell Cycle Functions
+#
+
+genes.cellCycle.hg19=cc.genes.updated.2019
+genes.cellCycle.hg38=cc.genes.updated.2019
+load(file.path(SDIR,"data/cc.genes.mouse.v2.rda"))
+genes.cellCycle.mm10=cc.genes.mouse.v2
+
 getCellCycleGenes<-function(genome) {
 
     if(genome=="mm10") {
@@ -136,7 +122,6 @@ getCellCycleGenes<-function(genome) {
     cellCycle.genes
 
 }
-
 
 scoreCellCycle <- function(dorig) {
 
@@ -189,14 +174,14 @@ plotCellCycle<-function(sc,title="") {
     cc.features=intersect(unlist(cellCycle.genes),VariableFeatures(sc))
 
     sc=RunPCA(sc,features=cc.features,approx=FALSE)
-    pg=DimPlot(sc,group.by="Phase") + ggtitle(paste("Cell Cycle PCA Projection",sc@project.name,title))
+    pg=DimPlot(sc,group.by="Phase",reduction="pca") + ggtitle(paste("Cell Cycle PCA Projection",sc@project.name,title))
     pg
 }
 
 plotClusterMarkers<-function(cli,s0,clusterColors) {
     # High Quality Genes First
-    cli=cli %>% arrange(desc(avg_logFC+lOR))
-    gHQ=cli %>% filter(lOR>2 & avg_logFC>2) %>% pull(gene)
+    cli=cli %>% arrange(desc(avg_log2FC+lOR))
+    gHQ=cli %>% filter(lOR>2 & avg_log2FC>2) %>% pull(gene)
     gMQ=cli %>% filter(lOR>2) %>% pull(gene)
     gLQ=pull(cli,gene)
 

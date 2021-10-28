@@ -9,7 +9,7 @@ usage: doSeuratV5_02.R PARAMS.yaml
 
 cArgs=commandArgs(trailing=T)
 
-if(len(cArgs)!=1) {
+if(len(cArgs)<1) {
     cat(usage)
     quit()
 }
@@ -40,7 +40,7 @@ args=read_yaml(cArgs[1])
 glbs=args$glbs
 ap=args$algoParams
 
-plotNo<-makeAutoIncrementor(30)
+plotNo<-makeAutoIncrementor(20)
 
 suppressPackageStartupMessages({
     library(Seurat)
@@ -59,8 +59,16 @@ suppressPackageStartupMessages({
 ##########################################################################
 
 obj=readRDS(args$PASS2b.RDAFile)
+genes=read_csv(cArgs[2])
 
+sr=subset(obj,cells=Cells(obj)[runif(nrow(obj@meta.data))<0.1])
+DefaultAssay(sr)="SCT"
 
+pg=DoHeatmap(sr,assay="SCT",features=genes$Gene) + scale_fill_gradientn(colors = c("blue", "white", "red"))
+
+png(filename="heatmap.png",type="cairo",units="in",width=14,height=10,pointsize=12,res=150)
+print(pg)
+dev.off()
 
 # clusterRes="RNA_snn_res.0.5"
 # s1=obj$s1

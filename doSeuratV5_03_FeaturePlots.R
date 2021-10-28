@@ -1,15 +1,15 @@
 suppressPackageStartupMessages(require(stringr))
 
 usage="
-usage: doSeuratV5_02.R PARAMS.yaml
+usage: doSeuratV5_02.R PARAMS.yaml GeneListFile
 
     PARAMS.yaml     parameter file from pass1
-
+    GeneListFile    List of Genes to Plot
 "
 
 cArgs=commandArgs(trailing=T)
 
-if(len(cArgs)!=1) {
+if(len(cArgs)!=2) {
     cat(usage)
     quit()
 }
@@ -40,7 +40,7 @@ args=read_yaml(cArgs[1])
 glbs=args$glbs
 ap=args$algoParams
 
-plotNo<-makeAutoIncrementor(30)
+plotNo<-makeAutoIncrementor(40)
 
 suppressPackageStartupMessages({
     library(Seurat)
@@ -50,6 +50,12 @@ suppressPackageStartupMessages({
     library(pals)
 })
 
+geneListFile=cArgs[2]
+genes=scan(geneListFile,"")
+if(args$glbs$genome=="mm10") {
+    genes=str_to_title(genes)
+}
+
 
 
 ##########################################################################
@@ -58,17 +64,26 @@ suppressPackageStartupMessages({
 #
 ##########################################################################
 
-obj=readRDS(args$PASS2b.RDAFile)
+s1=readRDS(args$PASS2b.RDAFile)
 
+pp=FeaturePlot(s1,features=genes,combine=F,order=T,max.cutoff="q95",min.cutoff=0)
 
+pgL=list()
+for(ii in seq(genes)) {
+    pg=NULL
+    print(genes[ii])
+    try({pg=FeaturePlot(s1,features=genes[ii],combine=F,order=T,max.cutoff="q95",min.cutoff=0,split.by="orig.ident")})
+    if(!is.null(pg)) {
+        pgL[[genes[ii]]]=pg
+    }
+}
 
-# clusterRes="RNA_snn_res.0.5"
-# s1=obj$s1
-# maxClusters=nlevels(s1@meta.data[[clusterRes]])
-# pal1=cols25(maxClusters)
+pfile=cc("seuratQC",args$PROJNAME,plotNo(),"GeneUMAPs_%03d.png")
+pngCairo(pfile,width=11,height=8.5)
+pp1=paginatePlots(pp,2,3,oneLegend=F)
+pp2=map(pgL,paginatePlots,2,2,oneLegend=F)
+print(pp1)
+print(pp2)
+dev.off()
 
-# pg=DimPlot(s1, reduction = "umap", group.by="orig.ident", split.by="orig.ident", label.size=6,ncol=2) + scale_color_manual(values=c("darkviolet","red","grey")) + ggtitle(clusterRes)
-
-# pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"UMAP","v2",".pdf"),width=11,height=8.5)
-# print(pg)
-# dev.off()
+mergePNGs(pfile)
