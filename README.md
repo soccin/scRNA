@@ -1,6 +1,8 @@
 # scRNA Version 4
 
-## Branch ver/Seurat4
+## Branch master (merged in ver/Seurat4 branch 2021-10-28)
+
+Now does SCTransform and Integrate
 
 Needs R>=4.x. Run `CMD.Setup_R-4.x` to load it
 
@@ -10,7 +12,9 @@ Multiple stages
 
 - `doSeuratV5_01.R`: Initial QC to check filtering paramters and check cell cycle regression plots to see if cell cycle regression is needed.
 
-- `doSeuratV5_02.R`: Stage 2, redo the QC-filter (but can reset parameters) but now move the Cell Cycle regression into the main script and follow the Seurat suggestion of only regressing out the variable features.
+- Stage 2: Multiple parts now:
 
+    - `doSeuratV5_02a.R` Now does SCTransform and Integrate with Normalize and CC regression
+    - `doSeuratV5_02b.R` PCA and clustering
 
 
