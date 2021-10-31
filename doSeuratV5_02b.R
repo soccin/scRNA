@@ -156,10 +156,57 @@ cat(" done\n\n")
 md=s1@meta.data %>% rownames_to_column("CellID") %>% tibble
 pc=list()
 for(clusterI in grep("integrated_snn_res",colnames(md),value=T)) {
+
     cLevels=sort(as.numeric(levels(md[[clusterI]])))
-    cTbl=md %>% count(SampleID,.data[[clusterI]]) %>% rename(Clusters=all_of(clusterI)) %>% mutate(Clusters=factor(Clusters,levels=cLevels))
-    pc[[len(pc)+1]]=ggplot(cTbl,aes(y=Clusters,x=n,fill=SampleID)) + geom_bar(position="fill", stat="identity") + scale_fill_manual(values=cols25()) + theme_light(base_size=18) + ggtitle(clusterI)
-    pc[[len(pc)+1]]=ggplot(cTbl,aes(fill=Clusters,x=n,y=SampleID)) + geom_bar(position="fill", stat="identity") + scale_fill_manual(values=pal1) + theme_light(base_size=18) + ggtitle(clusterI)
+
+    nClusters=len(cLevels)
+    nSamples=md %>% distinct(SampleID) %>% nrow
+
+    cTbl=md %>%
+        count(SampleID,.data[[clusterI]]) %>%
+        rename(Clusters=all_of(clusterI)) %>%
+        mutate(Clusters=factor(Clusters,levels=cLevels)) %>%
+        group_by(SampleID) %>%
+        mutate(Total=sum(n)) %>%
+        ungroup %>%
+        mutate(nSampleNorm=n/Total) %>%
+        arrange(Clusters,SampleID)
+
+    S_sample=cTbl %>%
+        select(SampleID,Clusters,n) %>%
+        group_by(SampleID) %>%
+        mutate(Total=sum(n)) %>%
+        mutate(PCT=n/Total) %>%
+        arrange(SampleID) %>%
+        summarize(S=-sum(PCT*log(PCT))/log(nClusters)) %>%
+        mutate(Clusters=0)
+
+    S_cluster=cTbl %>%
+        select(SampleID,Clusters,n) %>%
+        group_by(SampleID) %>%
+        mutate(Norm=sum(n)) %>%
+        mutate(n=n/Norm) %>%
+        group_by(Clusters) %>%
+        mutate(Total=sum(n)) %>%
+        mutate(PCT=n/Total) %>%
+        arrange(Clusters) %>%
+        summarize(S=-sum(PCT*log(PCT))/log(nSamples)) %>%
+        mutate(SampleID="")
+
+    pc[[len(pc)+1]]=ggplot(cTbl,aes(y=Clusters,x=nSampleNorm,fill=SampleID)) +
+        geom_bar(position="fill", stat="identity") +
+        scale_fill_manual(values=cols25()) +
+        theme_light(base_size=18) +
+        ggtitle(paste(clusterI,"Sample Cell Count Normalized")) +
+        geom_label(data=S_cluster,aes(x=1,y=Clusters,label=sprintf("%.3f",S)),fill="white",hjust=1.1,size=4,label.size=.3)
+
+    pc[[len(pc)+1]]=ggplot(cTbl,aes(fill=Clusters,x=n,y=SampleID)) +
+        geom_bar(position="fill", stat="identity") +
+        scale_fill_manual(values=pal1) +
+        theme_light(base_size=18) +
+        ggtitle(clusterI) +
+        geom_label(data=S_sample,aes(x=1,y=SampleID,label=sprintf("%.3f",S)),fill="white",hjust=1.1,size=4,label.size=.3)
+
 }
 
 pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"ClusterChart",nDims,".pdf"),width=14,height=8.5)
