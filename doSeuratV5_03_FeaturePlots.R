@@ -66,6 +66,8 @@ if(args$glbs$genome=="mm10") {
 
 s1=readRDS(args$PASS2b.RDAFile)
 
+
+
 pp=FeaturePlot(s1,features=genes,combine=F,order=T,max.cutoff="q95",min.cutoff=0)
 
 pgL=list()
@@ -78,7 +80,9 @@ for(ii in seq(genes)) {
     }
 }
 
-pfile=cc("seuratQC",args$PROJNAME,plotNo(),"GeneUMAPs_%03d.png")
+GENELISTTAG=paste0("genes-",substr(digest::digest(genes),1,8))
+
+pfile=cc("seuratQC",args$PROJNAME,plotNo(),"GeneUMAPs",GENELISTTAG,"_%03d.png")
 pngCairo(pfile,width=11,height=8.5)
 pp1=paginatePlots(pp,2,3,oneLegend=F)
 pp2=map(pgL,paginatePlots,2,2,oneLegend=F)
@@ -87,3 +91,7 @@ print(pp2)
 dev.off()
 
 mergePNGs(pfile)
+
+
+
+

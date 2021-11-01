@@ -1,6 +1,6 @@
 # scRNA Version 4
 
-## Branch ver/Seurat4
+## Project Specific Branch (proj/p12068)
 
 Needs R>=4.x. Run `CMD.Setup_R-4.x` to load it
 
