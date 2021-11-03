@@ -1,9 +1,9 @@
 suppressPackageStartupMessages(require(stringr))
 
 usage="
-usage: doSeuratV5_02.R PARAMS.yaml GeneListFile
+usage: doSeuratV5_03_FeaturePlots.R PARAMS_2b.yaml GeneListFile
 
-    PARAMS.yaml     parameter file from pass1
+    PARAMS_2b.yaml  parameter file from pass2b
     GeneListFile    List of Genes to Plot
 "
 
