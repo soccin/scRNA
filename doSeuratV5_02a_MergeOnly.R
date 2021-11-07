@@ -1,7 +1,8 @@
 #'
 #' Phase-II
 #'
-#' Do SCTransform and Integration
+#' Do SCTransform but simple MERGE instead of Integrate
+#' Also Swith to not regress Cell Cycle Out
 #'
 
 suppressPackageStartupMessages(require(stringr))
@@ -10,12 +11,24 @@ usage="
 usage: doSeuratV5_02.R PARAMS.yaml
 
     PARAMS.yaml     parameter file from pass1
+    CC_REGRESS      Flag to control cell cycle regression [Def: TRUE]
 
 "
-
 cArgs=commandArgs(trailing=T)
+args=list(CC_REGRESS=TRUE)
+usage=str_interp(usage,args)
 
-if(len(cArgs)!=1) {
+ii=grep("=",cArgs)
+if(len(ii)>0) {
+    parseArgs=str_match(cArgs[ii],"(.*)=(.*)")
+    aa=apply(parseArgs,1,function(x){args[[str_trim(x[2])]]<<-str_trim(x[3])})
+}
+
+args$CC_REGRESS=as.logical(args$CC_REGRESS)
+
+argv=grep("=",cArgs,value=T,invert=T)
+
+if(len(argv)<1) {
     cat(usage)
     quit()
 }
@@ -27,7 +40,9 @@ if(R.Version()$major<4) {
 }
 
 library(yaml)
-args=read_yaml(cArgs[1])
+args1=read_yaml(argv[1])
+
+args=c(args,args1)
 
 if(Sys.getenv("SDIR")=="") {
     #
@@ -77,18 +92,6 @@ for(ii in seq(d10X)) {
     d10X[[ii]]=ret$so
 }
 
-
-##############################################################################
-# Check Cell Cycle
-#
-cat("\nScoreCellCycle\n")
-
-for(ii in seq(d10X)) {
-    print(ii)
-    d10X[[ii]]=scoreCellCycle(d10X[[ii]])
-}
-
-
 if(args$DEBUG) {
 
     c("\n\nDEBUG SET; Subset data\n\n")
@@ -103,7 +106,24 @@ if(args$DEBUG) {
 
 }
 
+##############################################################################
+# Check Cell Cycle
+#
+cat("\nScoreCellCycle\n")
 
+for(ii in seq(d10X)) {
+    print(ii)
+    d10X[[ii]]=scoreCellCycle(d10X[[ii]])
+}
+
+##############################################################################
+# Merge samples if MERGE set
+#
+cat("\nMERGE Samples\n")
+
+cat("\nMerging sample files...")
+merge=merge(d10X[[1]],d10X[-1],project=args$PROJNAME)
+cat("done\n\n")
 
 ##############################################################################
 # Do SCTransform
@@ -111,27 +131,13 @@ if(args$DEBUG) {
 #
 cat("\nSCTransform\n")
 
-d10X.int=list()
-for(ii in seq(d10X)) {
-    print(ii)
-    d10X.int[[ii]]=SCTransform(d10X[[ii]],vars.to.regress = c('S.Score', 'G2M.Score'))
+if(args$CC_REGRESS) {
+    cat("\n\nRegress out Cell Cycle\n\n")
+    d10X.integrate=SCTransform(merge,vars.to.regress = c('S.Score', 'G2M.Score'))
+} else {
+    cat("\n\nNO Cell Cycle regression done\n\n")
+    d10X.integrate=SCTransform(merge)
 }
-
-##############################################################################
-# Do Integration
-#
-cat("\nSCTransform\n")
-
-features <- SelectIntegrationFeatures(object.list = d10X.int, nfeatures = 3000)
-d10X.int <- PrepSCTIntegration(object.list = d10X.int, anchor.features = features)
-
-anchors <- FindIntegrationAnchors(
-        object.list = d10X.int,
-        normalization.method = "SCT",
-        anchor.features = features
-        )
-
-d10X.integrate <- IntegrateData(anchorset = anchors, normalization.method = "SCT")
 
 d10X.integrate <- RunPCA(d10X.integrate, verbose = FALSE)
 d10X.integrate <- RunUMAP(d10X.integrate, reduction = "pca", dims = 1:30)

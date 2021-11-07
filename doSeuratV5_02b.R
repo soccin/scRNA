@@ -138,7 +138,7 @@ pal1=c(cols25(maxClusters),brewer.dark2(8))
 pal2=c(brewer.paired(20))
 
 pu=list()
-for(ci in grep("integrated_snn_",colnames(s1@meta.data),value=T)) {
+for(ci in grep("_snn_res",colnames(s1@meta.data),value=T)) {
 
     clusterLevels=s1@meta.data[[ci]]
 
@@ -158,7 +158,7 @@ cat(" done\n\n")
 
 md=s1@meta.data %>% rownames_to_column("CellID") %>% tibble
 pc=list()
-for(clusterI in grep("integrated_snn_res",colnames(md),value=T)) {
+for(clusterI in grep("_snn_res",colnames(md),value=T)) {
 
     cLevels=sort(as.numeric(levels(md[[clusterI]])))
 
@@ -210,6 +210,28 @@ for(clusterI in grep("integrated_snn_res",colnames(md),value=T)) {
         ggtitle(clusterI) +
         geom_label(data=S_sample,aes(x=1,y=SampleID,label=sprintf("%.3f",S)),fill="white",hjust=1.1,size=4,label.size=.3)
 
+
+    pTbl=md %>%
+        count(Phase,.data[[clusterI]]) %>%
+        rename(Clusters=all_of(clusterI)) %>%
+        mutate(Clusters=factor(Clusters,levels=cLevels)) %>%
+        group_by(Phase) %>%
+        mutate(Total=sum(n)) %>%
+        ungroup %>%
+        mutate(nNorm=n/Total) %>%
+        arrange(Clusters,Phase)
+
+    pc[[len(pc)+1]]=ggplot(pTbl,aes(y=Clusters,x=n,fill=Phase)) +
+        geom_bar(stat="identity",position="fill") +
+        theme_light(base_size=18) +
+        ggtitle(paste(clusterI))
+
+    pc[[len(pc)+1]]=ggplot(pTbl,aes(y=Phase,x=n,fill=Clusters)) +
+        geom_bar(stat="identity",position="fill") +
+        theme_light(base_size=18) +
+        ggtitle(paste(clusterI)) +
+        scale_fill_manual(values=pal1)
+
 }
 
 pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"ClusterChart",nDims,".pdf"),width=14,height=8.5)
@@ -248,7 +270,13 @@ if(!is.null(oArgs$MODULE_FILE)) {
 # Collect any changes in globals and parameters
 #
 
-DefaultAssay(s1)="integrated"
+if("integrated" %in% names(s1)) {
+    DefaultAssay(s1)="integrated"
+} else if("SCT" %in% names(s1)) {
+    DefaultAssay(s1)="SCT"
+} else {
+    rlang::abort("Unknown assay to set as default")
+}
 
 args$algoParams=ap
 args$glbs=glbs
