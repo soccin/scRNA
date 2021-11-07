@@ -125,7 +125,10 @@ s1 <- FindClusters(s1, resolution = ap$ClusterResolutions)
 s1 <- RunUMAP(s1, dims = 1:nDims)
 
 library(pals)
-maxClusters=s1@meta.data %>% tibble %>% distinct(integrated_snn_res.0.8) %>% pull %>% len
+
+maxResTag=grep(ap$ClusterResolutions[len(ap$ClusterResolutions)],colnames(s1@meta.data),value=T)
+maxClusters=s1@meta.data %>% tibble %>% distinct(.data[[maxResTag]]) %>% pull %>% len
+
 if(maxClusters>33) {
     save.image(cc("CHECKPOINT",DATE(),".RData"),compress=T)
     stop("\n\nTOO MANY CLUSTERS\n\n")
