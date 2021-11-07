@@ -1,13 +1,29 @@
 suppressPackageStartupMessages(require(stringr))
 
 usage="
-usage: doSeuratV5_03_CellTypes1.R PARAMS.yaml
+usage: doSeuratV5_03_CellTypes1.R MODULE_FILE=file PARAMS_2b.yaml
 
-    PARAMS.yaml     parameter file from pass2
+    PARAMS_2b.yaml     parameter file from pass2b [post PCA]
+
+    MODULE_FILE     TSV file with list of genes for modules [required]
 
 "
 
 cArgs=commandArgs(trailing=T)
+
+#
+# Separate out any options arguments
+#
+optionals=grep("=",cArgs,value=T)
+
+oArgs=list(MODULE_FILE=NULL)
+if(len(optionals)>0) {
+    require(stringr, quietly = T, warn.conflicts=F)
+    parseArgs=str_match(optionals,"(.*)=(.*)")
+    aa=apply(parseArgs,1,function(x){oArgs[[str_trim(x[2])]]<<-str_trim(x[3])})
+}
+
+cArgs=grep("=",cArgs,value=T,invert=T)
 
 if(len(cArgs)!=1) {
     cat(usage)
@@ -40,7 +56,7 @@ args=read_yaml(cArgs[1])
 glbs=args$glbs
 ap=args$algoParams
 
-plotNo<-makeAutoIncrementor(30)
+plotNo<-makeAutoIncrementor(50)
 
 suppressPackageStartupMessages({
     library(Seurat)
@@ -59,6 +75,8 @@ suppressPackageStartupMessages({
 ##########################################################################
 
 s1=readRDS(args$PASS2b.RDAFile)
+
+halt()
 
 if(is.null(args$optionals$MODULE_FILE)) {
     cat("\n\nNeed module file and module scores\n\n")
