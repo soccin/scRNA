@@ -7,18 +7,24 @@
 suppressPackageStartupMessages(require(stringr))
 
 usage="
-usage: doSeuratV5_02.R PARAMS.yaml
+usage: doSeuratV5_02.R [GENE_FILTER=geneFile] PARAMS.yaml
 
     PARAMS.yaml     parameter file from pass1
+    GENE_FILTER     File of genes to filter out
 
 "
 
 cArgs=commandArgs(trailing=T)
+args=list(GENE_FILTER=NULL)
+usage=str_interp(usage,args)
 
-if(len(cArgs)!=1) {
-    cat(usage)
-    quit()
+ii=grep("=",cArgs)
+if(len(ii)>0) {
+    parseArgs=str_match(cArgs[ii],"(.*)=(.*)")
+    aa=apply(parseArgs,1,function(x){args[[str_trim(x[2])]]<<-str_trim(x[3])})
 }
+
+argv=grep("=",cArgs,value=T,invert=T)
 
 if(R.Version()$major<4) {
     cat(usage)
@@ -27,7 +33,8 @@ if(R.Version()$major<4) {
 }
 
 library(yaml)
-args=read_yaml(cArgs[1])
+args0=read_yaml(argv[1])
+args=c(args0,args)
 
 if(Sys.getenv("SDIR")=="") {
     #
@@ -68,14 +75,34 @@ plotNo<-makeAutoIncrementor(10)
 
 d10X=readRDS(args$PASS1.RDAFile)
 
+halt("CHECK GENE FILTER")
+
+if(!is.null(args$GENE_FILTER)) {
+    rna=d10X[[1]]@assays$RNA
+    allGenes=rownames(rna@counts)
+    genesToFilter=scan(args$GENE_FILTER,"")
+    genesToKeep=setdiff(allGenes,genesToFilter)
+}
+
 cat("digest=",digest::digest(d10X),"\n")
 
 cat("\nDoQCandFilter\n")
 for(ii in seq(d10X)) {
     print(ii)
     ret=doQCandFilter(d10X[[ii]], ap$MIN_NCOUNT_RNA, ap$MIN_FEATURE_RNA, ap$PCT_MITO)
-    d10X[[ii]]=ret$so
+
+    if(!is.null(args$GENE_FILTER)) {
+        dn=ret$so
+        dn@assays$RNA@counts=dn@assays$RNA@counts[genesToKeep,]
+        dn@assays$RNA@data=dn@assays$RNA@data[genesToKeep,]
+        dn@assays$RNA@meta.features=dn@assays$RNA@meta.features[genesToKeep,]
+        d10X[[ii]]=dn
+    } else {
+        d10X[[ii]]=ret$so
+    }
 }
+
+
 
 
 ##############################################################################
