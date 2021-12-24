@@ -164,7 +164,7 @@ halt("Fix x -axis")
 pc1=DotPlot(s1,features=dot.gene.lOR) + scale_x_discrete(guide = guide_axis(n.dodge = 2))
 pc2=DotPlot(s1,features=dot.gene.lFC) + scale_x_discrete(guide = guide_axis(n.dodge = 2))
 
-pdf(file=cc("seuratQC",args$PROJNAME,paste0(plotNo(),"c"),"ClusterMarkersDot",clustTag,".pdf"),width=11,height=8.5)
+pdf(file=cc("seuratQC",args$PROJNAME,paste0(plotNo(),"c"),"ClusterMarkersDot",clustTag,"FDR",FDR.cut,"logFC",logFC.cut,".pdf"),width=11,height=8.5)
 print(pc1)
 print(pc2)
 dev.off()
