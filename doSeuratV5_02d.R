@@ -127,7 +127,7 @@ pal1=c(cols25(25),brewer.dark2(8))
 
 plt.cmark=cl %>% group_split(cluster) %>% map(plotClusterMarkers,s1,pal1)
 
-cmFile=cc("seuratQC",args$PROJNAME,paste0(plotNo(),"c"),"ClusterMarkers",clustTag,"%03d",".png")
+cmFile=cc("seuratQC",args$PROJNAME,paste0(plotNo(),"d"),"ClusterMarkers",clustTag,"FDR",FDR.cut,"logFC",logFC.cut,"%03d",".png")
 
 png(filename=cmFile,
     type="cairo",
