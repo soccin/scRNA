@@ -1,19 +1,3 @@
-suppressPackageStartupMessages(require(stringr))
-
-usage="
-usage: doSeuratV5_03_FeaturePlots.R PARAMS_2b.yaml GeneListFile
-
-    PARAMS_2b.yaml  parameter file from pass2b
-    GeneListFile    List of Genes to Plot
-"
-
-cArgs=commandArgs(trailing=T)
-
-if(len(cArgs)!=2) {
-    cat(usage)
-    quit()
-}
-
 if(R.Version()$major<4) {
     cat(usage)
     cat("\n\nThis script needs version(R).major>=4\n\n")
@@ -31,11 +15,37 @@ if(Sys.getenv("SDIR")=="") {
     SDIR=Sys.getenv("SDIR")
 }
 
+suppressPackageStartupMessages(require(stringr))
+
+usage="
+usage: doSeuratV5_03_FeaturePlots.R [CRES=clusterResolution] PARAMS_2b.yaml GeneListFile
+
+    PARAMS_2b.yaml  parameter file from pass2b
+    GeneListFile    List of Genes to Plot
+
+  Optional:
+    CRES=resNumber  Cluster Resolution to use (eg: CRES=0.2)
+
+"
+
+cArgs=commandArgs(trailing=T)
+args=list(CRES=NULL)
+usage=str_interp(usage,args)
+
+ii=grep("=",cArgs)
+if(len(ii)>0) {
+    parseArgs=str_match(cArgs[ii],"(.*)=(.*)")
+    aa=apply(parseArgs,1,function(x){args[[str_trim(x[2])]]<<-str_trim(x[3])})
+}
+
+argv=grep("=",cArgs,value=T,invert=T)
+
+suppressPackageStartupMessages(library(yaml))
+args0=read_yaml(argv[1])
+args=c(args0,args)
+
 source(file.path(SDIR,"seuratTools.R"))
 source(file.path(SDIR,"plotTools.R"))
-
-library(yaml)
-args=read_yaml(cArgs[1])
 
 glbs=args$glbs
 ap=args$algoParams
