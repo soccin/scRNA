@@ -98,3 +98,22 @@ print(pp2)
 dev.off()
 
 mergePNGs(pfile)
+
+if(!is.null(args$CRES)) {
+
+    library(pals)
+    pal1=c(cols25(),brewer.dark2(8))
+
+    clusterRes=grep(args$CRES,grep("res",colnames(s1@meta.data),value=T),value=T)
+
+    pv=VlnPlot(s1,features=go,combine=F,group.by=clusterRes,col=pal1)
+    pp3=paginatePlots(pv,2,3)
+
+    pfile=cc("seuratQC",args$PROJNAME,plotNo(),"GeneVlnPlt",
+                basename(geneListFile),"res",args$CRES,"%03d.png")
+    pngCairo(pfile,width=11,height=8.5)
+    print(pp3)
+    dev.off()
+    mergePNGs(pfile)
+
+}
