@@ -60,17 +60,17 @@ suppressPackageStartupMessages({
     library(pals)
 })
 
-geneListFile=cArgs[2]
+geneListFile=argv[2]
 genes=scan(geneListFile,"")
 if(args$glbs$genome=="mm10") {
     genes=str_to_title(genes)
 }
 
 
-
 ##########################################################################
 #
 # INCLUDE BREAK
+#halt("INCLUDE")
 #
 ##########################################################################
 
