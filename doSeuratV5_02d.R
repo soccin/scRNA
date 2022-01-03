@@ -71,9 +71,12 @@ s1=readRDS(args$PASS2b.RDAFile)
 
 if(len(cArgs)>1) {
     cResValue=cArgs[2]
-    clusterRes=paste0("integrated_snn_res.",cResValue)
+    clusterRes=grep(cResValue,grep("res\\.",colnames(s1@meta.data),value=T),value=T)
 } else {
-    clusterRes="integrated_snn_res.0.5"
+    cat("\n\nNeed to specify a cluster resolution that will match with grep\n")
+    cat("possible resolutions =>\n")
+    cat("  ",paste(grep("res\\.",colnames(s1@meta.data),value=T),collapse=", "),"\n\n")
+    quit()
 }
 
 if(!clusterRes %in% colnames(s1@meta.data)) {
