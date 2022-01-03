@@ -106,7 +106,7 @@ if(!is.null(args$CRES)) {
 
     clusterRes=grep(args$CRES,grep("res",colnames(s1@meta.data),value=T),value=T)
 
-    pv=VlnPlot(s1,features=go,combine=F,group.by=clusterRes,col=pal1)
+    pv=VlnPlot(s1,features=genes,combine=F,group.by=clusterRes,col=pal1)
     pp3=paginatePlots(pv,2,3)
 
     pfile=cc("seuratQC",args$PROJNAME,plotNo(),"GeneVlnPlt",
