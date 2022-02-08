@@ -93,9 +93,12 @@ if(file.exists("pass_00_PARAMS.yaml")) {
     cat("\n   No pass_00_PARAMS file; using default PARAMS\n\n\n")
 }
 
+halt("FIX SAMPLE IDS")
+
 dataFolders=argv
-sampleIDs=gsub("_",".",gsub(".outs.*","",gsub(".*/s_","",dataFolders)))
+sampleIDs=gsub("_",".",gsub(".outs.*","",gsub("^s_","",basename(dataFolders))))
 names(dataFolders)=sampleIDs
+
 
 #
 # QC Defaults
