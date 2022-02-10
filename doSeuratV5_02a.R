@@ -7,15 +7,16 @@
 suppressPackageStartupMessages(require(stringr))
 
 usage="
-usage: doSeuratV5_02.R [GENE_FILTER=geneFile] PARAMS.yaml
+usage: doSeuratV5_02.R [GENE_FILTER=geneFile] [CELL_FILTER=filterFile.csv] PARAMS.yaml
 
     PARAMS.yaml     parameter file from pass1
     GENE_FILTER     File of genes to filter out
+    CELL_FILTER     File of cells to filter out
 
 "
 
 cArgs=commandArgs(trailing=T)
-args=list(GENE_FILTER=NULL)
+args=list(GENE_FILTER=NULL,CELL_FILTER=NULL)
 usage=str_interp(usage,args)
 
 ii=grep("=",cArgs)
@@ -75,7 +76,7 @@ plotNo<-makeAutoIncrementor(10)
 
 d10X=readRDS(args$PASS1.RDAFile)
 
-halt("CHECK GENE FILTER")
+#halt("CHECK GENE FILTER")
 
 if(!is.null(args$GENE_FILTER)) {
     rna=d10X[[1]]@assays$RNA
@@ -102,8 +103,9 @@ for(ii in seq(d10X)) {
     }
 }
 
-
-
+if(!is.null(args$CELL_FILTER)) {
+    halt("Add Cell Filter")
+}
 
 ##############################################################################
 # Check Cell Cycle
