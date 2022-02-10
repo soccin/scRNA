@@ -116,6 +116,8 @@ if(args$DEBUG) {
 #
 
 if(!is.null(args$CELL_FILTER)) {
+
+    c("\n\nFiltering Cells...\n\n")
     cellFilter=read_csv(args$CELL_FILTER)
     for(ii in seq(d10X)) {
         print(ii)
