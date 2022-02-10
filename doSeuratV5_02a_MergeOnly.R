@@ -8,14 +8,15 @@
 suppressPackageStartupMessages(require(stringr))
 
 usage="
-usage: doSeuratV5_02.R PARAMS.yaml
+usage: doSeuratV5_02.R [CC_REGRESS=TRUE] [CELL_FILTER=filterFile.csv] PARAMS.yaml
 
     PARAMS.yaml     parameter file from pass1
     CC_REGRESS      Flag to control cell cycle regression [Def: TRUE]
+    CELL_FILTER     File of cells to filter out
 
 "
 cArgs=commandArgs(trailing=T)
-args=list(CC_REGRESS=TRUE)
+args=list(CC_REGRESS=TRUE,CELL_FILTER=NULL)
 usage=str_interp(usage,args)
 
 ii=grep("=",cArgs)
@@ -104,6 +105,23 @@ if(args$DEBUG) {
     }
     cat("digest=",digest::digest(d10X),"\n")
 
+}
+
+##############################################################################
+# Filter cells if file provided
+#
+# The file is a list of cells to _REMOVE_
+# It must contain valid cell barcodes in a column
+# called $CellID
+#
+
+if(!is.null(args$CELL_FILTER)) {
+    cellFilter=read_csv(args$CELL_FILTER)
+    for(ii in seq(d10X)) {
+        print(ii)
+        so=d10X[[ii]]
+        d10X[[ii]]=subset(so,cells=setdiff(Cells(so),cellFilter$CellID))
+    }
 }
 
 ##############################################################################
