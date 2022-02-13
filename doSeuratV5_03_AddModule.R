@@ -5,6 +5,7 @@ usage: doSeuratV5_03_FeaturePlots.R PARAMS_2b.yaml ModuleFile
 
     PARAMS_2b.yaml  parameter file from pass2b
     ModuleFile      File with Module Genes (name of module from filename)
+
 "
 
 cArgs=commandArgs(trailing=T)
@@ -44,12 +45,13 @@ plotNo<-makeAutoIncrementor(50)
 
 moduleFile=cArgs[2]
 
-if(!grepl("\\.xlsx$",moduleFile)) {
+if(!grepl("\\.(xlsx|csv)$",moduleFile)) {
     cat("\n    Note implemented: Only XLSX modules files currently working\n\n")
     quit()
 }
 
 args$MODULES=normalizePath(moduleFile)
+modFileExt=tools::file_ext(moduleFile)
 
 suppressPackageStartupMessages({
     library(Seurat)
@@ -69,12 +71,17 @@ suppressPackageStartupMessages({
 s1=readRDS(args$PASS2b.RDAFile)
 DefaultAssay(s1)="SCT"
 
-moduleTbl=read_xlsx(moduleFile,sheet="GeneList")
+if(modFileExt=="xlsx") {
+    moduleTbl=read_xlsx(moduleFile,sheet="GeneList")
+} else if(modFileExt=="csv") {
+    moduleTbl=read_csv(moduleFile)
+}
+
 modules=split(moduleTbl$Genes,moduleTbl$Module)
 
 s1=AddModuleScore(s1,features=modules,name="Modules")
 
-clusterRes="SCT_snn_res.0.5"
+clusterRes="SCT_snn_res.0.1"
 
 cat("\nPlot modules ...")
 pm=list()
