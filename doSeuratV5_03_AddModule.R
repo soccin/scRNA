@@ -120,9 +120,14 @@ print(paginatePlots(pn,3,1,FALSE))
 dev.off()
 mergePNGs(pfile)
 
+#
+# Dump metadata
+#
 
-
-
+md=s1@meta.data %>% data.frame %>% rownames_to_column("CellID") %>% tibble
+moduleCols=grep("^Modules\\d+",names(md))
+colnames(md)[moduleCols]=paste0("mod.",names(modules))
+write_csv(md,"metaData_AddModules.csv")
 
 
 
