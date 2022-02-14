@@ -1,3 +1,14 @@
+usage="
+usage: doSeuratV5_03_FeaturePlots.R [CRES=clusterResolution] PARAMS_2b.yaml GeneListFile
+
+    PARAMS_2b.yaml  parameter file from pass2b
+    GeneListFile    List of Genes to Plot
+
+  Optional:
+    CRES=resNumber  Cluster Resolution to use (eg: CRES=0.2)
+
+"
+
 if(R.Version()$major<4) {
     cat(usage)
     cat("\n\nThis script needs version(R).major>=4\n\n")
@@ -16,17 +27,6 @@ if(Sys.getenv("SDIR")=="") {
 }
 
 suppressPackageStartupMessages(require(stringr))
-
-usage="
-usage: doSeuratV5_03_FeaturePlots.R [CRES=clusterResolution] PARAMS_2b.yaml GeneListFile
-
-    PARAMS_2b.yaml  parameter file from pass2b
-    GeneListFile    List of Genes to Plot
-
-  Optional:
-    CRES=resNumber  Cluster Resolution to use (eg: CRES=0.2)
-
-"
 
 cArgs=commandArgs(trailing=T)
 args=list(CRES=NULL)
