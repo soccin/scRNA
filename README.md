@@ -1,6 +1,6 @@
 # scRNA Version 4
 
-## Branch master (merged in ver/Seurat4 branch 2021-10-28)
+## Branch proj/p12437 (Benezra NucSec Specific version)
 
 Now does SCTransform and Integrate
 
