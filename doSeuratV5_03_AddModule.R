@@ -1,22 +1,19 @@
 suppressPackageStartupMessages(require(stringr))
 
 usage="
-usage: doSeuratV5_03_FeaturePlots.R [CRES=clusterResolution] PARAMS_2b.yaml ModuleFile
+usage: doSeuratV5_03_AddModule.R PARAMS_2b.yaml ModuleFile
 
-    PARAMS_2b.yaml   parameter file from pass2b
-    ModuleFile       File with Module Genes (name of module from filename)
-
-    Optional:
-      CRES=resNumber Cluster Resolution to use (eg: CRES=0.2)
+    PARAMS_2b.yaml  parameter file from pass2b
+    ModuleFile      File with Module Genes (name of module from filename)
 
 "
 
-# cArgs=commandArgs(trailing=T)
+cArgs=commandArgs(trailing=T)
 
-# if(len(cArgs)!=2) {
-#     cat(usage)
-#     quit()
-# }
+if(len(cArgs)!=2) {
+    cat(usage)
+    quit()
+}
 
 if(R.Version()$major<4) {
     cat(usage)
@@ -38,33 +35,15 @@ if(Sys.getenv("SDIR")=="") {
 source(file.path(SDIR,"seuratTools.R"))
 source(file.path(SDIR,"plotTools.R"))
 
-cArgs=commandArgs(trailing=T)
-args=list(CRES=NULL)
-usage=str_interp(usage,args)
-
-ii=grep("=",cArgs)
-if(len(ii)>0) {
-    parseArgs=str_match(cArgs[ii],"(.*)=(.*)")
-    aa=apply(parseArgs,1,function(x){args[[str_trim(x[2])]]<<-str_trim(x[3])})
-}
-
-argv=grep("=",cArgs,value=T,invert=T)
-
-if(len(argv)!=2) {
-    cat(usage)
-    quit()
-}
-
-suppressPackageStartupMessages(library(yaml))
-args0=read_yaml(argv[1])
-args=c(args0,args)
+library(yaml)
+args=read_yaml(cArgs[1])
 
 glbs=args$glbs
 ap=args$algoParams
 
 plotNo<-makeAutoIncrementor(50)
 
-moduleFile=argv[2]
+moduleFile=cArgs[2]
 
 if(!grepl("\\.(xlsx|csv)$",moduleFile)) {
     cat("\n    Note implemented: Only XLSX modules files currently working\n\n")
@@ -102,14 +81,7 @@ modules=split(moduleTbl$Genes,moduleTbl$Module)
 
 s1=AddModuleScore(s1,features=modules,name="Modules")
 
-if(is.null(args$CRES)) {
-    clusterResolutions=c("0.1")
-} else {
-    clusterResolutions=strsplit(args$CRES,",")[[1]]
-}
-cTag=gsub("_res.*","_res",grep("_res",colnames(s1@meta.data),value=T)[1])
-
-halt()
+clusterRes="SCT_snn_res.0.1"
 
 cat("\nPlot modules ...")
 pm=list()
@@ -124,19 +96,14 @@ for(ii in seq(len(modules))) {
 
     pm[[ii]]=pp[[1]] + ggtitle(names(modules)[ii])
 
-    for(ci in clusterResolutions) {
+    pn[[ii]] = ggplot(s1@meta.data,aes_string(clusterRes,modTag,fill=clusterRes)) +
+        geom_violin() +
+        theme_light() +
+        geom_jitter(alpha=.1,size=.7,width=.2) +
+        ylab("Module Score") +
+        ggtitle(names(modules)[ii]) +
+        theme(legend.position = "none")
 
-        clusterRes=paste0(cTag,".",ci)
-
-        pn[[len(pn)+1]] = ggplot(s1@meta.data,aes_string(clusterRes,modTag,fill=clusterRes)) +
-            geom_violin() +
-            theme_light() +
-            geom_jitter(alpha=.1,size=.7,width=.2) +
-            ylab("Module Score") +
-            ggtitle(names(modules)[ii]) +
-            theme(legend.position = "none")
-
-    }
 
 }
 
