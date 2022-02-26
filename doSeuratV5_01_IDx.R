@@ -229,9 +229,9 @@ Idents(d10X[[1]])<-"SampleID"
 
 pFile=cc("seuratQC",args$PROJNAME,plotNo(),"Filter_%03d.png")
 pngCairo(file=pFile,height=8.5,width=11)
-for(ii in seq(d10X)) {
+for(ii in grep("ID\\d",names(d10X.orig),invert=T)) {
     print(ii)
-    ret=doQCandFilter(d10X[[ii]], MIN_NCOUNT_RNA, MIN_FEATURE_RNA, PCT_MITO)
+    ret=doQCandFilter(d10X.orig[[ii]], MIN_NCOUNT_RNA, MIN_FEATURE_RNA, PCT_MITO)
     d10X[[ii]]=ret$so
     print(ret$plts)
 }
