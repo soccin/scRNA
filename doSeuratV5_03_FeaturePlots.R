@@ -32,6 +32,11 @@ cArgs=commandArgs(trailing=T)
 args=list(CRES=NULL)
 usage=str_interp(usage,args)
 
+if(len(cArgs)<2) {
+    cat(usage)
+    quit()
+}
+
 ii=grep("=",cArgs)
 if(len(ii)>0) {
     parseArgs=str_match(cArgs[ii],"(.*)=(.*)")
@@ -91,8 +96,8 @@ for(ii in seq(genes)) {
 
 pfile=cc("seuratQC",args$PROJNAME,plotNo(),"GeneUMAPs",basename(geneListFile),"%03d.png")
 pngCairo(pfile,width=11,height=8.5)
-pp1=paginatePlots(pp,2,3,oneLegend=F)
-pp2=map(pgL,paginatePlots,2,2,oneLegend=F)
+pp1=paginatePlots(pp,2,2,oneLegend=F)
+pp2=map(pgL,paginatePlots,2,3,oneLegend=F)
 print(pp1)
 print(pp2)
 dev.off()
