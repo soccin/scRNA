@@ -126,7 +126,8 @@ s1 <- RunUMAP(s1, dims = 1:nDims)
 
 library(pals)
 
-maxResTag=grep(ap$ClusterResolutions[len(ap$ClusterResolutions)],colnames(s1@meta.data),value=T)
+cRes=grep("_res\\.",colnames(s1@meta.data),value=T)
+maxResTag=cRes[len(cRes)]
 maxClusters=s1@meta.data %>% tibble %>% distinct(.data[[maxResTag]]) %>% pull %>% len
 
 if(maxClusters>33) {
