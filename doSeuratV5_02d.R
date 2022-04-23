@@ -90,7 +90,7 @@ pct=c(clusterMarkers$pct.1,clusterMarkers$pct.2)
 ps=min(min(pct[pct>0]),min(1-pct[pct<1]))/2
 
 FDR.cut=0.05
-logFC.cut=1
+logFC.cut=0.25
 filterCLTable<-function(clm) {
     tibble(clm) %>%
         mutate(lor.1=log((pct.1+ps)/(1-pct.1+ps))) %>%
