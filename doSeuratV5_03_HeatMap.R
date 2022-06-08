@@ -1,18 +1,25 @@
 suppressPackageStartupMessages(require(stringr))
 
 usage="
-usage: doSeuratV5_02.R PARAMS.yaml
+usage: doSeuratV5_02.R PARAMS_2b.yaml geneList.csv
 
-    PARAMS.yaml     parameter file from pass1
-
+    PARAMS.yaml     parameter file from pass2b
+    geneList.csv    List of genes
 "
 
 cArgs=commandArgs(trailing=T)
 
-if(len(cArgs)<1) {
+if(len(cArgs)<2) {
     cat(usage)
     quit()
 }
+
+if(!grepl("\\.csv$",cArgs[2])) {
+    cat("\n\nGeneList needs to be a .CSV file with a column called Gene\n\n")
+    cat(usage)
+    quit()
+}
+
 
 if(R.Version()$major<4) {
     cat(usage)
@@ -40,7 +47,14 @@ args=read_yaml(cArgs[1])
 glbs=args$glbs
 ap=args$algoParams
 
-plotNo<-makeAutoIncrementor(20)
+if(is.null(args$PASS2b.RDAFile)) {
+    cat(usage)
+    cat("\n\nNeed to work with PASS2b data\n\n")
+    quit()
+}
+
+
+plotNo<-makeAutoIncrementor(30)
 
 suppressPackageStartupMessages({
     library(Seurat)
@@ -58,15 +72,16 @@ suppressPackageStartupMessages({
 #
 ##########################################################################
 
-obj=readRDS(args$PASS2b.RDAFile)
+sr=readRDS(args$PASS2b.RDAFile)
 genes=read_csv(cArgs[2])
 
-sr=subset(obj,cells=Cells(obj)[runif(nrow(obj@meta.data))<0.1])
 DefaultAssay(sr)="SCT"
+Idents(sr)="integrated_snn_res.0.2"
 
 pg=DoHeatmap(sr,assay="SCT",features=genes$Gene) + scale_fill_gradientn(colors = c("blue", "white", "red"))
 
-png(filename="heatmap.png",type="cairo",units="in",width=14,height=10,pointsize=12,res=150)
+pfile=cc("seuratQC",args$PROJNAME,plotNo(),"HeatMap_%03d.png")
+pngCairo(pfile,width=11,height=8.5)
 print(pg)
 dev.off()
 
