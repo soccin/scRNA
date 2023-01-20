@@ -28,7 +28,7 @@ makeAutoIncrementor <- function(init=0) {
 }
 
 #genomes=c("refdata-gex-mm10-2020-A"="mm10","refdata-gex-GRCh38-2020-A"="hg38")
-genomes=unlist(yaml::read_yaml("data/genomes.yaml")$genomes)
+genomes=unlist(yaml::read_yaml(file.path(SDIR,"data/genomes.yaml"))$genomes)
 
 extractProjNoFromPath<-function(pp) {
 
