@@ -93,7 +93,7 @@ if(file.exists("pass_00_PARAMS.yaml")) {
     cat("\n   No pass_00_PARAMS file; using default PARAMS\n\n\n")
 }
 
-halt("FIX SAMPLE IDS")
+#halt("FIX SAMPLE IDS")
 
 dataFolders=argv
 sampleIDs=gsub("_",".",gsub(".outs.*","",gsub("^s_","",basename(dataFolders))))
@@ -162,6 +162,7 @@ if(args$DEBUG) {
 ##############################################################################
 # Check Cell Cycle
 #
+if(0) {
 cat("\nScoreCellCycle\n")
 
 for(ii in seq(d10X)) {
@@ -190,10 +191,11 @@ pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"CellCycle.pdf"),width=11,height=8
 #         print(wrap_plots(pOut,ncol=2))
 #     }
 # } else {
-    print(pcc)
+   print(pcc)
 #}
 
 dev.off()
+}
 
 ##############################################################################
 # Merge samples if MERGE set
@@ -229,6 +231,8 @@ d10X[[1]]@meta.data=md
 cat("\nDoQCandFilter\n")
 
 Idents(d10X[[1]])<-"SampleID"
+
+halt("Stage-I QC")
 
 pFile=cc("seuratQC",args$PROJNAME,plotNo(),"Filter_%03d.png")
 pngCairo(file=pFile,height=8.5,width=11)
