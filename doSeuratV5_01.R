@@ -77,7 +77,7 @@ suppressPackageStartupMessages({
 
 source(file.path(SDIR,"seuratTools.R"))
 source(file.path(SDIR,"plotTools.R"))
-source(file.path(SDIR,"doQCandFilter.R"))
+source(file.path(SDIR,"qcAndFilter.R"))
 
 ##############################################################################
 # Set up global variables, parameters and defaults
@@ -244,6 +244,15 @@ for(ii in seq(d10X)) {
 }
 dev.off()
 mergePNGs(pFile)
+
+
+##############################################################################
+##############################################################################
+# Move cell cycle here and run if filtering is set by pass_00_PARAMS.yaml
+#     if(file.exists("pass_00_PARAMS.yaml"))
+##############################################################################
+##############################################################################
+
 
 args$glbs=glbs
 args$algoParams=algoParams

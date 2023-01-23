@@ -68,7 +68,7 @@ suppressPackageStartupMessages({
 
 source(file.path(SDIR,"seuratTools.R"))
 source(file.path(SDIR,"plotTools.R"))
-source(file.path(SDIR,"doQCandFilter.R"))
+source(file.path(SDIR,"qcAndFilter.R"))
 
 glbs=args$glbs
 ap=args$algoParams
