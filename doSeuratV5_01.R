@@ -126,38 +126,127 @@ algoParams$SEED=101
 # Read 10X data
 #
 
-d10X=list()
-for(ii in seq(len(dataFolders))) {
-    sampleName=sampleIDs[ii]
-    cat("Reading Sample =",sampleName,"...")
-    d10X[[sampleName]] <- read10XDataFolderAsSeuratObj(dataFolders[ii],args$PROJNAME)
-    cat("\n")
-}
-d10X.orig=d10X
-glb.digest=digest::digest(d10X)
-cat("digest=",digest::digest(d10X),"\n")
-
-##############################################################################
-# Downsample if DEBUG set
-#
-
-if(args$DEBUG) {
-
-    c("\n\nDEBUG SET; Subset data\n\n")
-
-    set.seed(algoParams$SEED)
-
-    cat("\nDEBUG::subset\n")
-
-    for(ii in seq(d10X)) {
-        print(ii)
-        xx=d10X[[ii]]
-        d10X[[ii]]=subset(xx,cells=Cells(xx)[runif(nrow(xx@meta.data))<args$DOWNSAMPLE])
+CACHE=F
+if(exists("args00") && !is.null(args00$PASS0.RDAFile)) {
+    cat("Reading from cache",args00$PASS0.RDAFile,"\n")
+    d10X=readRDS(args00$PASS0.RDAFile)
+    CACHE=T
+} else {
+    d10X=list()
+    for(ii in seq(len(dataFolders))) {
+        sampleName=sampleIDs[ii]
+        cat("Reading Sample =",sampleName,"...")
+        d10X[[sampleName]] <- read10XDataFolderAsSeuratObj(dataFolders[ii],args$PROJNAME)
+        cat("\n")
     }
 
+
+    d10X.orig=d10X
+    glb.digest=digest::digest(d10X)
     cat("digest=",digest::digest(d10X),"\n")
 
+    ##############################################################################
+    # Downsample if DEBUG set
+    #
+
+    if(args$DEBUG) {
+
+        c("\n\nDEBUG SET; Subset data\n\n")
+
+        set.seed(algoParams$SEED)
+
+        cat("\nDEBUG::subset\n")
+
+        for(ii in seq(d10X)) {
+            print(ii)
+            xx=d10X[[ii]]
+            d10X[[ii]]=subset(xx,cells=Cells(xx)[runif(nrow(xx@meta.data))<args$DOWNSAMPLE])
+        }
+
+        cat("digest=",digest::digest(d10X),"\n")
+
+    }
+
+    ##############################################################################
+    # Merge samples if MERGE set
+    #
+    cat("\nMERGE Samples\n")
+
+    if(args$MERGE & len(d10X)>1) {
+        cat("\nMerging sample files...")
+        s.merge=merge(d10X[[1]],d10X[-1],project=args$PROJNAME)
+        d10X=list()
+        d10X[[args$PROJNAME]]=s.merge
+        cat("done\n\n")
+    }
+
+    #
+    # Add SampleID metadata, if there is a manifest
+    # use that for the id's otherwise make them orig.ident
+    #
+
+    md=d10X[[1]]@meta.data
+    if(is.null(args00$SAMPLE_MANIFEST)) {
+        md$SampleID=md$orig.ident
+    } else {
+        args$SAMPLE_MANIFEST=args00$SAMPLE_MANIFEST
+        manifest=read_csv(args00$SAMPLE_MANIFEST)
+        md=md %>% rownames_to_column("CELLID") %>% left_join(manifest,by="orig.ident") %>% column_to_rownames("CELLID")
+    }
+    d10X[[1]]@meta.data=md
 }
+
+##############################################################################
+# Save load cache file for faster reloading
+#
+
+args$glbs=glbs
+args$algoParams=algoParams
+
+args$GIT.Describe=git.describe(SDIR)
+args.digest.orig=digest::digest(args)
+
+if(!CACHE) {
+    args$PASS0.RDAFile=cc("pass_00","SObj",args.digest.orig,"d10X.orig",".rda")
+    write_yaml(args,cc("pass_00","PARAMS.yaml"))
+    saveRDS(d10X,args$PASS0.RDAFile,compress=T)
+}
+
+##############################################################################
+# Do Stage-I QC
+#
+cat("\nDoQCandFilter\n")
+
+Idents(d10X[[1]])<-"SampleID"
+
+cat("md5(dX10) =",digest::digest(d10X),"\n")
+
+rlang::abort("Stage-I QC")
+halt("Stage-I QC")
+
+pFile=cc("seuratQC",args$PROJNAME,plotNo(),"Filter_%03d.png")
+pngCairo(file=pFile,height=8.5,width=11)
+for(ii in seq(d10X)) {
+    print(ii)
+    ret=doQCandFilter(d10X[[ii]], MIN_NCOUNT_RNA, MIN_FEATURE_RNA, PCT_MITO)
+    d10X[[ii]]=ret$so
+    print(ret$plts)
+}
+dev.off()
+mergePNGs(pFile)
+
+args.digest.orig=digest::digest(args)
+args$PASS1.RDAFile=cc("pass_01","SObj",args.digest.orig,"d10X.orig",".rda")
+write_yaml(args,cc("pass_01","PARAMS.yaml"))
+
+saveRDS(d10X.orig,args$PASS1.RDAFile,compress=T)
+
+##############################################################################
+##############################################################################
+# Move cell cycle here and run if filtering is set by pass_00_PARAMS.yaml
+#     if(file.exists("pass_00_PARAMS.yaml"))
+##############################################################################
+##############################################################################
 
 ##############################################################################
 # Check Cell Cycle
@@ -197,69 +286,3 @@ pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"CellCycle.pdf"),width=11,height=8
 dev.off()
 }
 
-##############################################################################
-# Merge samples if MERGE set
-#
-cat("\nMERGE Samples\n")
-
-if(args$MERGE & len(d10X)>1) {
-    cat("\nMerging sample files...")
-    s.merge=merge(d10X[[1]],d10X[-1],project=args$PROJNAME)
-    d10X=list()
-    d10X[[args$PROJNAME]]=s.merge
-    cat("done\n\n")
-}
-
-#
-# Add SampleID metadata, if there is a manifest
-# use that for the id's otherwise make them orig.ident
-#
-
-md=d10X[[1]]@meta.data
-if(is.null(args00$SAMPLE_MANIFEST)) {
-    md$SampleID=md$orig.ident
-} else {
-    args$SAMPLE_MANIFEST=args00$SAMPLE_MANIFEST
-    manifest=read_csv(args00$SAMPLE_MANIFEST)
-    md=md %>% rownames_to_column("CELLID") %>% left_join(manifest,by="orig.ident") %>% column_to_rownames("CELLID")
-}
-d10X[[1]]@meta.data=md
-
-##############################################################################
-# Do Stage-I QC
-#
-cat("\nDoQCandFilter\n")
-
-Idents(d10X[[1]])<-"SampleID"
-
-halt("Stage-I QC")
-
-pFile=cc("seuratQC",args$PROJNAME,plotNo(),"Filter_%03d.png")
-pngCairo(file=pFile,height=8.5,width=11)
-for(ii in seq(d10X)) {
-    print(ii)
-    ret=doQCandFilter(d10X[[ii]], MIN_NCOUNT_RNA, MIN_FEATURE_RNA, PCT_MITO)
-    d10X[[ii]]=ret$so
-    print(ret$plts)
-}
-dev.off()
-mergePNGs(pFile)
-
-
-##############################################################################
-##############################################################################
-# Move cell cycle here and run if filtering is set by pass_00_PARAMS.yaml
-#     if(file.exists("pass_00_PARAMS.yaml"))
-##############################################################################
-##############################################################################
-
-
-args$glbs=glbs
-args$algoParams=algoParams
-
-args$GIT.Describe=git.describe(SDIR)
-args.digest.orig=digest::digest(args)
-args$PASS1.RDAFile=cc("pass_01","SObj",args.digest.orig,"d10X.orig",".rda")
-write_yaml(args,cc("pass_01","PARAMS.yaml"))
-
-saveRDS(d10X.orig,args$PASS1.RDAFile,compress=T)
