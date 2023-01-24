@@ -33,12 +33,12 @@ doQCandFilter <- function(so,MIN_NCOUNT_RNA,MIN_FEATURE_RNA,PCT_MITO) {
 
     tbl2=so@meta.data %>% tibble %>%
         mutate(
-            nCount_RNA=nCount_RNA>MIN_NCOUNT_RNA,
-            nFeature_RNA=nFeature_RNA>MIN_FEATURE_RNA,
-            percent.mt=percent.mt<PCT_MITO
+            nCount_RNA.FAIL=nCount_RNA>MIN_NCOUNT_RNA,
+            nFeature_RNA.FAIL=nFeature_RNA>MIN_FEATURE_RNA,
+            percent.mt.FAIL=percent.mt<PCT_MITO
             ) %>%
-        summarize_if(is.logical,~round(100*(1-sum(.)/n()),1)) %>%
-        gather(Metric,PCT.Fail)
+        group_by(SampleID) %>%
+        summarize_if(is.logical,~round(100*(1-sum(.)/n()),1))
 
     plot1 <- FeatureScatter(so, feature1 = "nCount_RNA", feature2 = "percent.mt") +
                 geom_hline(yintercept=PCT_MITO,col="grey",alpha=0.75) +
