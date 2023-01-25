@@ -81,3 +81,28 @@ transformVlnPlot<-function(gg,qcFilterLevels,maxValue=NA) {
     gret
 
 }
+
+transformVlnPlot0<-function(gg,maxValue=NA) {
+
+    if(is.na(maxValue)) {
+        maxValue=quantile(gg$data[[1]],.95)
+        cat("maxValue =",maxValue,"\n")
+    }
+
+    minValue=0
+
+    newBreaks=scales::breaks_extended(5)(c(minValue,maxValue))
+
+    xLabels=str_wrap(gsub("[-_.]"," ",levels(gg$data[[2]])),15)
+
+    gret=gg +
+        geom_jitter(alpha=0.1,size=0.25) +
+        scale_y_continuous(limit=c(minValue,maxValue), breaks=newBreaks) +
+        scale_x_discrete(labels=xLabels) +
+        theme(axis.title.y=element_blank()) +
+        coord_flip() +
+        NoLegend()
+
+    gret
+
+}
