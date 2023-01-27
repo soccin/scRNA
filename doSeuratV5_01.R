@@ -3,7 +3,6 @@ suppressPackageStartupMessages(require(stringr))
 usage="
 usage:
         doSeuratV5_01.R [DEBUG=${DEBUG}] [MERGE=${MERGE}] [PROJNAME=${PROJNAME}] 10XDir1 [10XDir2 ... ]
-        doSeuratV5_01.R pass_00_PARAMS.yaml
 
     DEBUG        Set DEBUG mode (downsample to 10%) [${DEBUG}]
     DOWNSAMPLE   Set amount of DEBUG downsample [${DOWNSAMPLE}]
@@ -52,7 +51,7 @@ if(Sys.getenv("SDIR")=="") {
 }
 
 ##############################################################################
-if(len(argv)<1) {
+if(len(argv)<1 && !file.exists("pass_00_PARAMS.yaml")) {
     cat(usage)
     quit()
 }

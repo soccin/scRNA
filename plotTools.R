@@ -1,3 +1,12 @@
+#
+# Seurat Stuff
+#
+       # if (is.null(x = cols)) {
+       #      cols <- hue_pal()(length(x = levels(x = idents)))
+       #      cols <- Interleave(cols, InvertHex(hexadecimal = cols))
+       #  }
+
+
 pngCairo<-function(filename,width=14,height=8.5,pointsize=12,res=150) {
 
     png(filename,type="cairo",units="in",

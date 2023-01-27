@@ -13,8 +13,9 @@ qcSamples <- function(so) {
         sampleId=cc("MERGE",so@project.name)
     }
 
-    pg0=VlnPlot(so, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), pt.size=0,combine=F)
+    md=tibble(so@meta.data)
 
+    pg0=VlnPlot(so, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), pt.size=0,combine=F)
 
 
     pg0[[1]]=transformVlnPlot(pg0[[1]],MIN_FEATURE_RNA)
