@@ -128,11 +128,28 @@ algoParams$SEED=101
 #
 
 CACHE=F
-if(exists("args00") && !is.null(args00$PASS0.RDAFile)) {
-    cat("Reading from cache",args00$PASS0.RDAFile,"\n")
-    d10X=readRDS(args00$PASS0.RDAFile)
+if(exists("args00") && !is.null(args00$PASS0.CACHE)) {
+
+    cat("Reading from cache",args00$PASS0.CACHE,"\n")
+    cobj=readRDS(args00$PASS0.CACHE)
+
+    args=cobj$args
+    cArgs=cobj$cArgs
+    glbs=cobj$glbs
+    d10X.orig=cobj$d10X.orig
+    d10X=cobj$d10X
+
     CACHE=T
+
+    set.seed(algoParams$SEED)
+
+    glb.digest=digest::digest(d10X.orig)
+    cat("digest=",digest::digest(d10X.orig),"\n")
+
 } else {
+
+    set.seed(algoParams$SEED)
+
     d10X=list()
     for(ii in seq(len(dataFolders))) {
         sampleName=sampleIDs[ii]
@@ -143,8 +160,9 @@ if(exists("args00") && !is.null(args00$PASS0.RDAFile)) {
 
 
     d10X.orig=d10X
-    glb.digest=digest::digest(d10X)
-    cat("digest=",digest::digest(d10X),"\n")
+
+    glb.digest=digest::digest(d10X.orig)
+    cat("digest=",digest::digest(d10X.orig),"\n")
 
     ##############################################################################
     # Downsample if DEBUG set
@@ -153,8 +171,6 @@ if(exists("args00") && !is.null(args00$PASS0.RDAFile)) {
     if(args$DEBUG) {
 
         c("\n\nDEBUG SET; Subset data\n\n")
-
-        set.seed(algoParams$SEED)
 
         cat("\nDEBUG::subset\n")
 
@@ -197,6 +213,8 @@ if(exists("args00") && !is.null(args00$PASS0.RDAFile)) {
     d10X[[1]]@meta.data=md
 }
 
+
+
 ##############################################################################
 # Save load cache file for faster reloading
 #
@@ -208,9 +226,12 @@ args$GIT.Describe=git.describe(SDIR)
 args.digest.orig=digest::digest(args)
 
 if(!CACHE) {
-    args$PASS0.RDAFile=cc("pass_00","SObj",args.digest.orig,"d10X.orig",".rda")
+
+    cobj=list(args=args,cArgs=cArgs,glbs=glbs,d10X.orig=d10X.orig,d10X=d10X)
+    args$PASS0.CACHE=cc("pass_00","CACHE",substr(digest::digest(cArgs),1,7),".rda")
     write_yaml(args,cc("pass_00","PARAMS.yaml"))
-    saveRDS(d10X,args$PASS0.RDAFile,compress=T)
+    saveRDS(cobj,args$PASS0.CACHE,compress=T)
+
 }
 
 ##############################################################################
@@ -222,25 +243,21 @@ Idents(d10X[[1]])<-"SampleID"
 
 cat("md5(dX10) =",digest::digest(d10X),"\n")
 
-rlang::abort("Stage-I QC")
-halt("Stage-I QC")
-
-pFile=cc("seuratQC",args$PROJNAME,plotNo(),"Filter_%03d.png")
-pngCairo(file=pFile,height=8.5,width=11)
 for(ii in seq(d10X)) {
     print(ii)
-    ret=doQCandFilter(d10X[[ii]], MIN_NCOUNT_RNA, MIN_FEATURE_RNA, PCT_MITO)
-    d10X[[ii]]=ret$so
+    ret=qcSamples(d10X[[ii]])
+    pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"QC.pdf"),width=11,height=8.5)
     print(ret$plts)
+    dev.off
 }
-dev.off()
-mergePNGs(pFile)
 
 args.digest.orig=digest::digest(args)
 args$PASS1.RDAFile=cc("pass_01","SObj",args.digest.orig,"d10X.orig",".rda")
 write_yaml(args,cc("pass_01","PARAMS.yaml"))
 
 saveRDS(d10X.orig,args$PASS1.RDAFile,compress=T)
+
+halt("Stage-I Finished")
 
 ##############################################################################
 ##############################################################################
