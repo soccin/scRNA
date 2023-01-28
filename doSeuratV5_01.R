@@ -117,9 +117,9 @@ if(exists("args00")) {
 }
 
 algoParams=list()
-algoParams$PCT_MITO=PCT_MITO
 algoParams$MIN_FEATURE_RNA=MIN_FEATURE_RNA
 algoParams$MIN_NCOUNT_RNA=MIN_NCOUNT_RNA
+algoParams$PCT_MITO=PCT_MITO
 algoParams$SEED=101
 
 
