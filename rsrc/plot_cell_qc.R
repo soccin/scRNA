@@ -26,10 +26,19 @@ plot_cell_qc <- function(obj,feature,maxVal=NA,lower=T,numCellsPerSample=5000) {
         maxVal=max(maxVal,cut3mad)
     }
 
-    smd=md %>% filter(.data[[feature]]<maxVal) %>% sample_n(min(nrow(md),numCells))
-    yBreaks=sort(c(scales::breaks_pretty(3)(smd[[feature]]),medFeat,cut3mad))
-    yBreaksLabels=sort(c(scales::breaks_pretty(3)(smd[[feature]]),
-        round(medFeat,1),round(cut3mad,1)))
+    fmd=md %>% filter(.data[[feature]]<maxVal)
+    smd=fmd %>% sample_n(min(nrow(fmd),numCells))
+
+    break0=scales::breaks_pretty(5)(fmd[[feature]])
+    cat(break0,"\n")
+    breakDelta=median(diff(break0))
+    rm1=which(abs((break0-cut3mad))<(breakDelta/10))
+    rm2=which(abs((break0-medFeat))<(breakDelta/10))
+    if(len(c(rm1,rm2))>0) {
+        break0=break0[-c(rm1,rm2)]
+    }
+    yBreaks=sort(c(break0,cut3mad,medFeat))
+    yBreaksLabels=sort(c(break0,round(cut3mad,1),round(medFeat,1)))
 
     cat(yBreaks,"\n")
 

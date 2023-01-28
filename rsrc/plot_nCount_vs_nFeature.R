@@ -4,7 +4,7 @@ library(ggforce)
 plot_nCount_vs_nFeature<-function(obj,ncol=3,nrow=2) {
 
     if(class(obj)[1]=="Seurat") {
-        md=tibble(so@meta.data)
+        md=tibble(obj@meta.data)
     } else {
         md=obj
     }
@@ -14,7 +14,7 @@ plot_nCount_vs_nFeature<-function(obj,ncol=3,nrow=2) {
         rasterize(geom_point()) +
         scale_x_log10() +
         scale_y_log10() +
-        scale_colour_gradient(low = "#f7fbff", high = "#08306b") +
+        scale_colour_gradient(low = "#deebf7", high = "#08306b") +
         theme_classic() +
         stat_smooth(method=lm)
 

@@ -9,7 +9,7 @@ plot_highest_exprs_genes<-function(obj,n=25,filterRibo=F,filterMito=F) {
     #
     # ref: https://nbisweden.github.io/workshop-scRNAseq/labs/compiled/scater/scater_01_qc.html
 
-    if(class(obj)[1]=="SeuratObject") {
+    if(class(obj)[1]=="Seurat") {
 
         C=obj@assays$RNA@counts
         C@x=C@x/rep.int(colSums(C), diff(C@p))
@@ -26,14 +26,20 @@ plot_highest_exprs_genes<-function(obj,n=25,filterRibo=F,filterMito=F) {
     }
 
     titleB=c()
+
     if(filterRibo) {
-        #if(glbs$genome=="mm10") {
+        if(glbs$genome!="mm10") {
+            rlang::abort(paste("Unsupported Genome",glbs$genome))
+        }
         cat("\n\nHardcoded for Mouse fix this\n\n")
-        C=C[grep("^Rp[ls]\\d",rownames(C),invert=T),]
+        C=C[grep("^Rp[ls]",rownames(C),invert=T),]
         titleB=c(titleB,"Filter Ribo")
     }
 
     if(filterMito) {
+        if(glbs$genome!="mm10") {
+            rlang::abort(paste("Unsupported Genome",glbs$genome))
+        }
         cat("\n\nHardcoded for Mouse fix this\n\n")
         C=C[grep("^mt-",rownames(C),invert=T),]
         titleB=c(titleB,"Filter Mito")
@@ -51,7 +57,7 @@ plot_highest_exprs_genes<-function(obj,n=25,filterRibo=F,filterMito=F) {
     titleA="Percent Total Count per Cell"
 
     ggplot(dc,aes(Gene,PCT,fill=Gene)) +
-        geom_boxplot(outlier.shape=95,outlier.size=3,outlier.alpha=.6) +
+        rasterize(geom_boxplot(outlier.shape=95,outlier.size=3,outlier.alpha=.6)) +
         scale_y_continuous(labels=scales::percent) +
         theme_light() +
         NoLegend() +
