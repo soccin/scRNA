@@ -241,7 +241,6 @@ saveRDS(d10X.orig,args$PASS1.RDAFile,compress=T)
 ##############################################################################
 # Check Cell Cycle
 #
-if(0) {
 cat("\nScoreCellCycle\n")
 
 for(ii in seq(d10X)) {
@@ -274,5 +273,4 @@ pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"CellCycle.pdf"),width=11,height=8
 #}
 
 dev.off()
-}
 
