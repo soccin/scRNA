@@ -8,3 +8,13 @@ The FASTQ files were first processed using CellRanger V6 with the mouse genome a
 
 The filtered data was normalized and scaled using the SCTransform method from Seurat. For the transform we regressed against the cell cycle scores previously computed. After normlazation we computed the PCA coordinates and retained the first 20 coordiantes in the clustering and projection analysis. For cluster we used the Seurat FindNeighbor and FindClusters functions with several resolution values and after manual inspection fixed on a resolution value of 0.2 for subsequent work. We also computed the UMAP project using RunUMAP and 20 pca coordinates. Cluster specific marker genes were computed using FindAllMarkers with a cutoff of 0.25 in the log fold change and a minimum percentage of 25%. For two specifed gene sets: Adipocyte and Skeletal Muscle, we computed a score for each using AddModuleScore.
 
+## Software
+
+All of the custom R scripts used in this analysis are available here (https://github.com/soccin/scRNA/tree/proj/p12553). The following software packages were also used:
+
+- CellRanger Version 6 (https://support.10xgenomics.com)
+
+- R Version 4.1.2 (https://www.r-project.org)
+
+- Seurat Version 4.2.0 (https://satijalab.org/seurat)
+
