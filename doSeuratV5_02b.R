@@ -158,6 +158,7 @@ cat(" done\n\n")
 
 md=s1@meta.data %>% rownames_to_column("CellID") %>% tibble
 pc=list()
+countTables=list()
 for(clusterI in grep("_snn_res",colnames(md),value=T)) {
 
     cLevels=sort(as.numeric(levels(md[[clusterI]])))
@@ -195,6 +196,8 @@ for(clusterI in grep("_snn_res",colnames(md),value=T)) {
         arrange(Clusters) %>%
         summarize(S=-sum(PCT*log(PCT))/log(nSamples)) %>%
         mutate(SampleID="")
+
+halt("DDDD")
 
     pc[[len(pc)+1]]=ggplot(cTbl,aes(y=Clusters,x=nSampleNorm,fill=SampleID)) +
         geom_bar(position="fill", stat="identity") +

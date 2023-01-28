@@ -1,6 +1,8 @@
 # scRNA Version 4
 
-## Branch master (merged in ver/Seurat4 branch 2021-10-28)
+## Branch proj/p12553
+
+### Manuscript branch
 
 Now does SCTransform and Integrate
 
