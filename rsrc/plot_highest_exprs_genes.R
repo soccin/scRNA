@@ -28,20 +28,24 @@ plot_highest_exprs_genes<-function(obj,n=25,filterRibo=F,filterMito=F) {
     titleB=c()
 
     if(filterRibo) {
-        if(glbs$genome!="mm10") {
-            rlang::abort(paste("Unsupported Genome",glbs$genome))
+        if(glb$genome=="hg38") {
+           C=C[grep("^RP[LSP]",rownames(C),invert=T),]
+        } else if(glb$genome=="mm10") {
+            C=C[grep("^Rp[lsp]",rownames(C),invert=T),]
+        } else {
+           rlang::abort(paste("UNKNOWN Genome",glbs$genome))
         }
-        cat("\n\nHardcoded for Mouse fix this\n\n")
-        C=C[grep("^Rp[ls]",rownames(C),invert=T),]
         titleB=c(titleB,"Filter Ribo")
     }
 
     if(filterMito) {
-        if(glbs$genome!="mm10") {
-            rlang::abort(paste("Unsupported Genome",glbs$genome))
+        if(glb$genome=="hg38") {
+            C=C[grep("^MT-",rownames(C),invert=T),]
+        } else if(glb$genome=="mm10") {
+            C=C[grep("^mt-",rownames(C),invert=T),]
+        } else {
+           rlang::abort(paste("UNKNOWN Genome",glbs$genome))
         }
-        cat("\n\nHardcoded for Mouse fix this\n\n")
-        C=C[grep("^mt-",rownames(C),invert=T),]
         titleB=c(titleB,"Filter Mito")
     }
 
