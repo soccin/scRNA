@@ -1,22 +1,22 @@
 #'
 #' Phase-II
 #'
-#' Do SCTransform but simple MERGE instead of Integrate
-#' Also Switch to not regress Cell Cycle Out
+#' Do SCTransform and Integration
 #'
 
 suppressPackageStartupMessages(require(stringr))
 
 usage="
-usage: doSeuratV5_02.R [CC_REGRESS=TRUE] [CELL_FILTER=filterFile.csv] PARAMS.yaml
+usage: doSeuratV5_02.R [GENE_FILTER=geneFile] [CELL_FILTER=filterFile.csv] PARAMS.yaml
 
     PARAMS.yaml     parameter file from pass1
-    CC_REGRESS      Flag to control cell cycle regression [Def: TRUE]
+    GENE_FILTER     File of genes to filter out
     CELL_FILTER     File of cells to filter out
 
 "
+
 cArgs=commandArgs(trailing=T)
-args=list(CC_REGRESS=TRUE,CELL_FILTER=NULL)
+args=list(GENE_FILTER=NULL,CELL_FILTER=NULL)
 usage=str_interp(usage,args)
 
 ii=grep("=",cArgs)
@@ -25,14 +25,7 @@ if(len(ii)>0) {
     aa=apply(parseArgs,1,function(x){args[[str_trim(x[2])]]<<-str_trim(x[3])})
 }
 
-args$CC_REGRESS=as.logical(args$CC_REGRESS)
-
 argv=grep("=",cArgs,value=T,invert=T)
-
-if(len(argv)<1) {
-    cat(usage)
-    quit()
-}
 
 if(R.Version()$major<4) {
     cat(usage)
@@ -41,9 +34,8 @@ if(R.Version()$major<4) {
 }
 
 library(yaml)
-args1=read_yaml(argv[1])
-
-args=c(args,args1)
+args0=read_yaml(argv[1])
+args=c(args0,args)
 
 if(Sys.getenv("SDIR")=="") {
     #
@@ -84,14 +76,63 @@ plotNo<-makeAutoIncrementor(10)
 
 d10X=readRDS(args$PASS1.RDAFile)
 
+#halt("CHECK GENE FILTER")
+
+if(!is.null(args$GENE_FILTER)) {
+    rna=d10X[[1]]@assays$RNA
+    allGenes=rownames(rna@counts)
+    genesToFilter=scan(args$GENE_FILTER,"")
+    genesToKeep=setdiff(allGenes,genesToFilter)
+}
+
 cat("digest=",digest::digest(d10X),"\n")
 
-cat("\nDoQCandFilter\n")
+cat("\nFilter Cells and Genes\n")
 for(ii in seq(d10X)) {
     print(ii)
+
+    halt("FIX THIS")
+
+    # keep=(
+    #     so@meta.data$nFeature_RNA > MIN_FEATURE_RNA &
+    #     so@meta.data$nCount_RNA > MIN_NCOUNT_RNA &
+    #     so@meta.data$percent.mt < PCT_MITO
+    #     )
+
+    # so <- subset(so,
+    #         subset = nFeature_RNA > MIN_FEATURE_RNA & nCount_RNA > MIN_NCOUNT_RNA & percent.mt < PCT_MITO
+    #         )
+
+
+
+
     ret=doQCandFilter(d10X[[ii]], ap$MIN_NCOUNT_RNA, ap$MIN_FEATURE_RNA, ap$PCT_MITO)
-    d10X[[ii]]=ret$so
+
+    if(!is.null(args$GENE_FILTER)) {
+        dn=ret$so
+        dn@assays$RNA@counts=dn@assays$RNA@counts[genesToKeep,]
+        dn@assays$RNA@data=dn@assays$RNA@data[genesToKeep,]
+        dn@assays$RNA@meta.features=dn@assays$RNA@meta.features[genesToKeep,]
+        d10X[[ii]]=dn
+    } else {
+        d10X[[ii]]=ret$so
+    }
 }
+
+if(!is.null(args$CELL_FILTER)) {
+    halt("Add Cell Filter")
+}
+
+##############################################################################
+# Check Cell Cycle
+#
+cat("\nScoreCellCycle\n")
+
+for(ii in seq(d10X)) {
+    print(ii)
+    d10X[[ii]]=scoreCellCycle(d10X[[ii]])
+}
+
 
 if(args$DEBUG) {
 
@@ -107,43 +148,7 @@ if(args$DEBUG) {
 
 }
 
-##############################################################################
-# Filter cells if file provided
-#
-# The file is a list of cells to _REMOVE_
-# It must contain valid cell barcodes in a column
-# called $CellID
-#
 
-if(!is.null(args$CELL_FILTER)) {
-
-    c("\n\nFiltering Cells...\n\n")
-    cellFilter=read_csv(args$CELL_FILTER)
-    for(ii in seq(d10X)) {
-        print(ii)
-        so=d10X[[ii]]
-        d10X[[ii]]=subset(so,cells=setdiff(Cells(so),cellFilter$CellID))
-    }
-}
-
-##############################################################################
-# Check Cell Cycle
-#
-cat("\nScoreCellCycle\n")
-
-for(ii in seq(d10X)) {
-    print(ii)
-    d10X[[ii]]=scoreCellCycle(d10X[[ii]])
-}
-
-##############################################################################
-# Merge samples if MERGE set
-#
-cat("\nMERGE Samples\n")
-
-cat("\nMerging sample files...")
-merge=merge(d10X[[1]],d10X[-1],project=args$PROJNAME)
-cat("done\n\n")
 
 ##############################################################################
 # Do SCTransform
@@ -151,13 +156,27 @@ cat("done\n\n")
 #
 cat("\nSCTransform\n")
 
-if(args$CC_REGRESS) {
-    cat("\n\nRegress out Cell Cycle\n\n")
-    d10X.integrate=SCTransform(merge,vars.to.regress = c('S.Score', 'G2M.Score'))
-} else {
-    cat("\n\nNO Cell Cycle regression done\n\n")
-    d10X.integrate=SCTransform(merge)
+d10X.int=list()
+for(ii in seq(d10X)) {
+    print(ii)
+    d10X.int[[ii]]=SCTransform(d10X[[ii]],vars.to.regress = c('S.Score', 'G2M.Score'))
 }
+
+##############################################################################
+# Do Integration
+#
+cat("\nSCTransform\n")
+
+features <- SelectIntegrationFeatures(object.list = d10X.int, nfeatures = 3000)
+d10X.int <- PrepSCTIntegration(object.list = d10X.int, anchor.features = features)
+
+anchors <- FindIntegrationAnchors(
+        object.list = d10X.int,
+        normalization.method = "SCT",
+        anchor.features = features
+        )
+
+d10X.integrate <- IntegrateData(anchorset = anchors, normalization.method = "SCT")
 
 d10X.integrate <- RunPCA(d10X.integrate, verbose = FALSE)
 d10X.integrate <- RunUMAP(d10X.integrate, reduction = "pca", dims = 1:30)
