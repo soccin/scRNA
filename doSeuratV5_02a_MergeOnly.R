@@ -86,12 +86,59 @@ d10X=readRDS(args$PASS1.RDAFile)
 
 cat("digest=",digest::digest(d10X),"\n")
 
+qTbls=list()
+
 cat("\nDoQCandFilter\n")
 for(ii in seq(d10X)) {
     print(ii)
-    ret=doQCandFilter(d10X[[ii]], ap$MIN_NCOUNT_RNA, ap$MIN_FEATURE_RNA, ap$PCT_MITO)
-    d10X[[ii]]=ret$so
+
+    so = d10X[[ii]]
+    md=so@meta.data
+    if(is.null(args$SAMPLE_MANIFEST)) {
+        md$SampleID=md$orig.ident
+    } else {
+        manifest=read_csv(args$SAMPLE_MANIFEST)
+        md=md %>% rownames_to_column("CELLID") %>% left_join(manifest,by="orig.ident") %>% column_to_rownames("CELLID")
+    }
+    so@meta.data=md
+
+    qTbls[[len(qTbls)+1]]=get_qc_tables(so@meta.data,ap)
+
+#    d10X[[ii]] <- subset(so,
+#                       subset = nFeature_RNA > ap$MIN_FEATURE_RNA
+#                        & nCount_RNA > ap$MIN_NCOUNT_RNA
+#                        & percent.mt < ap$PCT_MITO
+#                        )
+
 }
+
+names(qTbls)=names(d10X)
+
+tblCutOff=map(qTbls,1) %>% bind_rows(.id="SampleID") %>% spread(SampleID,Cutoff)
+tblFailN=map(qTbls,5) %>% bind_rows
+tblFailPCT=map(qTbls,4) %>% bind_rows %>% mutate_if(is.numeric,\(x) sprintf("%.2f%%",round(100*x,2)))
+
+totalCells=map(d10X,ncol) %>% data.frame %>% t %>% data.frame %>% rownames_to_column("SampleID") %>% rename(N=2)
+
+tblTotals=tblFailN %>%
+    gather(Feature,Value,-SampleID) %>%
+    group_by(SampleID) %>%
+    summarize(NFail=sum(Value)) %>%
+    left_join(totalCells) %>%
+    mutate(NKeep=N-NFail) %>%
+    select(SampleID,N,NFail,NKeep) %>%
+    mutate(PCT.Keep=sprintf("%.2f%%",100*NKeep/N))
+
+
+ptb=list()
+ptb[[1]]=ggplot()+theme_void()+annotation_custom(tableGrob(tblCutOff,rows=NULL))
+ptb[[2]]=ggplot()+theme_void()+annotation_custom(tableGrob(tblFailN,rows=NULL))
+ptb[[3]]=ggplot()+theme_void()+annotation_custom(tableGrob(tblTotals,rows=NULL))
+ptb[[4]]=ggplot()+theme_void()+annotation_custom(tableGrob(tblFailPCT,rows=NULL))
+
+pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"PostFilterQCTbls.pdf"),width=11,height=8.5)
+print(ptb[[1]]/(ptb[[2]]+ptb[[3]])/ptb[[4]])
+dev.off()
 
 if(args$DEBUG) {
 
