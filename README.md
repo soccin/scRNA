@@ -1,20 +1,9 @@
 # scRNA Version 4
 
-## Branch master (merged in ver/Seurat4 branch 2021-10-28)
+## Branch proj/p12068_v6 (Manuscript Version)
 
-Now does SCTransform and Integrate
+## Methods
 
-Needs R>=4.x. Run `CMD.Setup_R-4.x` to load it
+### scRNAseq analysis
 
-## Current pipeline
-
-Multiple stages
-
-- `doSeuratV5_01.R`: Initial QC to check filtering paramters and check cell cycle regression plots to see if cell cycle regression is needed.
-
-- Stage 2: Multiple parts now:
-
-    - `doSeuratV5_02a.R` Now does SCTransform and Integrate with Normalize and CC regression
-    - `doSeuratV5_02b.R` PCA and clustering
-
-
+The raw sequence data (FASTQ files) were first processed with 10X Genomics CellRanger (v6) software to compute the cell/barcode by gene count matrices using the `cellranger count` command with the refdata-gex-GRCh38-2020-A reference database. The count matrix was then processed with a series of R scripts (R version 4) using the Seurat (version 4) R library38. The cells in each sample were filtered to remove those that failed any of the following QC measures: at least 1,000 detected genes per cell; at least 2,500 UMIs per cell; less than 20% of the cells reads mapping to mitochondrial genes. All ribosomal and mitochondrial genes were also explicitly filtered out of any downstream analysis. Each cell was scored for its cell cycle phase using Seurat’s CellCycleScoring function. All samples were then integrated into one normalized dataset using Seurat’s standard workflow, using SCTransform to normalize the data before merging. This both normalizes and regresses out the cell cycle component. We then ran the PCA projection (RunPCA) and computed the UMAP embedding (RunUMAP) using the first 20 PCA components. The data was then clustered using the FindNeighbors/FindClusters functions with resolutions of 0.1 and 0.5 in the clustering step. We then found cluster specific marker genes which were used to manually annotate cell type identity using comparison to existing relevant single cell dataset annotations. UMAP plots were then created showing the cell level intensity of selected genes.
