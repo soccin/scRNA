@@ -233,6 +233,27 @@ saveRDS(d10X.orig,args$PASS1.RDAFile,compress=T)
 
 ##############################################################################
 ##############################################################################
+# Dump MAD3 levels for possible pass_00_PARAMS
+##############################################################################
+##############################################################################
+
+cutOffsMAD3=ret$stats[[1]]$Cutoff
+names(cutOffsMAD3)=ret$stats[[1]]$Feature
+cutOffsMAD3=as.list(cutOffsMAD3)
+
+args00Mad3=list(
+    algoParams=list(
+        MIN_FEATURE_RNA=cutOffsMAD3$nFeature_RNA,
+        MIN_NCOUNT_RNA=cutOffsMAD3$nCount_RNA,
+        PCT_MITO=cutOffsMAD3$percent.mt,
+        METHOD="MAD3"
+    )
+)
+
+write_yaml(args00Mad3,"pass_00_PARAMS.yaml.mad3")
+
+##############################################################################
+##############################################################################
 # Move cell cycle here and run if filtering is set by pass_00_PARAMS.yaml
 #     if(file.exists("pass_00_PARAMS.yaml"))
 ##############################################################################
