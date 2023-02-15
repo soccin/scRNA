@@ -8,15 +8,17 @@
 suppressPackageStartupMessages(require(stringr))
 
 usage="
-usage: doSeuratV5_02.R [CC_REGRESS=TRUE] [CELL_FILTER=filterFile.csv] PARAMS.yaml
+usage: doSeuratV5_02.R [CC_REGRESS=TRUE] [CELL_FILTER=filterFile.csv] [GENE_FILTER=geneFile] PARAMS.yaml
 
     PARAMS.yaml     parameter file from pass1
     CC_REGRESS      Flag to control cell cycle regression [Def: TRUE]
     CELL_FILTER     File of cells to filter out
+    GENE_FILTER     File of genes to filter out
+
 
 "
 cArgs=commandArgs(trailing=T)
-args=list(CC_REGRESS=TRUE,CELL_FILTER=NULL)
+args=list(CC_REGRESS=TRUE,CELL_FILTER=NULL,GENE_FILTER=NULL)
 usage=str_interp(usage,args)
 
 ii=grep("=",cArgs)
@@ -84,6 +86,19 @@ plotNo<-makeAutoIncrementor(10)
 
 d10X=readRDS(args$PASS1.RDAFile)
 
+#
+# Add gene filters also
+# 
+
+halt("CHECK GENE FILTER")
+if(!is.null(args$GENE_FILTER)) {
+    rna=d10X[[1]]@assays$RNA
+    allGenes=rownames(rna@counts)
+    genesToFilter=scan(args$GENE_FILTER,"")
+    genesToKeep=setdiff(allGenes,genesToFilter)
+}
+
+
 cat("digest=",digest::digest(d10X),"\n")
 
 qTbls=list()
@@ -104,13 +119,18 @@ for(ii in seq(d10X)) {
 
     qTbls[[len(qTbls)+1]]=get_qc_tables(so@meta.data,ap)
 
+    stop("CHECK AND FIX QC FILTERS")
+
 #    d10X[[ii]] <- subset(so,
 #                       subset = nFeature_RNA > ap$MIN_FEATURE_RNA
 #                        & nCount_RNA > ap$MIN_NCOUNT_RNA
 #                        & percent.mt < ap$PCT_MITO
 #                        )
 
+    stop("ADD GENE FILTERS")
+
 }
+
 
 names(qTbls)=names(d10X)
 
@@ -118,7 +138,7 @@ tblCutOff=map(qTbls,1) %>% bind_rows(.id="SampleID") %>% spread(SampleID,Cutoff)
 tblFailN=map(qTbls,5) %>% bind_rows
 tblFailPCT=map(qTbls,4) %>% bind_rows %>% mutate_if(is.numeric,\(x) sprintf("%.2f%%",round(100*x,2)))
 
-totalCells=map(d10X,ncol) %>% data.frame %>% t %>% data.frame %>% rownames_to_column("SampleID") %>% rename(N=2)
+totalCells=map(d10X,ncol) %>% data.frame(check.names=F) %>% t %>% data.frame(check.names=F) %>% rownames_to_column("SampleID") %>% rename(N=2)
 
 tblTotals=tblFailN %>%
     gather(Feature,Value,-SampleID) %>%
