@@ -90,7 +90,6 @@ d10X=readRDS(args$PASS1.RDAFile)
 # Add gene filters also
 # 
 
-halt("CHECK GENE FILTER")
 if(!is.null(args$GENE_FILTER)) {
     rna=d10X[[1]]@assays$RNA
     allGenes=rownames(rna@counts)
@@ -119,15 +118,13 @@ for(ii in seq(d10X)) {
 
     qTbls[[len(qTbls)+1]]=get_qc_tables(so@meta.data,ap)
 
-    stop("CHECK AND FIX QC FILTERS")
+    so = apply_filter01(so,ap)
 
-#    d10X[[ii]] <- subset(so,
-#                       subset = nFeature_RNA > ap$MIN_FEATURE_RNA
-#                        & nCount_RNA > ap$MIN_NCOUNT_RNA
-#                        & percent.mt < ap$PCT_MITO
-#                        )
+    if(!is.null(args$GENE_FILTER)) {
+        so = so[genesToKeep,]
+    }
 
-    stop("ADD GENE FILTERS")
+    d10X[[ii]]=so
 
 }
 
