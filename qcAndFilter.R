@@ -17,6 +17,16 @@ get_mad3Cutoff<-function(xx,lower=T) {
     }
 }
 
+apply_filter01 <- function(so,filters) {
+
+    subset(so,
+           subset = nFeature_RNA > filters$MIN_FEATURE_RNA
+                    & nCount_RNA > filters$MIN_NCOUNT_RNA
+                    & percent.mt < filters$PCT_MITO
+        )
+
+}
+
 get_qc_tables <- function(md,filters) {
 
     MIN_NCOUNT_RNA=filters$MIN_NCOUNT_RNA
