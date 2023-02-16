@@ -45,7 +45,7 @@ if(R.Version()$major<4) {
 library(yaml)
 args1=read_yaml(argv[1])
 
-args=c(args,args1)
+args=modifyList(args,args1)
 
 if(Sys.getenv("SDIR")=="") {
     #
@@ -91,6 +91,7 @@ d10X=readRDS(args$PASS1.RDAFile)
 # 
 
 if(!is.null(args$GENE_FILTER)) {
+    cat("\n   Running gene file with file ",args$GENE_FILTER,"\n\n")
     rna=d10X[[1]]@assays$RNA
     allGenes=rownames(rna@counts)
     genesToFilter=scan(args$GENE_FILTER,"")
