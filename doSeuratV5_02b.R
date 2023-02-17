@@ -239,6 +239,13 @@ pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"ClusterChart",nDims,".pdf"),width
 print(pc)
 dev.off()
 
+halt("SampleBiasChart")
+numResolutions=len(grep("_snn_res",colnames(md),value=T))
+pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"SampleBias",".pdf"),width=11,height=8.5)
+print(pu[numResolutions+1])
+print(pc[4*(seq(numResolutions)-1)+1])
+dev.off()
+
 if(!is.null(oArgs$MODULE_FILE)) {
     oArgs$MODULE_FILE=normalizePath(oArgs$MODULE_FILE)
     DefaultAssay(s1)="SCT"
