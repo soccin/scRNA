@@ -8,13 +8,12 @@
 suppressPackageStartupMessages(require(stringr))
 
 usage="
-usage: doSeuratV5_02.R [CC_REGRESS=TRUE] [CELL_FILTER=filterFile.csv] [GENE_FILTER=geneFile] PARAMS.yaml
+usage: doSeuratV5_02a_MergeOnly.R [CC_REGRESS=TRUE] [CELL_FILTER=filterFile.csv] [GENE_FILTER=geneFile] PARAMS.yaml
 
     PARAMS.yaml     parameter file from pass1
     CC_REGRESS      Flag to control cell cycle regression [Def: TRUE]
     CELL_FILTER     File of cells to filter out
     GENE_FILTER     File of genes to filter out
-
 
 "
 cArgs=commandArgs(trailing=T)
@@ -98,12 +97,14 @@ if(!is.null(args$GENE_FILTER)) {
     genesToKeep=setdiff(allGenes,genesToFilter)
 }
 
-
 cat("digest=",digest::digest(d10X),"\n")
 
-qTbls=list()
-
+##############################################################################
+# Do QC and Filter Cells
+#
 cat("\nDoQCandFilter\n")
+
+qTbls=list()
 for(ii in seq(d10X)) {
     print(ii)
 
@@ -128,7 +129,6 @@ for(ii in seq(d10X)) {
     d10X[[ii]]=so
 
 }
-
 
 names(qTbls)=names(d10X)
 
@@ -224,6 +224,10 @@ if(args$CC_REGRESS) {
     d10X.integrate=SCTransform(merge)
 }
 
+##############################################################################
+# PCA + UMAP on merge/integrated data
+#
+
 d10X.integrate <- RunPCA(d10X.integrate, verbose = FALSE)
 d10X.integrate <- RunUMAP(d10X.integrate, reduction = "pca", dims = 1:30)
 
@@ -274,11 +278,13 @@ print(pv2)
 dev.off()
 
 args$glbs=glbs
+args$CombineMethod="merge"
+args$CombineMethodARGS=list()
 args$algoParams=ap
 args$GIT.Describe=git.describe(SDIR)
 args.digest.orig=digest::digest(args)
 
-args$PASS2.RDAFile=cc("pass_02a","SObj",args.digest.orig,"d10X.integrate",".rda")
+args$PASS2.RDAFile=cc("pass_02a","SObj",args.digest.orig,"d10X.merge",".rda")
 write_yaml(args,cc("pass_02","PARAMS.yaml"))
 
 saveRDS(d10X.integrate,args$PASS2.RDAFile,compress=T)
