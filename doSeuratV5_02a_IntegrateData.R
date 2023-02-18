@@ -17,7 +17,7 @@ usage: doSeuratV5_02_IntegrateData.R [GENE_FILTER=geneFile] [CELL_FILTER=filterF
 "
 
 cArgs=commandArgs(trailing=T)
-args=list(GENE_FILTER=NULL,CELL_FILTER=NULL)
+args=list(GENE_FILTER=NULL,CELL_FILTER=NULL,CC_REGRESS=T)
 usage=str_interp(usage,args)
 
 ii=grep("=",cArgs)
@@ -232,6 +232,7 @@ for(ii in seq(d10X)) {
         cat("\n\nNO Cell Cycle regression done\n\n")
         d10X.int[[ii]]=SCTransform(d10X[[ii]])
     }
+}
 
 ##############################################################################
 # Do Integration
