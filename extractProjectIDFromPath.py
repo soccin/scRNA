@@ -3,7 +3,7 @@
 import sys
 
 cwd=sys.argv[1].split("/")
-projectNo=[x for x in cwd if x.find("Proj_")>-1]
+projectNo=[x for x in cwd if x.find("Proj_")>-1 or x.find("B-")>-1]
 if(len(projectNo)>0):
     print(projectNo[-1])
 else:
