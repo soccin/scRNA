@@ -100,14 +100,14 @@ sce=as.SingleCellExperiment(DietSeurat(s2))
 
 # pred_cell_main=SingleR(test=sce,ref=atlas,assay.type.test="logcounts",labels=atlas$label.main,prune=T)
 # cellTypes=singleR_to_long(pred_cell_main,"Cell.Main")
-pred_cell_fine=SingleR::SingleR(test=sce,ref=atlas,assay.type.test="logcounts",labels=atlas$label.fine,prune=T)
+pred_cell=SingleR::SingleR(test=sce,ref=atlas,assay.type.test="logcounts",labels=atlas$label.main,prune=T)
 
 md=s1@meta.data %>% data.frame(check.names=F) %>% rownames_to_column("CellID") %>% tibble
 md=md %>% left_join(
-            pred_cell_fine %>%
+            pred_cell %>%
             data.frame %>%
             rownames_to_column("CellID") %>%
-            select(CellID,CT_Fine=pruned.labels)
+            select(CellID,CT_Main=pruned.labels)
         )
 
 for(cres in grep("_res",colnames(md),value=T)) {
@@ -115,17 +115,18 @@ for(cres in grep("_res",colnames(md),value=T)) {
     res=gsub(".*_res.","",cres)
     cpred=SingleR::SingleR(test=sce,ref=atlas,assay.type.test="logcounts",labels=atlas$label.fine,clusters=md[[cres]],prune=T)
     ctbl=cpred %>% data.frame %>% rownames_to_column(cres) %>% select(cres,Labels=pruned.labels)
-    colnames(ctbl)[2]=paste0("CTC_Fine_",res)
+    colnames(ctbl)[2]=paste0("CTC_Main_",res)
     md=left_join(md,ctbl)
 }
 
 s1@meta.data=md %>% column_to_rownames("CellID")
 
-ctNames=sort(unique(md$CT_Fine))
+ctNames=sort(unique(atlas$label.main))
 ctCols=pals::cols25(len(ctNames))
 names(ctCols)=ctNames
+ctCols=ctCols[sort(unique(md$CT_Main[!is.na(md$CT_Main)]))]
 
-pg=DimPlot(s1,group.by="CT_Fine",cols=ctCols)
+pg=DimPlot(s1,group.by="CT_Main",cols=ctCols)
 
 pdf(file=cc("seuratQC",args$PROJNAME,cc("b",plotNo()),"CellTypes","SingleR",".pdf"),width=12,height=8.5)
 print(pg)
