@@ -1,9 +1,10 @@
 suppressPackageStartupMessages(require(stringr))
 
 usage="
-usage: doSeuratV5_03_CTSingleR.R MODULE_FILE=file PARAMS_2b.yaml
+usage: doSeuratV5_03_CTSingleR.R [CLUSTER_RES=res] PARAMS_2b.yaml
 
     PARAMS_2b.yaml     parameter file from pass2b [post PCA]
+    CLUSTER_RES        optional: resolution of clusters to use for cluster level assigments
 
 "
 
@@ -14,7 +15,7 @@ cArgs=commandArgs(trailing=T)
 #
 optionals=grep("=",cArgs,value=T)
 
-oArgs=list(MODULE_FILE=NULL)
+oArgs=list(CLUSTER_RES=NULL)
 if(len(optionals)>0) {
     require(stringr, quietly = T, warn.conflicts=F)
     parseArgs=str_match(optionals,"(.*)=(.*)")
@@ -57,6 +58,8 @@ ap=args$algoParams
 plotNo<-makeAutoIncrementor(00)
 
 suppressPackageStartupMessages({
+    library(SingleR)
+    library(celldex)
     library(Seurat)
     library(patchwork)
     library(tidyverse)
@@ -74,38 +77,59 @@ suppressPackageStartupMessages({
 
 s1=readRDS(args$PASS2b.RDAFile)
 
-halt("BREAK")
-
-require(ggforce)
-
-pcc=list()
-pltClusterModules<-function(dd,pageI) {
-    ggplot(dd,aes(Module,PCT,fill=Module)) +
-        geom_bar(stat="identity") +
-        facet_wrap_paginate(~Cluster,ncol=3,nrow=2,page=pageI) +
-        scale_fill_manual(values=cols25()) +
-        theme_light() +
-        theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-        ggtitle(paste("Cluster Resolution",clusterI))
-}
-for(clusterI in grep("integrated_snn",colnames(s1@meta.data),value=T)) {
-    print(clusterI)
-    sc=s1@meta.data %>%
-        count(.data[[clusterI]],Module,.drop=F) %>%
-        tibble %>%
-        rename(Cluster=1) %>%
-        group_by(Cluster) %>%
-        mutate(PCT=n/sum(n)) %>%
-        ungroup
-    pg=list()
-    pg[[1]]=pltClusterModules(sc,1)
-    for(jj in 2:n_pages(pg[[1]])) {
-        print(jj)
-        pg[[jj]]=pltClusterModules(sc,jj)
-    }
-    pcc=c(pcc,pg)
+if(args$glbs$genome=="mm10") {
+    atlas=celldex::MouseRNAseqData()
+} else {
+    cat("\n    Genome",args$glbs$genome,"not implemented\n\n")
+    halt("FATAL ERROR::CTSingleR")
 }
 
-pdf(file=cc("seuratQC",args$PROJNAME,cc("b",plotNo()),"CellTypes",args$algoParams$NDIMS,".pdf"),width=14,height=8.5)
-print(pcc)
+DefaultAssay(s1)="RNA"
+s2=DietSeurat(s1)
+s2=NormalizeData(s1)
+sce=as.SingleCellExperiment(DietSeurat(s2))
+
+# singleR_to_long<-function(pred,method){
+#     pred %>%
+#         data.frame %>%
+#         rownames_to_column("CellID") %>%
+#         select(CellID,Labels=pruned.labels) %>%
+#         mutate(Method=method) %>%
+#         tibble
+# }
+
+# pred_cell_main=SingleR(test=sce,ref=atlas,assay.type.test="logcounts",labels=atlas$label.main,prune=T)
+# cellTypes=singleR_to_long(pred_cell_main,"Cell.Main")
+pred_cell_fine=SingleR::SingleR(test=sce,ref=atlas,assay.type.test="logcounts",labels=atlas$label.fine,prune=T)
+
+md=s1@meta.data %>% data.frame(check.names=F) %>% rownames_to_column("CellID") %>% tibble
+md=md %>% left_join(
+            pred_cell_fine %>%
+            data.frame %>%
+            rownames_to_column("CellID") %>%
+            select(CellID,CT_Fine=pruned.labels)
+        )
+
+for(cres in grep("_res",colnames(md),value=T)) {
+    print(cres)
+    res=gsub(".*_res.","",cres)
+    cpred=SingleR::SingleR(test=sce,ref=atlas,assay.type.test="logcounts",labels=atlas$label.fine,clusters=md[[cres]],prune=T)
+    ctbl=cpred %>% data.frame %>% rownames_to_column(cres) %>% select(cres,Labels=pruned.labels)
+    colnames(ctbl)[2]=paste0("CTC_Fine_",res)
+    md=left_join(md,ctbl)
+}
+
+s1@meta.data=md %>% column_to_rownames("CellID")
+
+ctNames=sort(unique(md$CT_Fine))
+ctCols=pals::cols25(len(ctNames))
+names(ctCols)=ctNames
+
+pg=DimPlot(s1,group.by="CT_Fine",cols=ctCols)
+
+pdf(file=cc("seuratQC",args$PROJNAME,cc("b",plotNo()),"CellTypes","SingleR",".pdf"),width=12,height=8.5)
+print(pg)
 dev.off()
+write_csv(md,"cellTypes_SingleR.csv.gz")
+
+
