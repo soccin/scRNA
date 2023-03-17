@@ -81,7 +81,8 @@ modules=split(moduleTbl$Genes,moduleTbl$Module)
 
 s1=AddModuleScore(s1,features=modules,name="Modules")
 
-clusterRes="SCT_snn_res.0.1"
+clusterRes="res.0.1"
+clusterRes=grep(paste0(clusterRes,"$"),colnames(s1@meta.data),value=T)
 
 cat("\nPlot modules ...")
 pm=list()
