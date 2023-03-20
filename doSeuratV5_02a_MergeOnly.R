@@ -2,21 +2,22 @@
 #' Phase-II
 #'
 #' Do SCTransform but simple MERGE instead of Integrate
-#' Also Swith to not regress Cell Cycle Out
+#' Also Switch to not regress Cell Cycle Out
 #'
 
 suppressPackageStartupMessages(require(stringr))
 
 usage="
-usage: doSeuratV5_02.R [CC_REGRESS=TRUE] [CELL_FILTER=filterFile.csv] PARAMS.yaml
+usage: doSeuratV5_02a_MergeOnly.R [CC_REGRESS=TRUE] [CELL_FILTER=filterFile.csv] [GENE_FILTER=geneFile] PARAMS.yaml
 
     PARAMS.yaml     parameter file from pass1
     CC_REGRESS      Flag to control cell cycle regression [Def: TRUE]
     CELL_FILTER     File of cells to filter out
+    GENE_FILTER     File of genes to filter out
 
 "
 cArgs=commandArgs(trailing=T)
-args=list(CC_REGRESS=TRUE,CELL_FILTER=NULL)
+args=list(CC_REGRESS=TRUE,CELL_FILTER=NULL,GENE_FILTER=NULL)
 usage=str_interp(usage,args)
 
 ii=grep("=",cArgs)
@@ -43,7 +44,7 @@ if(R.Version()$major<4) {
 library(yaml)
 args1=read_yaml(argv[1])
 
-args=c(args,args1)
+args=modifyList(args,args1)
 
 if(Sys.getenv("SDIR")=="") {
     #
@@ -68,7 +69,7 @@ suppressPackageStartupMessages({
 
 source(file.path(SDIR,"seuratTools.R"))
 source(file.path(SDIR,"plotTools.R"))
-source(file.path(SDIR,"doQCandFilter.R"))
+source(file.path(SDIR,"qcAndFilter.R"))
 
 glbs=args$glbs
 ap=args$algoParams
@@ -84,14 +85,78 @@ plotNo<-makeAutoIncrementor(10)
 
 d10X=readRDS(args$PASS1.RDAFile)
 
+#
+# Add gene filters also
+# 
+
+if(!is.null(args$GENE_FILTER)) {
+    cat("\n   Running gene file with file ",args$GENE_FILTER,"\n\n")
+    rna=d10X[[1]]@assays$RNA
+    allGenes=rownames(rna@counts)
+    genesToFilter=scan(args$GENE_FILTER,"")
+    genesToKeep=setdiff(allGenes,genesToFilter)
+}
+
 cat("digest=",digest::digest(d10X),"\n")
 
+##############################################################################
+# Do QC and Filter Cells
+#
 cat("\nDoQCandFilter\n")
+
+qTbls=list()
 for(ii in seq(d10X)) {
     print(ii)
-    ret=doQCandFilter(d10X[[ii]], ap$MIN_NCOUNT_RNA, ap$MIN_FEATURE_RNA, ap$PCT_MITO)
-    d10X[[ii]]=ret$so
+
+    so = d10X[[ii]]
+    md=so@meta.data
+    if(is.null(args$SAMPLE_MANIFEST)) {
+        md$SampleID=md$orig.ident
+    } else {
+        manifest=read_csv(args$SAMPLE_MANIFEST)
+        md=md %>% rownames_to_column("CELLID") %>% left_join(manifest,by="orig.ident") %>% column_to_rownames("CELLID")
+    }
+    so@meta.data=md
+
+    qTbls[[len(qTbls)+1]]=get_qc_tables(so@meta.data,ap)
+
+    so = apply_filter01(so,ap)
+
+    if(!is.null(args$GENE_FILTER)) {
+        so = so[genesToKeep,]
+    }
+
+    d10X[[ii]]=so
+
 }
+
+names(qTbls)=names(d10X)
+
+tblCutOff=map(qTbls,1) %>% bind_rows(.id="SampleID") %>% spread(SampleID,Cutoff)
+tblFailN=map(qTbls,5) %>% bind_rows
+tblFailPCT=map(qTbls,4) %>% bind_rows %>% mutate_if(is.numeric,\(x) sprintf("%.2f%%",round(100*x,2)))
+
+totalCells=map(d10X,ncol) %>% data.frame(check.names=F) %>% t %>% data.frame(check.names=F) %>% rownames_to_column("SampleID") %>% rename(N=2)
+
+tblTotals=tblFailN %>%
+    gather(Feature,Value,-SampleID) %>%
+    group_by(SampleID) %>%
+    summarize(NFail=sum(Value)) %>%
+    left_join(totalCells) %>%
+    mutate(NKeep=N-NFail) %>%
+    select(SampleID,N,NFail,NKeep) %>%
+    mutate(PCT.Keep=sprintf("%.2f%%",100*NKeep/N))
+
+
+ptb=list()
+ptb[[1]]=ggplot()+theme_void()+annotation_custom(tableGrob(tblCutOff,rows=NULL))
+ptb[[2]]=ggplot()+theme_void()+annotation_custom(tableGrob(tblFailN,rows=NULL))
+ptb[[3]]=ggplot()+theme_void()+annotation_custom(tableGrob(tblTotals,rows=NULL))
+ptb[[4]]=ggplot()+theme_void()+annotation_custom(tableGrob(tblFailPCT,rows=NULL))
+
+pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"PostFilterQCTbls.pdf"),width=11,height=8.5)
+print(ptb[[1]]/(ptb[[2]]+ptb[[3]])/ptb[[4]])
+dev.off()
 
 if(args$DEBUG) {
 
@@ -159,6 +224,10 @@ if(args$CC_REGRESS) {
     d10X.integrate=SCTransform(merge)
 }
 
+##############################################################################
+# PCA + UMAP on merge/integrated data
+#
+
 d10X.integrate <- RunPCA(d10X.integrate, verbose = FALSE)
 d10X.integrate <- RunUMAP(d10X.integrate, reduction = "pca", dims = 1:30)
 
@@ -209,11 +278,13 @@ print(pv2)
 dev.off()
 
 args$glbs=glbs
+args$CombineMethod="merge"
+args$CombineMethodARGS=list()
 args$algoParams=ap
 args$GIT.Describe=git.describe(SDIR)
 args.digest.orig=digest::digest(args)
 
-args$PASS2.RDAFile=cc("pass_02a","SObj",args.digest.orig,"d10X.integrate",".rda")
+args$PASS2.RDAFile=cc("pass_02a","SObj",args.digest.orig,"d10X.merge",".rda")
 write_yaml(args,cc("pass_02","PARAMS.yaml"))
 
 saveRDS(d10X.integrate,args$PASS2.RDAFile,compress=T)

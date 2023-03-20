@@ -7,16 +7,17 @@
 suppressPackageStartupMessages(require(stringr))
 
 usage="
-usage: doSeuratV5_02.R [GENE_FILTER=geneFile] [CELL_FILTER=filterFile.csv] PARAMS.yaml
+usage: doSeuratV5_02_IntegrateData.R [GENE_FILTER=geneFile] [CELL_FILTER=filterFile.csv] PARAMS.yaml
 
     PARAMS.yaml     parameter file from pass1
+    CC_REGRESS      Flag to control cell cycle regression [Def: TRUE]
     GENE_FILTER     File of genes to filter out
     CELL_FILTER     File of cells to filter out
 
 "
 
 cArgs=commandArgs(trailing=T)
-args=list(GENE_FILTER=NULL,CELL_FILTER=NULL)
+args=list(GENE_FILTER=NULL,CELL_FILTER=NULL,CC_REGRESS=T)
 usage=str_interp(usage,args)
 
 ii=grep("=",cArgs)
@@ -25,7 +26,14 @@ if(len(ii)>0) {
     aa=apply(parseArgs,1,function(x){args[[str_trim(x[2])]]<<-str_trim(x[3])})
 }
 
+args$CC_REGRESS=as.logical(args$CC_REGRESS)
+
 argv=grep("=",cArgs,value=T,invert=T)
+
+if(len(argv)<1) {
+    cat(usage)
+    quit()
+}
 
 if(R.Version()$major<4) {
     cat(usage)
@@ -34,8 +42,9 @@ if(R.Version()$major<4) {
 }
 
 library(yaml)
-args0=read_yaml(argv[1])
-args=c(args0,args)
+args1=read_yaml(argv[1])
+
+args=modifyList(args,args1)
 
 if(Sys.getenv("SDIR")=="") {
     #
@@ -60,7 +69,7 @@ suppressPackageStartupMessages({
 
 source(file.path(SDIR,"seuratTools.R"))
 source(file.path(SDIR,"plotTools.R"))
-source(file.path(SDIR,"doQCandFilter.R"))
+source(file.path(SDIR,"qcAndFilter.R"))
 
 glbs=args$glbs
 ap=args$algoParams
@@ -76,9 +85,12 @@ plotNo<-makeAutoIncrementor(10)
 
 d10X=readRDS(args$PASS1.RDAFile)
 
-#halt("CHECK GENE FILTER")
+#
+# Add gene filters also
+#
 
 if(!is.null(args$GENE_FILTER)) {
+    cat("\n   Running gene file with file ",args$GENE_FILTER,"\n\n")
     rna=d10X[[1]]@assays$RNA
     allGenes=rownames(rna@counts)
     genesToFilter=scan(args$GENE_FILTER,"")
@@ -87,24 +99,96 @@ if(!is.null(args$GENE_FILTER)) {
 
 cat("digest=",digest::digest(d10X),"\n")
 
+##############################################################################
+# Do QC and Filter Cells
+#
 cat("\nDoQCandFilter\n")
+
+qTbls=list()
 for(ii in seq(d10X)) {
     print(ii)
-    ret=doQCandFilter(d10X[[ii]], ap$MIN_NCOUNT_RNA, ap$MIN_FEATURE_RNA, ap$PCT_MITO)
+
+    so = d10X[[ii]]
+    md=so@meta.data
+    if(is.null(args$SAMPLE_MANIFEST)) {
+        md$SampleID=md$orig.ident
+    } else {
+        manifest=read_csv(args$SAMPLE_MANIFEST)
+        md=md %>% rownames_to_column("CELLID") %>% left_join(manifest,by="orig.ident") %>% column_to_rownames("CELLID")
+    }
+    so@meta.data=md
+
+    qTbls[[len(qTbls)+1]]=get_qc_tables(so@meta.data,ap)
+
+    so = apply_filter01(so,ap)
 
     if(!is.null(args$GENE_FILTER)) {
-        dn=ret$so
-        dn@assays$RNA@counts=dn@assays$RNA@counts[genesToKeep,]
-        dn@assays$RNA@data=dn@assays$RNA@data[genesToKeep,]
-        dn@assays$RNA@meta.features=dn@assays$RNA@meta.features[genesToKeep,]
-        d10X[[ii]]=dn
-    } else {
-        d10X[[ii]]=ret$so
+        so = so[genesToKeep,]
     }
+
+    d10X[[ii]]=so
+
 }
 
+names(qTbls)=names(d10X)
+
+tblCutOff=map(qTbls,1) %>% bind_rows(.id="SampleID") %>% spread(SampleID,Cutoff)
+tblFailN=map(qTbls,5) %>% bind_rows
+tblFailPCT=map(qTbls,4) %>% bind_rows %>% mutate_if(is.numeric,\(x) sprintf("%.2f%%",round(100*x,2)))
+
+totalCells=map(d10X,ncol) %>% data.frame(check.names=F) %>% t %>% data.frame(check.names=F) %>% rownames_to_column("SampleID") %>% rename(N=2)
+
+tblTotals=tblFailN %>%
+    gather(Feature,Value,-SampleID) %>%
+    group_by(SampleID) %>%
+    summarize(NFail=sum(Value)) %>%
+    left_join(totalCells) %>%
+    mutate(NKeep=N-NFail) %>%
+    select(SampleID,N,NFail,NKeep) %>%
+    mutate(PCT.Keep=sprintf("%.2f%%",100*NKeep/N))
+
+
+ptb=list()
+ptb[[1]]=ggplot()+theme_void()+annotation_custom(tableGrob(tblCutOff,rows=NULL))
+ptb[[2]]=ggplot()+theme_void()+annotation_custom(tableGrob(tblFailN,rows=NULL))
+ptb[[3]]=ggplot()+theme_void()+annotation_custom(tableGrob(tblTotals,rows=NULL))
+ptb[[4]]=ggplot()+theme_void()+annotation_custom(tableGrob(tblFailPCT,rows=NULL))
+
+pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"PostFilterQCTbls.pdf"),width=11,height=8.5)
+print(ptb[[1]]/(ptb[[2]]+ptb[[3]])/ptb[[4]])
+dev.off()
+
+if(args$DEBUG) {
+
+    c("\n\nDEBUG SET; Subset data\n\n")
+    set.seed(ap$SEED)
+    cat("\nDEBUG::subset\n")
+    for(ii in seq(d10X)) {
+        print(ii)
+        xx=d10X[[ii]]
+        d10X[[ii]]=subset(xx,cells=Cells(xx)[runif(nrow(xx@meta.data))<args$DOWNSAMPLE])
+    }
+    cat("digest=",digest::digest(d10X),"\n")
+
+}
+
+##############################################################################
+# Filter cells if file provided
+#
+# The file is a list of cells to _REMOVE_
+# It must contain valid cell barcodes in a column
+# called $CellID
+#
+
 if(!is.null(args$CELL_FILTER)) {
-    halt("Add Cell Filter")
+
+    c("\n\nFiltering Cells...\n\n")
+    cellFilter=read_csv(args$CELL_FILTER)
+    for(ii in seq(d10X)) {
+        print(ii)
+        so=d10X[[ii]]
+        d10X[[ii]]=subset(so,cells=setdiff(Cells(so),cellFilter$CellID))
+    }
 }
 
 ##############################################################################
@@ -132,8 +216,6 @@ if(args$DEBUG) {
 
 }
 
-
-
 ##############################################################################
 # Do SCTransform
 # - This is where the cell cycle gets regressed out
@@ -143,15 +225,23 @@ cat("\nSCTransform\n")
 d10X.int=list()
 for(ii in seq(d10X)) {
     print(ii)
-    d10X.int[[ii]]=SCTransform(d10X[[ii]],vars.to.regress = c('S.Score', 'G2M.Score'))
+    if(args$CC_REGRESS) {
+        cat("\n\nRegress out Cell Cycle\n\n")
+        d10X.int[[ii]]=SCTransform(d10X[[ii]],vars.to.regress = c('S.Score', 'G2M.Score'))
+    } else {
+        cat("\n\nNO Cell Cycle regression done\n\n")
+        d10X.int[[ii]]=SCTransform(d10X[[ii]])
+    }
 }
 
 ##############################################################################
 # Do Integration
 #
-cat("\nSCTransform\n")
+cat("\nIntegration\n")
 
-features <- SelectIntegrationFeatures(object.list = d10X.int, nfeatures = 3000)
+INTEGRATION_NFEATURES=3000
+
+features <- SelectIntegrationFeatures(object.list = d10X.int, nfeatures = INTEGRATION_NFEATURES)
 d10X.int <- PrepSCTIntegration(object.list = d10X.int, anchor.features = features)
 
 anchors <- FindIntegrationAnchors(
@@ -161,6 +251,10 @@ anchors <- FindIntegrationAnchors(
         )
 
 d10X.integrate <- IntegrateData(anchorset = anchors, normalization.method = "SCT")
+
+##############################################################################
+# PCA + UMAP on merge/integrated data
+#
 
 d10X.integrate <- RunPCA(d10X.integrate, verbose = FALSE)
 d10X.integrate <- RunUMAP(d10X.integrate, reduction = "pca", dims = 1:30)
@@ -212,6 +306,8 @@ print(pv2)
 dev.off()
 
 args$glbs=glbs
+args$CombineMethod="integrate"
+args$CombineMethodARGS=list(nfeatures=INTEGRATION_NFEATURES)
 args$algoParams=ap
 args$GIT.Describe=git.describe(SDIR)
 args.digest.orig=digest::digest(args)

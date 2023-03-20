@@ -26,5 +26,3 @@ Multiple stages
 
     - `doSeuratV5_02a_MergeOnly.R` or `doSeuratV5_02a_IntegrateData.R` for merge or integration steps
     - `doSeuratV5_02b.R` PCA and clustering
-
-
