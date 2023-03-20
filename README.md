@@ -4,11 +4,19 @@
 
 Major refactor of workflow
 
+Needs R>=4.x.
 
+Major workflow refactor.
 
-Now does SCTransform and Integrate
+- Default is to use simple merge for multiple samples but can set `COMBINE=INTEGRATE` to get the `Seurat` integration workflow. This is now doable from the `CMD.p12` script.
 
-Needs R>=4.x. Run `CMD.Setup_R-4.x` to load it
+- Same two pass of stage 1 `doSeuratV5_01.R` to do QC and determine filtering options. Filtering levels now computed using `MED +/- 3*MAD` criteria.
+
+- Cell Cycle QC done after filtering in stage 1. And added a script for just filtering.
+
+- Added gene filter to Stage 2a
+
+- QC Filter tables
 
 ## Current pipeline
 
@@ -18,19 +26,5 @@ Multiple stages
 
 - Stage 2: Multiple parts now:
 
-    - `doSeuratV5_02a.R` Now does SCTransform and Integrate with Normalize and CC regression
+    - `doSeuratV5_02a_MergeOnly.R` or `doSeuratV5_02a_IntegrateData.R` for merge or integration steps
     - `doSeuratV5_02b.R` PCA and clustering
-
-
-Warning message:
-`funs()` was deprecated in dplyr 0.8.0.
-Please use a list of either functions or lambdas:
-
-  # Simple named list:
-  list(mean = mean, median = median)
-
-  # Auto named with `tibble::lst()`:
-  tibble::lst(mean, median)
-
-  # Using lambdas
-  list(~ mean(., trim = .2), ~ median(., na.rm = TRUE))
