@@ -44,7 +44,7 @@ At this stage the PCA transformation is done on the scaled data using the top (t
 
 For a given cluster resolution; either choosen by default of selected after review of the cluster QC plots we find the genes that are differentially expressed between the clusters. We show the distribution of these marker genes expressions amount the cluster. Also included is a table of the marker genes.
 
-- `seuratQC_analysis_22c_ClusterMarkersDot_SCT_snn_res.0.2_FDR_0.05_logFC_1_.pdf`:
-- `seuratQC_analysis_21d_ClusterMarkers_SCT_snn_res.0.2_FDR_0.05_logFC_1.pdf`:
+- `seuratQC_analysis_31_ClusterMarkersDot_SCT_snn_res.0.2_FDR_0.05_logFC_1_.pdf`:
+- `seuratQC_analysis_32_ClusterMarkers_SCT_snn_res.0.2_FDR_0.05_logFC_1.pdf`:
 - `tblClusterMarkers_SCT_snn_res.0.2_FDR_0.05_logFC_1.xlsx`:
 
