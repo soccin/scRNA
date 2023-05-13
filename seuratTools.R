@@ -43,7 +43,7 @@ extractProjNoFromPath<-function(pp) {
 
 }
 
-read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
+get_genome_from_cellranger<-function(cellRangerDir) {
 
     cmdlineFile=dir_ls(cellRangerDir,regex="_cmd")
     if(len(cmdlineFile)!=1) {
@@ -59,6 +59,18 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
         cat("\n\n  Unknown genomeFile =",genomeFile,"\n\n")
         stop("FATAL ERROR")
     }
+
+    genome
+
+}
+
+read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
+
+    #
+    # This version uses the full cellRanger output to infer the Genome
+    #
+
+    genome=get_genome_from_cellranger(cellRangerDir)
 
     dataDir=dir_ls(cellRangerDir,regex="outs/filtered_feature_bc_matrix$",recurs=T)
     if(len(dataDir)!=1) {
@@ -94,6 +106,38 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
 
 }
 
+read_10X_multi_as_SeurateObject<-function(bc_matrix_dir,sampleName,gexSlot,genome,projName) {
+
+    #
+    # This require the genome to be passed in
+    #
+    # It will also handle multi objects if the Gene Expression slot
+    # is properly named
+    #
+
+    xx <- Read10X(bc_matrix_dir)
+
+    so <- CreateSeuratObject(counts = xx[[gexSlot]], project=projName)
+
+    cell.barcode=basename(colnames(so)) %>% gsub("filtered_feature_bc_matrix_","",.)
+
+    so <- RenameCells(so,new.names=paste0(projName,":bc:",cell.barcode))
+
+    if(genome=="mm10") {
+        so[["percent.mt"]] <- PercentageFeatureSet(so, pattern = "^mt-")
+    } else if(genome=="hg38") {
+        so[["percent.mt"]] <- PercentageFeatureSet(so, pattern = "^MT-")
+    } else {
+        stop(paste("Unknown genome",genome,"Should not get here"))
+    }
+
+    so@meta.data$orig.ident=sampleName
+
+    Idents(so)<-"orig.ident"
+
+    so
+
+}
 
 ##############################################################################
 # Cell Cycle Functions
