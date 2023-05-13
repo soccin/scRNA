@@ -2,22 +2,23 @@ suppressPackageStartupMessages(require(stringr))
 
 usage="
 usage:
-        doSeuratV5_01.R [DEBUG=${DEBUG}] [MERGE=${MERGE}] [PROJNAME=${PROJNAME}] 10XDir1 [10XDir2 ... ]
+        doSeuratV5_01.R [CONFIG=${CONFIG}] [DEBUG=${DEBUG}] [MERGE=${MERGE}] [PROJNAME=${PROJNAME}] 10XDir1 [10XDir2 ... ]
 
     DEBUG        Set DEBUG mode (downsample to 10%) [${DEBUG}]
     DOWNSAMPLE   Set amount of DEBUG downsample [${DOWNSAMPLE}]
     MERGE        If True then merge samples with simple merge [${MERGE}]
     PROJNAME     Set name of project. Must either be used or there
                  must be a file PROJNAME in folder with name
+    CONFIG       YAML file used to specify explicit paths to cellRanger data folder and genome
+                 if used then directories not read from command line
 
   Pass 1, check QC and filtering levels and also generate Cell Cycle
   Regression plots to see if C.C. needs to be regressed out.
 
 "
 
-
 cArgs=commandArgs(trailing=T)
-args=list(DEBUG=FALSE,MERGE=TRUE,PROJNAME="scRNA",DOWNSAMPLE=0.1)
+args=list(DEBUG=FALSE,MERGE=TRUE,PROJNAME="scRNA",DOWNSAMPLE=0.1,CONFIG=".none")
 usage=str_interp(usage,args)
 
 ii=grep("=",cArgs)
@@ -51,7 +52,28 @@ if(Sys.getenv("SDIR")=="") {
 }
 
 ##############################################################################
-if(len(argv)<1 && !file.exists("pass_00_PARAMS.yaml")) {
+
+if(args$CONFIG!=".none" & file.exists(args$CONFIG)) {
+    cat("\nUsing config file for data paths\n\n")
+    library(yaml)
+    require(dplyr)
+
+    config=read_yaml(args$CONFIG)
+    inputs=purrr::map(config$inputs,as_tibble) %>% bind_rows
+    dataFolders=inputs$dir
+    names(dataFolders)=inputs$sid
+
+} else {
+
+    #halt("FIX SAMPLE IDS")
+    #
+    dataFolders=argv
+    sampleIDs=gsub("_",".",gsub(".outs.*","",gsub("^s_","",basename(dataFolders))))
+    names(dataFolders)=sampleIDs
+
+}
+
+if(len(dataFolders)<1) {
     cat(usage)
     quit()
 }
@@ -94,11 +116,6 @@ if(file.exists("pass_00_PARAMS.yaml")) {
     cat("\n   No pass_00_PARAMS file; using default PARAMS\n\n\n")
 }
 
-#halt("FIX SAMPLE IDS")
-
-dataFolders=argv
-sampleIDs=gsub("_",".",gsub(".outs.*","",gsub("^s_","",basename(dataFolders))))
-names(dataFolders)=sampleIDs
 
 
 #
