@@ -61,7 +61,8 @@ if(args$CONFIG!=".none" & file.exists(args$CONFIG)) {
     config=read_yaml(args$CONFIG)
     inputs=purrr::map(config$inputs,as_tibble) %>% bind_rows
     dataFolders=inputs$dir
-    names(dataFolders)=inputs$sid
+    sampleIDs=inputs$sid
+    names(dataFolders)=sampleIDs
 
 } else {
 
