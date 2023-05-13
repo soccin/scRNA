@@ -1,8 +1,12 @@
 # scRNA Version 4
 
-## Branch master (2023-04-30 reconcile with p14049)
+## Branch feat/arc
 
-Needs R>=4.x.
+Needs R>=4.2.
+
+This one has the input fixed to deal with cellranger arc output (Chromium Single Cell Multiome ATAC + Gene Expression) also to deal with external groups running of cellranger (SAIL)
+
+## Previous Updates
 
 Major workflow refactor.
 
