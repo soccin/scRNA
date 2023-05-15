@@ -1,6 +1,6 @@
 # scRNA Version 4
 
-## Branch dev/2023 (2023-05-15 pulled in master)
+## Branch master (2023-05-15 pulled from dev/2023)
 
 Needs R>=4.2.
 
