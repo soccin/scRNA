@@ -71,6 +71,7 @@ if(args$CONFIG!=".none" & file.exists(args$CONFIG)) {
     dataFolders=argv
     sampleIDs=gsub("_",".",gsub(".outs.*","",gsub("^s_","",basename(dataFolders))))
     names(dataFolders)=sampleIDs
+    config=NULL
 
 }
 
