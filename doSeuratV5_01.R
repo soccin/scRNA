@@ -151,7 +151,31 @@ d10X=list()
 for(ii in seq(len(dataFolders))) {
     sampleName=sampleIDs[ii]
     cat("Reading Sample =",sampleName,"...")
-    d10X[[sampleName]] <- read10XDataFolderAsSeuratObj(dataFolders[ii],args$PROJNAME)
+
+    if(!is.null(config$multi)) {
+
+        #
+        # Need to explicity set genome also from config
+        #
+        glbs$genome <- config$genome
+
+        #read_10X_multi_as_SeurateObject(bc_matrix_dir,gexSlot,genome,projName)
+
+        d10X[[sampleName]] <- read_10X_multi_as_SeurateObject(
+                                        dataFolders[ii],
+                                        sampleName,
+                                        config$multi$gex,
+                                        glbs$genome,
+                                        args$PROJNAME
+                                    )
+
+    } else {
+        # Orig default path
+
+        d10X[[sampleName]] <- read10XDataFolderAsSeuratObj(dataFolders[ii],args$PROJNAME)
+
+    }
+
     cat("\n")
 }
 

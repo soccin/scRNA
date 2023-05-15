@@ -1,0 +1,16 @@
+inputs:
+- dir: /juno/res/mix/Cache/2023-03-22/B-101-538/raw/MY-2015_7982_multiome/cr-arc-results/filtered_feature_bc_matrix
+  sid: MY-2015_7982
+- dir: /juno/res/mix/Cache/2023-03-22/B-101-538/raw/MY-2015_8058_multiome/cr-arc-results/filtered_feature_bc_matrix
+  sid: MY-2015_8058
+- dir: /juno/res/mix/Cache/2023-03-22/B-101-538/raw/MY-2015_AK164_multiome/cr-arc-results/filtered_feature_bc_matrix
+  sid: MY-2015_AK164
+- dir: /juno/res/mix/Cache/2023-03-22/B-101-538/raw/MY-2015_AK193_multiome/cr-arc-results/filtered_feature_bc_matrix
+  sid: MY-2015_AK193
+- dir: /juno/res/mix/Cache/2023-03-22/B-101-538/raw/MY-2015_AK199_multiome/cr-arc-results/filtered_feature_bc_matrix
+  sid: MY-2015_AK199
+- dir: /juno/res/mix/Cache/2023-03-22/B-101-538/raw/MY-2015_AK201_multiome/cr-arc-results/filtered_feature_bc_matrix
+  sid: MY-2015_AK201
+genome: mm10
+multi:
+ gex: "Gene Expression"
