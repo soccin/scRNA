@@ -25,7 +25,11 @@ if(Sys.getenv("SDIR")=="") {
     if(len(file.arg)>0) {
         SDIR=dirname(gsub(".*=","",file.arg))
     } else {
-        SDIR="."
+        if(len(fs::dir_ls(regex="scRNA"))>0) {
+            SDIR=fs::dir_ls(regex="scRNA")
+        } else {
+            SDIR="."
+        }
     }
 } else {
     SDIR=Sys.getenv("SDIR")
