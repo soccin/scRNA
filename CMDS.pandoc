@@ -1,0 +1,1 @@
+pandoc RESULTS.md -o RESULTS.pdf -V geometry:margin=1in
