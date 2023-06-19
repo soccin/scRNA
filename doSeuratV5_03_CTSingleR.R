@@ -5,7 +5,7 @@ usage: doSeuratV5_03_CTSingleR.R [CLUSTER_RES=res] PARAMS_2b.yaml
 
     PARAMS_2b.yaml     parameter file from pass2b [post PCA]
     CLUSTER_RES        optional: resolution of clusters to use for cluster level assigments
-
+    ATLAS_TAG          Atlas to use [ImmGenData,MouseRNAseqData]
 "
 
 cArgs=commandArgs(trailing=T)
@@ -15,7 +15,7 @@ cArgs=commandArgs(trailing=T)
 #
 optionals=grep("=",cArgs,value=T)
 
-oArgs=list(CLUSTER_RES=NULL)
+oArgs=list(CLUSTER_RES=NULL,ATLAS_TAG="MouseRNAseqData")
 if(len(optionals)>0) {
     require(stringr, quietly = T, warn.conflicts=F)
     parseArgs=str_match(optionals,"(.*)=(.*)")
@@ -67,6 +67,7 @@ suppressPackageStartupMessages({
     library(pals)
 })
 
+ATLAS_TAG=oArgs$ATLAS_TAG
 
 
 ##########################################################################
@@ -78,16 +79,50 @@ suppressPackageStartupMessages({
 s1=readRDS(args$PASS2b.RDAFile)
 
 if(args$glbs$genome=="mm10") {
-    atlas=celldex::MouseRNAseqData()
+    if(ATLAS_TAG=="MouseRNAseqData") {
+        atlas=celldex::MouseRNAseqData()
+    } else if(ATLAS_TAG=="ImmGenData") {
+        atlas=celldex::ImmGenData()
+    } else {
+        cat("\n\nUnknown ATLAS",ATLAS_TAG,"\n")
+        quit()
+    }
 } else {
     cat("\n    Genome",args$glbs$genome,"not implemented\n\n")
     halt("FATAL ERROR::CTSingleR")
 }
 
+
+
 DefaultAssay(s1)="RNA"
-s2=DietSeurat(s1)
-s2=NormalizeData(s1)
-sce=as.SingleCellExperiment(DietSeurat(s2))
+DEBUG=FALSE
+if(DEBUG) {
+    set.seed(31415)
+    s1.o=s1
+    s1=subset(s1,downsample=1000)
+}
+
+.seurat_to_sce<-function(sobj) {
+
+    s2=DietSeurat(sobj)
+    s2=NormalizeData(s2)
+    sce=as.SingleCellExperiment(s2)
+    sce
+
+}
+
+library(memoise)
+
+mCache=file.path("/fscratch/socci/_RCache_",digest::digest(getwd(),algo="md5"))
+fs::dir_create(mCache)
+
+cdb <- cachem::cache_disk(mCache)
+seurat_to_sce=memoise(.seurat_to_sce,cache=cdb)
+
+#halt("DB")
+
+sce=seurat_to_sce(s1)
+
 
 # singleR_to_long<-function(pred,method){
 #     pred %>%
@@ -100,7 +135,13 @@ sce=as.SingleCellExperiment(DietSeurat(s2))
 
 # pred_cell_main=SingleR(test=sce,ref=atlas,assay.type.test="logcounts",labels=atlas$label.main,prune=T)
 # cellTypes=singleR_to_long(pred_cell_main,"Cell.Main")
-pred_cell=SingleR::SingleR(test=sce,ref=atlas,assay.type.test="logcounts",labels=atlas$label.main,prune=T)
+
+ATLAS_LEVEL="fine"
+if(ATLAS_LEVEL=="fine") {
+    pred_cell=SingleR::SingleR(test=sce,ref=atlas,assay.type.test="logcounts",labels=atlas$label.fine,prune=T)
+} else {
+    pred_cell=SingleR::SingleR(test=sce,ref=atlas,assay.type.test="logcounts",labels=atlas$label.main,prune=T)
+}
 
 md=s1@meta.data %>% data.frame(check.names=F) %>% rownames_to_column("CellID") %>% tibble
 md=md %>% left_join(
@@ -128,9 +169,8 @@ ctCols=ctCols[sort(unique(md$CT_Main[!is.na(md$CT_Main)]))]
 
 pg=DimPlot(s1,group.by="CT_Main",cols=ctCols)
 
-pdf(file=cc("seuratQC",args$PROJNAME,cc("b",plotNo()),"CellTypes","SingleR",".pdf"),width=12,height=8.5)
+pdf(file=cc("seuratQC",args$PROJNAME,cc("b",plotNo()),"CellTypes","SingleR",ATLAS_TAG,ATLAS_LEVEL,".pdf"),width=12,height=8.5)
 print(pg)
 dev.off()
-write_csv(md,"cellTypes_SingleR.csv.gz")
-
+write_csv(md,cc("cellTypes_SingleR",ATLAS_TAG,ATLAS_LEVEL,".csv.gz"))
 
