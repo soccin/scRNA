@@ -88,6 +88,10 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
     so <- CreateSeuratObject(counts = xx, project=projName)
 
     cell.barcode=basename(colnames(so)) %>% gsub("filtered_feature_bc_matrix_","",.)
+
+    cmdlineFile=dir_ls(cellRangerDir,regex="_cmd")
+    cmdline=scan(cmdlineFile,"",quiet = TRUE)
+
     sampleId=grep("--id=",cmdline,value=T) %>% gsub(".*id=","",.) %>% gsub("^s_","",.)
     pNum=extractProjNoFromPath(grep("--fastq",cmdline,value=T))
 
@@ -102,7 +106,6 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
     } else {
         stop(paste("Unknown genome",genome,"Should not get here"))
     }
-
 
     so@meta.data$orig.ident=sampleId
     Idents(so)<-"orig.ident"
