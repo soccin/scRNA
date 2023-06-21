@@ -45,7 +45,6 @@ extractProjNoFromPath<-function(pp) {
 
 get_genome_from_cellranger<-function(cellRangerDir) {
 
-    cellRangerDir=gsub("/outs.*","",cellRangerDir)
     cmdlineFile=dir_ls(cellRangerDir,regex="_cmd")
     if(len(cmdlineFile)!=1) {
         cat("\n\n  cellRangerDir =",cellRangerDir,"not a valid CellRanger Directory\n\n")
@@ -70,6 +69,11 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
     #
     # This version uses the full cellRanger output to infer the Genome
     #
+
+    #
+    # Normalize cellRangerDir to root if subfolder was given
+    #
+    cellRangerDir=gsub("/outs.*","",cellRangerDir)
 
     genome=get_genome_from_cellranger(cellRangerDir)
 
