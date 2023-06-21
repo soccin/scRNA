@@ -45,6 +45,7 @@ extractProjNoFromPath<-function(pp) {
 
 get_genome_from_cellranger<-function(cellRangerDir) {
 
+    cellRangerDir=gsub("/outs.*","",cellRangerDir)
     cmdlineFile=dir_ls(cellRangerDir,regex="_cmd")
     if(len(cmdlineFile)!=1) {
         cat("\n\n  cellRangerDir =",cellRangerDir,"not a valid CellRanger Directory\n\n")
