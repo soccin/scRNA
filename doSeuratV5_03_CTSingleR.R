@@ -160,12 +160,14 @@ for(cres in grep("_res",colnames(md),value=T)) {
     md=left_join(md,ctbl)
 }
 
+md=md %>% mutate(CT=gsub(" \\(.*","",CT_Main))
+
 s1@meta.data=md %>% column_to_rownames("CellID")
 
 ctNames=sort(unique(atlas$label.main))
 ctCols=pals::cols25(len(ctNames))
 names(ctCols)=ctNames
-ctCols=ctCols[sort(unique(md$CT_Main[!is.na(md$CT_Main)]))]
+ctCols=ctCols[sort(unique(md$CT[!is.na(md$CT)]))]
 
 pg=DimPlot(s1,group.by="CT_Main",cols=ctCols)
 
