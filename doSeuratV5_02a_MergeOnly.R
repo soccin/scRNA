@@ -136,7 +136,7 @@ tblCutOff=map(qTbls,1) %>% bind_rows(.id="SampleID") %>% spread(SampleID,Cutoff)
 tblFailN=map(qTbls,5) %>% bind_rows
 tblFailPCT=map(qTbls,4) %>% bind_rows %>% mutate_if(is.numeric,\(x) sprintf("%.2f%%",round(100*x,2)))
 
-totalCells=map(d10X,ncol) %>% data.frame(check.names=F) %>% t %>% data.frame(check.names=F) %>% rownames_to_column("SampleID") %>% rename(N=2)
+totalCells=map(d10X,ncol) %>% data.frame(check.names=F) %>% t %>% data.frame(check.names=F) %>% rownames_to_column("SampleID") %>% rename(N=2) %>% mutate(SampleID=gsub("^s_","",SampleID))
 
 tblTotals=tblFailN %>%
     gather(Feature,Value,-SampleID) %>%
