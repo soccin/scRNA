@@ -32,11 +32,12 @@ get_qc_tables <- function(md,filters) {
     MIN_NCOUNT_RNA=filters$MIN_NCOUNT_RNA
     MIN_FEATURE_RNA=filters$MIN_FEATURE_RNA
     PCT_MITO=filters$PCT_MITO
+    METHOD=filters$METHOD
 
     tbl0=tibble(
         Feature=c("nCount_RNA","nFeature_RNA","percent.mt"),
         Cutoff=c(MIN_NCOUNT_RNA,MIN_FEATURE_RNA,PCT_MITO),
-        Method=c("Mad3-","Mad3-","Mad3+")
+        Method=c(METHOD)
     )
 
     tbl1=md %>%
