@@ -171,3 +171,14 @@ pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"ClusterMarkersDot",clustTag,"FDR"
 print(pc1)
 print(pc2)
 dev.off()
+
+nClust=nlevels(cl$cluster)
+nGenes=floor(75/nClust)
+genesHeat=cl %>% group_by(cluster) %>% top_n(n=nGenes,wt=avg_log2FC) %>% pull(gene) %>% unique
+nCells=min(ncol(s1),5000)
+sh=s1[,sample(colnames(s1),nCells)]
+ph=DoHeatmap(sh,features=genesHeat)
+
+pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"ClusterHeatmap",clustTag,"FDR",FDR.cut,"logFC",logFC.cut,".pdf"),width=11,height=8.5)
+print(ph)
+dev.off()
