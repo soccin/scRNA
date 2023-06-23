@@ -169,7 +169,7 @@ ctCols=pals::cols25(len(ctNames))
 names(ctCols)=ctNames
 ctCols=ctCols[sort(unique(md$CT[!is.na(md$CT)]))]
 
-pg=DimPlot(s1,group.by="CT_Main",cols=ctCols)
+pg=DimPlot(s1,group.by="CT",cols=ctCols)
 
 pdf(file=cc("seuratQC",args$PROJNAME,cc("b",plotNo()),"CellTypes","SingleR",ATLAS_TAG,ATLAS_LEVEL,".pdf"),width=12,height=8.5)
 print(pg)
