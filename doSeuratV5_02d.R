@@ -130,7 +130,7 @@ pal1=c(cols25(25),brewer.dark2(8))
 
 plt.cmark=cl %>% group_split(cluster) %>% map(plotClusterMarkers,s1,pal1)
 
-cmFile=cc("seuratQC",args$PROJNAME,plotNo(),"ClusterMarkers",clustTag,"FDR",FDR.cut,"logFC",logFC.cut,"%03d",".png")
+cmFile=cc(plotFilePrefix,args$PROJNAME,plotNo(),"ClusterMarkers",clustTag,"FDR",FDR.cut,"logFC",logFC.cut,"%03d",".png")
 
 png(filename=cmFile,
     type="cairo",
@@ -167,7 +167,7 @@ halt("Fix x -axis")
 pc1=DotPlot(s1,features=dot.gene.lOR) + scale_x_discrete(guide = guide_axis(n.dodge = 2))
 pc2=DotPlot(s1,features=dot.gene.lFC) + scale_x_discrete(guide = guide_axis(n.dodge = 2))
 
-pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"ClusterMarkersDot",clustTag,"FDR",FDR.cut,"logFC",logFC.cut,".pdf"),width=11,height=8.5)
+pdf(file=cc(plotFilePrefix,args$PROJNAME,plotNo(),"ClusterMarkersDot",clustTag,"FDR",FDR.cut,"logFC",logFC.cut,".pdf"),width=11,height=8.5)
 print(pc1)
 print(pc2)
 dev.off()
@@ -179,6 +179,6 @@ nCells=min(ncol(s1),5000)
 sh=s1[,sample(colnames(s1),nCells)]
 ph=DoHeatmap(sh,features=genesHeat)
 
-pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"ClusterHeatmap",clustTag,"FDR",FDR.cut,"logFC",logFC.cut,".pdf"),width=11,height=8.5)
+pdf(file=cc(plotFilePrefix,args$PROJNAME,plotNo(),"ClusterHeatmap",clustTag,"FDR",FDR.cut,"logFC",logFC.cut,".pdf"),width=11,height=8.5)
 print(ph)
 dev.off()

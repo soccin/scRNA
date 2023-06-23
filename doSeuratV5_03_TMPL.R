@@ -69,6 +69,6 @@ obj=readRDS(args$PASS2b.RDAFile)
 
 # pg=DimPlot(s1, reduction = "umap", group.by="orig.ident", split.by="orig.ident", label.size=6,ncol=2) + scale_color_manual(values=c("darkviolet","red","grey")) + ggtitle(clusterRes)
 
-# pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"UMAP","v2",".pdf"),width=11,height=8.5)
+# pdf(file=cc(plotFilePrefix,args$PROJNAME,plotNo(),"UMAP","v2",".pdf"),width=11,height=8.5)
 # print(pg)
 # dev.off()

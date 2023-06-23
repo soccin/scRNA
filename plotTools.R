@@ -6,6 +6,7 @@
        #      cols <- Interleave(cols, InvertHex(hexadecimal = cols))
        #  }
 
+plotFilePrefix="seuratPlot"
 
 pngCairo<-function(filename,width=14,height=8.5,pointsize=12,res=150) {
 

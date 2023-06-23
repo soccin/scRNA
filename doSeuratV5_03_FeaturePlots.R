@@ -94,7 +94,7 @@ for(ii in seq(genes)) {
 }
 
 
-pfile=cc("seuratQC",args$PROJNAME,plotNo(),"GeneUMAPs",basename(geneListFile),"%03d.png")
+pfile=cc(plotFilePrefix,args$PROJNAME,plotNo(),"GeneUMAPs",basename(geneListFile),"%03d.png")
 pngCairo(pfile,width=11,height=8.5)
 pp1=paginatePlots(pp,2,2,oneLegend=F)
 pp2=map(pgL,paginatePlots,2,3,oneLegend=F)
@@ -114,7 +114,7 @@ if(!is.null(args$CRES)) {
     pv=VlnPlot(s1,features=genes,combine=F,group.by=clusterRes,col=pal1)
     pp3=paginatePlots(pv,2,3)
 
-    pfile=cc("seuratQC",args$PROJNAME,plotNo(),"GeneVlnPlt",
+    pfile=cc(plotFilePrefix,args$PROJNAME,plotNo(),"GeneVlnPlt",
                 basename(geneListFile),"res",args$CRES,"%03d.png")
     pngCairo(pfile,width=11,height=8.5)
     print(pp3)

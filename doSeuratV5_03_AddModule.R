@@ -109,13 +109,13 @@ for(ii in seq(len(modules))) {
 }
 
 cat(" done\n\n")
-pfile=cc("seuratQC",args$PROJNAME,plotNo(),"ModuleScores_%03d.png")
+pfile=cc(plotFilePrefix,args$PROJNAME,plotNo(),"ModuleScores_%03d.png")
 pngCairo(pfile,width=11,height=8.5)
 print(paginatePlots(pm,2,2,FALSE))
 dev.off()
 mergePNGs(pfile)
 
-pfile=cc("seuratQC",args$PROJNAME,plotNo(),"ModuleDistribution_%03d.png")
+pfile=cc(plotFilePrefix,args$PROJNAME,plotNo(),"ModuleDistribution_%03d.png")
 pngCairo(pfile,width=8.5,height=11)
 print(paginatePlots(pn,3,1,FALSE))
 dev.off()

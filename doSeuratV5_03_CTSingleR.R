@@ -171,7 +171,7 @@ ctCols=ctCols[sort(unique(md$CT[!is.na(md$CT)]))]
 
 pg=DimPlot(s1,group.by="CT",cols=ctCols)
 
-pdf(file=cc("seuratQC",args$PROJNAME,cc("b",plotNo()),"CellTypes","SingleR",ATLAS_TAG,ATLAS_LEVEL,".pdf"),width=12,height=8.5)
+pdf(file=cc(plotFilePrefix,args$PROJNAME,cc("b",plotNo()),"CellTypes","SingleR",ATLAS_TAG,ATLAS_LEVEL,".pdf"),width=12,height=8.5)
 print(pg)
 dev.off()
 write_csv(md,cc("cellTypes_SingleR",ATLAS_TAG,ATLAS_LEVEL,".csv.gz"))

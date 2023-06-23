@@ -91,7 +91,7 @@ for(ci in grep("integrated_snn_",colnames(s1@meta.data),value=T)) {
 pu[[len(pu)+1]] <- DimPlot(s1, reduction = "umap", group.by="SampleID") + scale_color_manual(values=cols25())
 pu[[len(pu)+1]] <- DimPlot(s1, reduction = "umap", group.by="Phase")
 
-pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"UMAP",nDims,".pdf"),width=11,height=8.5)
+pdf(file=cc(plotFilePrefix,args$PROJNAME,plotNo(),"UMAP",nDims,".pdf"),width=11,height=8.5)
 print(pu)
 dev.off()
 cat(" done\n\n")
@@ -105,6 +105,6 @@ for(clusterI in grep("integrated_snn_res",colnames(md),value=T)) {
     pc[[len(pc)+1]]=ggplot(cTbl,aes(fill=Clusters,x=n,y=SampleID)) + geom_bar(position="fill", stat="identity") + scale_fill_manual(values=pal1) + theme_light(base_size=18) + ggtitle(clusterI)
 }
 
-pdf(file=cc("seuratQC",args$PROJNAME,plotNo(),"ClusterChart",nDims,".pdf"),width=14,height=8.5)
+pdf(file=cc(plotFilePrefix,args$PROJNAME,plotNo(),"ClusterChart",nDims,".pdf"),width=14,height=8.5)
 print(pc)
 dev.off()
