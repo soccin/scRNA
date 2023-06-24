@@ -162,8 +162,6 @@ dot.gene.lFC=cl %>%
     head(12) %>%
     pull(gene)
 
-halt("Fix x -axis")
-
 pc1=DotPlot(s1,features=dot.gene.lOR) + scale_x_discrete(guide = guide_axis(n.dodge = 2))
 pc2=DotPlot(s1,features=dot.gene.lFC) + scale_x_discrete(guide = guide_axis(n.dodge = 2))
 
@@ -182,3 +180,35 @@ ph=DoHeatmap(sh,features=genesHeat)
 pdf(file=cc(plotFilePrefix,args$PROJNAME,plotNo(),"ClusterHeatmap",clustTag,"FDR",FDR.cut,"logFC",logFC.cut,".pdf"),width=11,height=8.5)
 print(ph)
 dev.off()
+
+umapGenes=cl %>%
+    filter(pct.1>.75 & pct.2<.25) %>%
+    group_by(cluster) %>%
+    top_n(n=3,wt=lOR) %>%
+    ungroup %>%
+    arrange(cluster,desc(lOR)) %>%
+    distinct(gene) %>%
+    pull
+
+pu=list()
+uu=umapGenes
+while(len(uu)>0) {
+    up=uu[1:min(len(uu),12)]
+    pu[[len(pu)+1]]=FeaturePlot(s1,features=up)
+    uu=setdiff(uu,up)
+}
+
+umFile=cc(plotFilePrefix,args$PROJNAME,plotNo(),"ClusterUMAP",clustTag,"FDR",FDR.cut,"logFC",logFC.cut,"%03d",".png")
+
+png(filename=umFile,
+    type="cairo",
+    units="in",
+    width=14,
+    height=8.5,
+    pointsize=12,
+    res=96)
+
+print(pu)
+
+dev.off()
+mergePNGs(umFile)
