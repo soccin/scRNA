@@ -130,23 +130,27 @@ for(ii in seq(d10X)) {
 
 }
 
+######################################################################
+# Post filter QC report
+#
+
 names(qTbls)=names(d10X)
 
 tblCutOff=map(qTbls,1) %>% bind_rows(.id="SampleID") %>% spread(SampleID,Cutoff)
 tblFailN=map(qTbls,5) %>% bind_rows
 tblFailPCT=map(qTbls,4) %>% bind_rows %>% mutate_if(is.numeric,\(x) sprintf("%.2f%%",round(100*x,2)))
 
-totalCells=map(d10X,ncol) %>% data.frame(check.names=F) %>% t %>% data.frame(check.names=F) %>% rownames_to_column("SampleID") %>% rename(N=2) %>% mutate(SampleID=gsub("^s_","",SampleID))
-
-tblTotals=tblFailN %>%
-    gather(Feature,Value,-SampleID) %>%
-    group_by(SampleID) %>%
-    summarize(NFail=sum(Value)) %>%
-    left_join(totalCells) %>%
-    mutate(NKeep=N-NFail) %>%
-    select(SampleID,N,NFail,NKeep) %>%
-    mutate(PCT.Keep=sprintf("%.2f%%",100*NKeep/N))
-
+tblTotals=map(qTbls,2) %>%
+    bind_rows(.id="SampleID") %>%
+    mutate(Pass=Count.RNA&Num.Features&PCT.MT) %>%
+    group_by(SampleID,Pass) %>%
+    summarize(N=sum(n)) %>%
+    ungroup %>%
+    mutate(Pass=ifelse(Pass,"Keep","Fail")) %>%
+    spread(Pass,N) %>%
+    mutate(N=Fail+Keep) %>%
+    mutate(PCT.Keep=sprintf("%.2f%%",100*Keep/N)) %>%
+    select(SampleID,N,Fail,Keep,PCT.Keep)
 
 ptb=list()
 ptb[[1]]=ggplot()+theme_void()+annotation_custom(tableGrob(tblCutOff,rows=NULL))
@@ -157,6 +161,9 @@ ptb[[4]]=ggplot()+theme_void()+annotation_custom(tableGrob(tblFailPCT,rows=NULL)
 pdf(file=cc(plotFilePrefix,args$PROJNAME,plotNo(),"PostFilterQCTbls.pdf"),width=11,height=8.5)
 print(ptb[[1]]/(ptb[[2]]+ptb[[3]])/ptb[[4]])
 dev.off()
+
+######################################################################
+######################################################################
 
 if(args$DEBUG) {
 
