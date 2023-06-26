@@ -27,6 +27,24 @@ makeAutoIncrementor <- function(init=0) {
     }
 }
 
+plotFilePrefix="plt"
+
+get_plot_filename<-function(...) {
+    argv=list(...)
+    odir="results/stageX"
+    if(!is.null(argv$stage)) {
+        odir=file.path("results",paste0("stage",argv$stage))
+        argv$stage=NULL
+    } else if(exists("STAGE")) {
+        odir=file.path("results",paste0("stage",STAGE))  
+    }
+    fs::dir_create(odir)
+    base=cc(args$PROJNAME,plotFilePrefix,paste0(argv,collapse="_"))
+    fname=file.path(odir,base)
+    cat("fname =",fname,"\n")
+    fname
+}
+
 #genomes=c("refdata-gex-mm10-2020-A"="mm10","refdata-gex-GRCh38-2020-A"="hg38")
 genomes=unlist(yaml::read_yaml(file.path(SDIR,"data/genomes.yaml"))$genomes)
 
