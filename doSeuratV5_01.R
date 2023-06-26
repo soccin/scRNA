@@ -266,7 +266,7 @@ cat("md5(dX10) =",digest::digest(d10X),"\n")
 for(ii in seq(d10X)) {
     print(ii)
     ret=qcSamples(d10X[[ii]])
-    pdf(file=cc(plotFilePrefix,args$PROJNAME,plotNo(),"QC.pdf"),width=11,height=8.5)
+    pdf(file=get_plot_filename(plotNo(),"QC.pdf"),width=11,height=8.5)
     print(ret$plts)
     dev.off
 }
@@ -322,7 +322,7 @@ for(ii in seq(d10X)) {
     pcc[[ii]]=plotCellCycle(preProcessSO(d10X[[ii]]),names(d10X)[ii])
 }
 
-pdf(file=cc(plotFilePrefix,args$PROJNAME,plotNo(),"CellCycle.pdf"),width=11,height=8.5)
+pdf(file=get_plot_filename(plotNo(),"CellCycle.pdf"),width=11,height=8.5)
 
 # if(len(pcc)>1) {
 #     nPages=ceiling(len(pcc)/4)

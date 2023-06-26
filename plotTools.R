@@ -6,7 +6,25 @@
        #      cols <- Interleave(cols, InvertHex(hexadecimal = cols))
        #  }
 
+get_plot_filename()
+
 plotFilePrefix="seuratPlot"
+
+get_plot_filename<-function(...) {
+    argv=list(...)
+    odir="results/stage1"
+    if(!is.null(argv$stage)) {
+        odir=file.path("results",paste0("stage",argv$stage))
+        argv$stage=NULL
+    } else if(exists("STAGE")) {
+        odir=file.path("results",paste0("stage",STAGE))  
+    }
+    fs::dir_create(odir)
+    base=cc(plotFilePrefix,paste0(argv,collapse="_"))
+    fname=file.path(odir,base)
+    cat("fname =",fname,"\n")
+    #fname
+}
 
 pngCairo<-function(filename,width=14,height=8.5,pointsize=12,res=150) {
 

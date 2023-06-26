@@ -108,7 +108,7 @@ cat(" done\n\n")
 nDims=50 # Default
 
 p.elbow=ElbowPlot(s1,ndims=nDims) + geom_hline(yintercept=0,color="grey",size=2)
-pdf(file=cc(plotFilePrefix,args$PROJNAME,plotNo(),"PCADimMetric.pdf"),width=11,height=8.5)
+pdf(file=get_plot_filename(plotNo(),"PCADimMetric.pdf"),width=11,height=8.5)
 print(p.elbow)
 dev.off()
 
@@ -152,7 +152,7 @@ for(ci in grep("_snn_res",colnames(s1@meta.data),value=T)) {
 pu[[len(pu)+1]] <- DimPlot(s1, reduction = "umap", group.by="SampleID") + scale_color_manual(values=cols25())
 pu[[len(pu)+1]] <- DimPlot(s1, reduction = "umap", group.by="Phase")
 
-pdf(file=cc(plotFilePrefix,args$PROJNAME,plotNo(),"UMAP",nDims,".pdf"),width=11,height=8.5)
+pdf(file=get_plot_filename(plotNo(),"UMAP",nDims,".pdf"),width=11,height=8.5)
 print(pu)
 dev.off()
 cat(" done\n\n")
@@ -235,13 +235,13 @@ for(clusterI in grep("_snn_res",colnames(md),value=T)) {
 
 }
 
-pdf(file=cc(plotFilePrefix,args$PROJNAME,plotNo(),"ClusterChart",nDims,".pdf"),width=14,height=8.5)
+pdf(file=get_plot_filename(plotNo(),"ClusterChart",nDims,".pdf"),width=14,height=8.5)
 print(pc)
 dev.off()
 
 halt("SampleBiasChart")
 numResolutions=len(grep("_snn_res",colnames(md),value=T))
-pdf(file=cc(plotFilePrefix,args$PROJNAME,plotNo(),"SampleBias",".pdf"),width=11,height=8.5)
+pdf(file=get_plot_filename(plotNo(),"SampleBias",".pdf"),width=11,height=8.5)
 print(pu[numResolutions+1])
 print(pc[4*(seq(numResolutions)-1)+1])
 dev.off()
@@ -266,7 +266,7 @@ if(!is.null(oArgs$MODULE_FILE)) {
         pm[[ii]]=pp[[1]] + ggtitle(names(modules)[ii])
     }
     cat(" done\n\n")
-    pfile=cc(plotFilePrefix,args$PROJNAME,plotNo(),"ModuleScores_%03d.png")
+    pfile=get_plot_filename(plotNo(),"ModuleScores_%03d.png")
     pngCairo(pfile,width=11,height=8.5)
     print(paginatePlots(pm,2,2,FALSE))
     dev.off()

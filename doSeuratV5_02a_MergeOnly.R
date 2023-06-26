@@ -158,7 +158,7 @@ ptb[[2]]=ggplot()+theme_void()+annotation_custom(tableGrob(tblFailN,rows=NULL))
 ptb[[3]]=ggplot()+theme_void()+annotation_custom(tableGrob(tblTotals,rows=NULL))
 ptb[[4]]=ggplot()+theme_void()+annotation_custom(tableGrob(tblFailPCT,rows=NULL))
 
-pdf(file=cc(plotFilePrefix,args$PROJNAME,plotNo(),"PostFilterQCTbls.pdf"),width=11,height=8.5)
+pdf(file=get_plot_filename(plotNo(),"PostFilterQCTbls.pdf"),width=11,height=8.5)
 print(ptb[[1]]/(ptb[[2]]+ptb[[3]])/ptb[[4]])
 dev.off()
 
@@ -269,7 +269,7 @@ d10X.integrate@meta.data=md
 
 Idents(d10X.integrate)="Phase"
 
-pdf(file=cc(plotFilePrefix,args$PROJNAME,plotNo(),"PostIntegrateCC.pdf"),width=11,height=8.5)
+pdf(file=get_plot_filename(plotNo(),"PostIntegrateCC.pdf"),width=11,height=8.5)
 plotCellCycle(d10X.integrate,"Post Integration CC Regression")
 DimPlot(d10X.integrate,reduction="umap",group.by="Phase")
 dev.off()
@@ -280,7 +280,7 @@ so=FindVariableFeatures(d10X.integrate)
 pv1=VariableFeaturePlot(so)
 top10 <- head(VariableFeatures(so), 10)
 pv2 <- LabelPoints(plot = pv1, points = top10, repel = TRUE, xnudge=0, ynudge=0)
-pdf(file=cc(plotFilePrefix,args$PROJNAME,plotNo(),"VariableFeatures.pdf"),width=11,height=8.5)
+pdf(file=get_plot_filename(plotNo(),"VariableFeatures.pdf"),width=11,height=8.5)
 print(pv2)
 dev.off()
 

@@ -139,6 +139,6 @@ for(clusterI in grep("integrated_snn",colnames(s1@meta.data),value=T)) {
     pcc=c(pcc,pg)
 }
 
-pdf(file=cc(plotFilePrefix,args$PROJNAME,plotNo(),"ModuleCluster",args$algoParams$NDIMS,".pdf"),width=14,height=8.5)
+pdf(file=get_plot_filename(plotNo(),"ModuleCluster",args$algoParams$NDIMS,".pdf"),width=14,height=8.5)
 print(pcc)
 dev.off()
