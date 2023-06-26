@@ -3,6 +3,7 @@
 #'
 #' Do PCA, UMAP, Module Scores
 #'
+STAGE=2
 
 suppressPackageStartupMessages(require(stringr))
 

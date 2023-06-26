@@ -1,4 +1,5 @@
 suppressPackageStartupMessages(require(stringr))
+STAGE=1
 
 usage="
 usage:

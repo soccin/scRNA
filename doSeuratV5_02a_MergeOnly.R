@@ -4,6 +4,7 @@
 #' Do SCTransform but simple MERGE instead of Integrate
 #' Also Switch to not regress Cell Cycle Out
 #'
+STAGE=1
 
 suppressPackageStartupMessages(require(stringr))
 

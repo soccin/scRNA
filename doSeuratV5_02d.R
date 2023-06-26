@@ -3,6 +3,7 @@
 #'
 #' Do Find Cluster Markers
 #'
+STAGE=2
 
 suppressPackageStartupMessages(require(stringr))
 

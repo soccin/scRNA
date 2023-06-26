@@ -8,6 +8,7 @@ usage: doSeuratV5_03_CellTypes1.R MODULE_FILE=file PARAMS_2b.yaml
     MODULE_FILE     TSV file with list of genes for modules [required]
 
 "
+STAGE=3
 
 cArgs=commandArgs(trailing=T)
 
