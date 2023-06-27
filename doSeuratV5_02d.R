@@ -3,7 +3,7 @@
 #'
 #' Do Find Cluster Markers
 #'
-STAGE=2
+STAGE=3
 
 suppressPackageStartupMessages(require(stringr))
 
@@ -89,6 +89,11 @@ if(!clusterRes %in% colnames(s1@meta.data)) {
 s1=SetIdent(s1,value=clusterRes)
 
 clusterMarkers=FindAllMarkers(s1,only.pos=TRUE,logfc.threshold=0.25,min.pct = 0.25)
+
+if(nrow(clusterMarkers)==0) {
+    cat("\n\tNo cluster Markers Found\n\n")
+    quit()
+}
 
 pct=c(clusterMarkers$pct.1,clusterMarkers$pct.2)
 ps=min(min(pct[pct>0]),min(1-pct[pct<1]))/2
@@ -191,13 +196,8 @@ umapGenes=cl %>%
     distinct(gene) %>%
     pull
 
-pu=list()
-uu=umapGenes
-while(len(uu)>0) {
-    up=uu[1:min(len(uu),12)]
-    pu[[len(pu)+1]]=FeaturePlot(s1,features=up)
-    uu=setdiff(uu,up)
-}
+gumap=FeaturePlot(s1,features=umapGenes,combine=F,max.cutoff="q95")
+pgu=paginatePlots(gumap,2,3,oneLegend=F)
 
 umFile=get_plot_filename(plotNo(),"ClusterUMAP",clustTag,"FDR",FDR.cut,"logFC",logFC.cut,"%03d",".png")
 
@@ -209,7 +209,7 @@ png(filename=umFile,
     pointsize=12,
     res=96)
 
-print(pu)
+print(pgu)
 
 dev.off()
 mergePNGs(umFile)
