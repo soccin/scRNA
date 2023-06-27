@@ -8,7 +8,7 @@ usage: doSeuratV5_03_CTSingleR.R [CLUSTER_RES=res] PARAMS_2b.yaml
     ATLAS_TAG          Atlas to use [ImmGenData,MouseRNAseqData]
 "
 
-STAGE=3
+STAGE=4
 
 cArgs=commandArgs(trailing=T)
 
