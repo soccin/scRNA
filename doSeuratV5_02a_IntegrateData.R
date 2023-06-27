@@ -3,6 +3,7 @@
 #'
 #' Do SCTransform and Integration
 #'
+STAGE=1
 
 suppressPackageStartupMessages(require(stringr))
 
