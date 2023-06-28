@@ -178,3 +178,32 @@ print(pg)
 dev.off()
 write_csv(md,cc("cellTypes_SingleR",ATLAS_TAG,ATLAS_LEVEL,".csv.gz"))
 
+if(ATLAS_TAG=="ImmGenData") {
+
+annote=read_csv(file.path(SDIR,"data","celldex_ImmGenData_Annote.csv.gz")) %>% 
+    select(label.main,label.fine,label.ont,onto.name) %>%
+    distinct(label.fine,.keep_all=T)
+
+mdfine=md %>% 
+    select(CellID,matches("^CT_|^CTC_")) %>% 
+    gather(Class,Type,-CellID) %>% 
+    left_join(annote,by=c(Type="label.fine")) %>% 
+    select(CellID,Class,onto.name) %>% 
+    mutate(Class=gsub("_Main","_Fine",Class)) %>%
+    spread(Class,onto.name) %>%
+    mutate(CT_Fine=factor(CT_Fine) %>% 
+                    fct_infreq %>%
+                    fct_na_value_to_level("Unknown") %>%
+                    fct_lump_n(24) %>%
+                    fct_recode(Other="Unknown")
+                    ) 
+
+s1@meta.data=left_join(md,mdfine) %>% column_to_rownames("CellID")
+
+pf=DimPlot(s1,group.by="CT_Fine",cols=pals::cols25()) + guides(color=guide_legend(ncol=1,override.aes=list(size=5)))
+
+pdf(file=get_plot_filename(cc("b",plotNo()),"CellTypes","SingleR",ATLAS_TAG,"FineOnto",".pdf"),width=15,height=8.5)
+print(pf)
+dev.off()
+
+write_csv(left_join(md,mdfine),cc("cellTypes_SingleR",ATLAS_TAG,ATLAS_LEVEL,".csv.gz"))
