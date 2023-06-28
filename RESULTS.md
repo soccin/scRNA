@@ -49,12 +49,13 @@ At this stage the PCA transformation is done on the scaled data using the top (t
 
 ### Stage III - Cluster specific marker genes
 
-For a given cluster resolution; either choosen by default of selected after review of the cluster QC plots we find the genes that are differentially expressed between the clusters. We show the distribution of these marker genes expressions amount the cluster. Also included is a table of the marker genes.
+For a given cluster resolution; either choosen by default of selected after review of the cluster QC plots we find the genes that are differentially expressed between the clusters. We show the distribution of these marker genes expressions amount the cluster. Also included is a table of the marker genes. If you have submitted a list of genes of interest then UMAPs with those genes are also generated. 
 
 - `stage3/{ProjNo}_plt_31_ClusterMarkers_SCT_snn_res.0.1_FDR_0.05_logFC_1`: 
 - `stage3/{ProjNo}_plt_32_ClusterMarkersDot_SCT_snn_res.0.1_FDR_0.05_logFC_1`: 
 - `stage3/{ProjNo}_plt_33_ClusterHeatmap_SCT_snn_res.0.1_FDR_0.05_logFC_1`: 
 - `stage3/{ProjNo}_plt_34_ClusterUMAP_SCT_snn_res.0.1_FDR_0.05_logFC_1`: 
+- `stage3/{ProjNo}_plt_41_GeneUMAPs_geneList`:
 
 ### Stage IV - Cell Types
 
