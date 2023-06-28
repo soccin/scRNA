@@ -8,6 +8,7 @@ usage: doSeuratV5_03_FeaturePlots.R [CRES=clusterResolution] PARAMS_2b.yaml Gene
     CRES=resNumber  Cluster Resolution to use (eg: CRES=0.2)
 
 "
+STAGE=3
 
 if(R.Version()$major<4) {
     cat(usage)
