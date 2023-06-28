@@ -38,6 +38,9 @@ get_plot_filename<-function(...) {
     } else if(exists("STAGE")) {
         odir=file.path("results",paste0("stage",STAGE))  
     }
+    if(odir=="results/stageX") {
+        cat("\n\n    Please set STAGE variable\n\n\n")
+    }
     fs::dir_create(odir)
     base=cc(args$PROJNAME,plotFilePrefix,paste0(argv,collapse="_"))
     fname=file.path(odir,base)
