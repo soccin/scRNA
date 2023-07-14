@@ -1,4 +1,8 @@
 genomes:
   refdata-gex-mm10-2020-A: mm10
+  mm10: mm10
+  mouse: mm10
+  hg38: hg38
+  human: hg38
   refdata-gex-GRCh38-2020-A: hg38
   gex-GRCh38-2020-A--HALO: hg38
