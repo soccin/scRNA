@@ -19,6 +19,8 @@ inputs:
   sid: <NEXTSID>
 ```
 
+The script 'scRNA/getCRConfigTmpl.sh <CELL_RANGER_DIR>' will create a possible one. Remember to edit the genome line
+
 ## Previous Updates
 
 Major workflow refactor.
