@@ -75,12 +75,13 @@ get_genome_from_cellranger<-function(cellRangerDir) {
 
     genomeFile=grep("--transcriptome=",cmdline,value=T) %>% basename
     genome=genomes[genomeFile]
-    glbs$genome <<- union(glbs$genome,genome)
+
     if(is.na(genome)) {
         cat("\n\n  Unknown genomeFile =",genomeFile,"\n\n")
         stop("FATAL ERROR")
     }
 
+    glbs$genome <<- union(glbs$genome,genome)
     genome
 
 }
@@ -96,7 +97,11 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
     #
     cellRangerDir=gsub("/outs.*","",cellRangerDir)
 
-    genome=get_genome_from_cellranger(cellRangerDir)
+    if(is.null(glbs$genome)) {
+        genome=get_genome_from_cellranger(cellRangerDir)
+    } else {
+        genome=glbs$genome
+    }
 
     dataDir=dir_ls(cellRangerDir,regex="outs/filtered_feature_bc_matrix$",recurs=T)
     if(len(dataDir)!=1) {

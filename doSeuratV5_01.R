@@ -54,10 +54,15 @@ if(Sys.getenv("SDIR")=="") {
 
 ##############################################################################
 
-if(args$CONFIG!=".none" & file.exists(args$CONFIG)) {
+if(args$CONFIG!=".none") {
     cat("\nUsing config file for data paths\n\n")
     library(yaml)
     require(dplyr)
+
+    if(!file.exists(args$CONFIG)) {
+        cat("\n\n\tConfig file",args$CONFIG,"does not exist\n\n")
+        stop("FATAL:ERROR")
+    }
 
     config=read_yaml(args$CONFIG)
     inputs=purrr::map(config$inputs,as_tibble) %>% bind_rows
@@ -162,7 +167,7 @@ for(ii in seq(len(dataFolders))) {
         #
         # Need to explicity set genome also from config
         #
-        glbs$genome <- config$genome
+        glbs$genome <- genomes[config$genome]
 
         #read_10X_multi_as_SeurateObject(bc_matrix_dir,gexSlot,genome,projName)
 
@@ -175,7 +180,17 @@ for(ii in seq(len(dataFolders))) {
                                     )
 
     } else {
+
         # Orig default path
+
+        #
+        # If we are using a config file (in non-multi mode)
+        # check if genome was set and set the global
+        #
+
+        if(!is.null(config$genome)) {
+           glbs$genome <- genomes[config$genome]
+        }
 
         d10X[[sampleName]] <- read10XDataFolderAsSeuratObj(dataFolders[ii],args$PROJNAME)
 
