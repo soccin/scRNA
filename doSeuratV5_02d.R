@@ -183,7 +183,12 @@ nCells=min(ncol(s1),5000)
 sh=s1[,sample(colnames(s1),nCells)]
 ph=DoHeatmap(sh,features=genesHeat)
 
-pdf(file=get_plot_filename(plotNo(),"ClusterHeatmap",clustTag,"FDR",FDR.cut,"logFC",logFC.cut,".pdf"),width=11,height=8.5)
+hmPlotFile=get_plot_filename(plotNo(),"ClusterHeatmap",clustTag,"FDR",FDR.cut,"logFC",logFC.cut,".pdf")
+hmGeneList=gsub(".pdf","_GeneList.txt",basename(hmPlotFile))
+
+write(genesHeat,hmGeneList)
+
+pdf(file=hmPlotFile,width=11,height=8.5)
 print(ph)
 dev.off()
 
