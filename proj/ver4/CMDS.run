@@ -1,1 +1,0 @@
-bsub -o LSF/ -J Seurate.$(basename $PWD) -W 359 -n 8 -R "rusage[mem=8]" Rscript --no-save doSeuratV4.R

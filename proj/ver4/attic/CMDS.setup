@@ -1,5 +1,0 @@
-CODEDIR=/home/socci/Work/Users/SchmittA/ShamsedA/Proj_11206/Seurate/Code
-cp $CODEDIR/dataX10InputDirs .
-cp $CODEDIR/doSeurat*.R .
-cp $CODEDIR/seuratTools.R .
-cp $CODEDIR/CellCycleGenesUpdated2019_MouseFromHuman.rda .
