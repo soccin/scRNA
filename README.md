@@ -1,22 +1,39 @@
-# scRNA Version 4
+# Single Cell RNAseq Analysis Code
 
-## Branch proj/p12553
+Code for the analysis of single cell RNAseq data in: Nacev, _et. al._, _Cancer-associated Histone H3 N-terminal arginine mutations disrupt PRC2 activity and impair differentiation_
 
-### Manuscript branch
+## Installation
 
-Now does SCTransform and Integrate
+### Requirements:
 
-Needs R>=4.x. Run `CMD.Setup_R-4.x` to load it
+- OS: Linux (tested on CentOS-7 ver 7.9.2009)
 
-## Current pipeline
+- CellRanger Version 6 (https://support.10xgenomics.com)
 
-Multiple stages
+- R Version >= 4.1.x (https://www.r-project.org)
 
-- `doSeuratV5_01.R`: Initial QC to check filtering paramters and check cell cycle regression plots to see if cell cycle regression is needed.
+- Seurat Version 4.2.0 (https://satijalab.org/seurat)
 
-- Stage 2: Multiple parts now:
 
-    - `doSeuratV5_02a.R` Now does SCTransform and Integrate with Normalize and CC regression
-    - `doSeuratV5_02b.R` PCA and clustering
+### Setup
+
+To run the code the following directory struction is need as it is hardwired in the code. Create a directory for the analysis, it can be called anything. Here we will refer to by the variable `$AROOT`.
+
+Then in `$AROOT` create the following subfolders:
+- `$AROOT\analysis`
+- `$AROOT\cellRanger`
+
+In `$AROOT\cellRanger` you need to run `cellranger count` on the FASTQ files. The exact commands we ran are included in the file `CMDS.CellRanger.p12553`. Adjust to the correct path to the FASTQ files on your system however the `id` names must remain the same.
+
+
+```
+git clone -b proj/p12553 git@github.com:soccin/scRNA.git
+cp scRNA/pass_00_PARAMS.yaml .
+
+```
+
+## Run Analysis
+
+
 
 
