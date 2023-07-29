@@ -6,7 +6,7 @@ Code for the analysis of single cell RNAseq data in: Nacev, _et. al._, _Cancer-a
 
 ### Requirements:
 
-- OS: Linux (tested on CentOS-7 ver 7.9.2009)
+- OS: Linux CentOS-7 ver 7.9.2009 (may work on other Linux's untested)
 
 - CellRanger Version 6 (https://support.10xgenomics.com)
 
@@ -14,6 +14,7 @@ Code for the analysis of single cell RNAseq data in: Nacev, _et. al._, _Cancer-a
 
 - Seurat Version 4.2.0 (https://satijalab.org/seurat)
 
+The code follows the standard Seurat workflow: (https://satijalab.org/seurat/articles/pbmc3k_tutorial.html) using simple merging and `SCTransform` for normalization with cell cycle regression.
 
 ### Setup
 
@@ -27,8 +28,11 @@ In `$AROOT\cellRanger` you need to run `cellranger count` on the FASTQ files. Th
 
 
 ```
+cd $AROOT\analysis
 git clone -b proj/p12553 git@github.com:soccin/scRNA.git
 cp scRNA/pass_00_PARAMS.yaml .
+cp scRNA/pass_02b__MetaData__Res0.5_Cluster_6.csv .
+
 
 ```
 
