@@ -29,15 +29,48 @@ In `$AROOT\cellRanger` you need to run `cellranger count` on the FASTQ files. Th
 
 ```
 cd $AROOT\analysis
+
 git clone -b proj/p12553 git@github.com:soccin/scRNA.git
+
 cp scRNA/pass_00_PARAMS.yaml .
 cp scRNA/pass_02b__MetaData__Res0.5_Cluster_6.csv .
 
+./scRNA/CMDS.p12.CellFilter
+Rscript scRNA/doSeuratV5_02d.R pass_02b_PARAMS.yaml 0.2
 
 ```
 
 ## Run Analysis
 
+Time:
+```
+real    39m57.509s
+user    38m24.363s
+sys 1m28.393s
+
+real    12m36.144s
+user    12m8.818s
+sys 0m23.045s
 
 
+```
 
+Output:
+```
+seuratQC_p12553_01_CellCycle.pdf
+seuratQC_p12553_02_Filter.pdf
+pass_01_PARAMS.yaml
+pass_01_SObj_9c1ceafabf9f90c54b80e1a146236ea4_d10X.orig_.rda
+seuratQC_p12553_11_PostIntegrateCC.pdf
+seuratQC_p12553_12_VariableFeatures.pdf
+pass_02_PARAMS.yaml
+pass_02a_SObj_6197c2f6a624a6175059ae5eb2dfdca7_d10X.integrate_.rda
+seuratQC_p12553_21_PCADimMetric.pdf
+seuratQC_p12553_22_UMAP_20_.pdf
+seuratQC_p12553_23_ClusterChart_20_.pdf
+pass_02b_PARAMS.yaml
+pass_02b_SObj_958bba8282164eabdbc603b9de801ec1_s1_.rda
+tblClusterMarkers_SCT_snn_res.0.2_FDR_0.05_logFC_1.xlsx
+seuratQC_p12553_21d_ClusterMarkers_SCT_snn_res.0.2_FDR_0.05_logFC_1.pdf
+seuratQC_p12553_22c_ClusterMarkersDot_SCT_snn_res.0.2_FDR_0.05_logFC_1_.pdf
+```
