@@ -6,7 +6,7 @@ Code for the analysis of single cell RNAseq data in: Nacev, _et. al._, _Cancer-a
 
 ### Requirements:
 
-- OS: Linux CentOS-7 ver 7.9.2009 (may work on other Linux's untested)
+- OS: Linux CentOS-7 ver 7.9.2009 (may work on other Linux's bit this is untested)
 
 - CellRanger Version 6 (https://support.10xgenomics.com)
 
@@ -52,7 +52,7 @@ real    39m57.509s
 real    12m36.144s
 ```
 
-Output:
+Expected Output:
 ```
 seuratQC_p12553_01_CellCycle.pdf
 seuratQC_p12553_02_Filter.pdf
