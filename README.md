@@ -34,28 +34,28 @@ git clone -b proj/p12553 git@github.com:soccin/scRNA.git
 
 cp scRNA/pass_00_PARAMS.yaml .
 cp scRNA/pass_02b__MetaData__Res0.5_Cluster_6.csv .
-
-./scRNA/CMDS.p12.CellFilter
-Rscript scRNA/doSeuratV5_02d.R pass_02b_PARAMS.yaml 0.2
-
 ```
 
 ## Run Analysis
 
-Time:
+Once the install is complete you can run the analysis in the manuscript as follows:
+```
+./scRNA/CMDS.p12.CellFilter
+Rscript scRNA/doSeuratV5_02d.R pass_02b_PARAMS.yaml 0.2
+```
+
+Expected run time for the two 
 ```
 real    39m57.509s
 user    38m24.363s
-sys 1m28.393s
+sys     1m28.393s
 
 real    12m36.144s
 user    12m8.818s
-sys 0m23.045s
-
-
+sys     0m23.045s
 ```
 
-Output:
+## Output
 ```
 seuratQC_p12553_01_CellCycle.pdf
 seuratQC_p12553_02_Filter.pdf
