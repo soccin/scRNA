@@ -167,7 +167,12 @@ md=md %>% mutate(CT=gsub(" \\(.*","",CT_Main))
 s1@meta.data=md %>% column_to_rownames("CellID")
 
 ctNames=sort(unique(atlas$label.main))
-ctCols=pals::cols25(len(ctNames))
+nCols=len(ctNames)
+if(nCols<=12) {
+    ctCols=RColorBrewer::brewer.pal(nCols,"Paired")
+} else {
+    ctCols=pals::cols25(nCols)
+}
 names(ctCols)=ctNames
 ctCols=ctCols[sort(unique(md$CT[!is.na(md$CT)]))]
 
