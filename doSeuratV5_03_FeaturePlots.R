@@ -81,6 +81,7 @@ if(args$glbs$genome=="mm10") {
 ##########################################################################
 
 s1=readRDS(args$PASS2b.RDAFile)
+DefaultAssay(s1)="SCT"
 
 pp=FeaturePlot(s1,features=genes,combine=F,order=T,max.cutoff="q95",min.cutoff=0)
 
