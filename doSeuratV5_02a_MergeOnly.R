@@ -178,7 +178,7 @@ print(ptb[[1]]/(ptb[[2]]+ptb[[3]])/ptb[[4]])
 dev.off()
 
 openxlsx::write.xlsx(
-    list(CutOff=tblCutOff,FailN=tblFailN,FailPCT=tblFailPCT,Totals=tblTotals),
+    list(Totals=tblTotals,CutOff=tblCutOff,FailN=tblFailN,FailPCT=tblFailPCT),
     gsub(".pdf$",".xlsx",pfile)
 )
 
