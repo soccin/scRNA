@@ -106,8 +106,9 @@ cat("digest=",digest::digest(d10X),"\n")
 cat("\nDoQCandFilter\n")
 
 qTbls=list()
+dFilter=list()
 for(ii in seq(d10X)) {
-    print(ii)
+    cat(ii,names(d10X)[ii],"\n")
 
     so = d10X[[ii]]
     md=so@meta.data
@@ -121,13 +122,24 @@ for(ii in seq(d10X)) {
 
     qTbls[[len(qTbls)+1]]=get_qc_tables(so@meta.data,ap)
 
-    so = apply_filter01(so,ap)
-
     if(!is.null(args$GENE_FILTER)) {
         so = so[genesToKeep,]
     }
 
-    d10X[[ii]]=so
+    so = apply_filter01(so,ap)
+
+    if(is.null(so)) {
+
+        #
+        # No cells pass filter
+        #
+        cat("Sample",names(d10X)[ii],"has no cells after filtering, removing\n")
+
+    } else {
+
+        dFilter[[len(dFilter)+1]]=so
+
+    }
 
 }
 
@@ -159,9 +171,19 @@ ptb[[2]]=ggplot()+theme_void()+annotation_custom(tableGrob(tblFailN,rows=NULL))
 ptb[[3]]=ggplot()+theme_void()+annotation_custom(tableGrob(tblTotals,rows=NULL))
 ptb[[4]]=ggplot()+theme_void()+annotation_custom(tableGrob(tblFailPCT,rows=NULL))
 
-pdf(file=get_plot_filename(plotNo(),"PostFilterQCTbls.pdf"),width=11,height=8.5)
+pfile=get_plot_filename(plotNo(),"PostFilterQCTbls.pdf")
+
+pdf(file=pfile,width=11,height=8.5)
 print(ptb[[1]]/(ptb[[2]]+ptb[[3]])/ptb[[4]])
 dev.off()
+
+openxlsx::write.xlsx(
+    list(CutOff=tblCutOff,FailN=tblFailN,FailPCT=tblFailPCT,Totals=tblTotals),
+    gsub(".pdf$",".xlsx",pfile)
+)
+
+d10X=dFilter
+rm(dFilter)
 
 ######################################################################
 ######################################################################
