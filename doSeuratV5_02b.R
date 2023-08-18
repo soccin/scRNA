@@ -125,19 +125,44 @@ s1 <- FindNeighbors(s1, dims = 1:nDims)
 s1 <- FindClusters(s1, resolution = ap$ClusterResolutions)
 s1 <- RunUMAP(s1, dims = 1:nDims)
 
+#
+# Collect any changes in globals and parameters
+#
+
+if("integrated" %in% names(s1)) {
+    DefaultAssay(s1)="integrated"
+} else if("SCT" %in% names(s1)) {
+    DefaultAssay(s1)="SCT"
+} else {
+    rlang::abort("Unknown assay to set as default")
+}
+
+args$algoParams=ap
+args$glbs=glbs
+args$optionals=oArgs
+args$GIT.Describe=git.describe(SDIR)
+args.digest.orig=digest::digest(args)
+
+args$PASS2b.RDAFile=cc("pass_02b","SObj",args.digest.orig,"s1",".rda")
+write_yaml(args,cc("pass_02b","PARAMS.yaml"))
+
+cat("\nSaving rda object ...")
+saveRDS(s1,args$PASS2b.RDAFile,compress=T)
+cat(" done\n\n")
+
 library(pals)
 
 cRes=grep("_res\\.",colnames(s1@meta.data),value=T)
 maxResTag=cRes[len(cRes)]
 maxClusters=s1@meta.data %>% tibble %>% distinct(.data[[maxResTag]]) %>% pull %>% len
 
-if(maxClusters>33) {
-    save.image(cc("CHECKPOINT",DATE(),".RData"),compress=T)
-    stop("\n\nTOO MANY CLUSTERS\n\n")
+
+if(maxClusters>50) {
+    cat("\n\nTOO MANY CLUSTERS",maxClusters,"\n\n")
 }
 
-pal1=c(cols25(maxClusters),brewer.dark2(8))
-pal2=c(brewer.paired(20))
+pal1=c(cols25(),brewer.dark2(maxClusters-25))
+pal2=c(brewer.paired(maxClusters))
 
 pu=list()
 for(ci in grep("_snn_res",colnames(s1@meta.data),value=T)) {
@@ -146,11 +171,13 @@ for(ci in grep("_snn_res",colnames(s1@meta.data),value=T)) {
 
     s1@meta.data[[ci]]=factor(as.numeric(as.character(clusterLevels))+1,levels=sort(as.numeric(levels(clusterLevels)))+1)
 
-    pu[[len(pu)+1]] <- DimPlot(s1, reduction = "umap", label=T, group.by=ci, label.size=6) + scale_color_manual(values=pal1) + ggtitle(ci)
+    pu[[len(pu)+1]] <- DimPlot(s1, reduction = "umap", label=T, group.by=ci, label.size=6, raster=T) + scale_color_manual(values=pal1) + ggtitle(ci)
 
 }
 
-pu[[len(pu)+1]] <- DimPlot(s1, reduction = "umap", group.by="SampleID") + scale_color_manual(values=cols25())
+numSamples=len(unique(s1@meta.data$SampleID))
+
+pu[[len(pu)+1]] <- DimPlot(s1, reduction = "umap", group.by="SampleID") + scale_color_manual(values=brewer.dark2(numSamples))
 pu[[len(pu)+1]] <- DimPlot(s1, reduction = "umap", group.by="Phase")
 
 pdf(file=get_plot_filename(plotNo(),"UMAP",nDims,".pdf"),width=11,height=8.5)
@@ -275,28 +302,4 @@ if(!is.null(oArgs$MODULE_FILE)) {
 
 }
 
-#
-# Collect any changes in globals and parameters
-#
-
-if("integrated" %in% names(s1)) {
-    DefaultAssay(s1)="integrated"
-} else if("SCT" %in% names(s1)) {
-    DefaultAssay(s1)="SCT"
-} else {
-    rlang::abort("Unknown assay to set as default")
-}
-
-args$algoParams=ap
-args$glbs=glbs
-args$optionals=oArgs
-args$GIT.Describe=git.describe(SDIR)
-args.digest.orig=digest::digest(args)
-
-args$PASS2b.RDAFile=cc("pass_02b","SObj",args.digest.orig,"s1",".rda")
-write_yaml(args,cc("pass_02b","PARAMS.yaml"))
-
-cat("\nSaving rda object ...")
-saveRDS(s1,args$PASS2b.RDAFile,compress=T)
-cat(" done\n\n")
 
