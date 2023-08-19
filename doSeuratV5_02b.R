@@ -95,7 +95,15 @@ cat("digest=",digest::digest(d10X.integrate),"\n")
 
 cat("\nComputing PCA ...")
 s1=d10X.integrate
-s1=RunPCA(s1,features=VariableFeatures(s1),approx=FALSE)
+argSig=digest::digest(list(s1,features=VariableFeatures(s1),approx=FALSE))
+pcaCacheFile=file.path("_RCache_",paste0(argSig,".rds"))
+if(fs::file_exists(pcaCacheFile)) {
+    s1=readRDS(pcaCacheFile)
+} else {
+    s1=RunPCA(s1,features=VariableFeatures(s1),approx=FALSE)
+    fs::dir_create(dirname(pcaCacheFile))
+    saveRDS(s1,pcaCacheFile,compress=T)
+}
 cat(" done\n\n")
 
 # # Determine the ‘dimensionality’ of the dataset
@@ -176,9 +184,10 @@ for(ci in grep("_snn_res",colnames(s1@meta.data),value=T)) {
 }
 
 numSamples=len(unique(s1@meta.data$SampleID))
+sampleCols=brewer.dark2(numSamples)
 
-pu[[len(pu)+1]] <- DimPlot(s1, reduction = "umap", group.by="SampleID") + scale_color_manual(values=brewer.dark2(numSamples))
-pu[[len(pu)+1]] <- DimPlot(s1, reduction = "umap", group.by="Phase")
+pu[[len(pu)+1]] <- DimPlot(s1, reduction = "umap", group.by="SampleID", raster=T) + scale_color_manual(values=sampleCols)
+pu[[len(pu)+1]] <- DimPlot(s1, reduction = "umap", group.by="Phase", raster=T)
 
 pdf(file=get_plot_filename(plotNo(),"UMAP",nDims,".pdf"),width=11,height=8.5)
 print(pu)
@@ -186,6 +195,7 @@ dev.off()
 cat(" done\n\n")
 
 md=s1@meta.data %>% rownames_to_column("CellID") %>% tibble
+
 pc=list()
 for(clusterI in grep("_snn_res",colnames(md),value=T)) {
 
@@ -227,7 +237,7 @@ for(clusterI in grep("_snn_res",colnames(md),value=T)) {
 
     pc[[len(pc)+1]]=ggplot(cTbl,aes(y=Clusters,x=nSampleNorm,fill=SampleID)) +
         geom_bar(position="fill", stat="identity") +
-        scale_fill_manual(values=cols25()) +
+        scale_fill_manual(values=sampleCols) +
         theme_light(base_size=18) +
         ggtitle(paste(clusterI,"Sample Cell Count Normalized")) +
         geom_label(data=S_cluster,aes(x=1,y=Clusters,label=sprintf("%.3f",S)),fill="white",hjust=1.1,size=4,label.size=.3)
