@@ -89,7 +89,7 @@ d10X=readRDS(args$PASS1.RDAFile)
 #
 # Add gene filters also
 #
-
+genesToKeep=NULL
 if(!is.null(args$GENE_FILTER)) {
     cat("\n   Running gene file with file ",args$GENE_FILTER,"\n\n")
     rna=d10X[[1]]@assays$RNA
@@ -123,7 +123,7 @@ for(ii in seq(d10X)) {
 
     qTbls[[len(qTbls)+1]]=get_qc_tables(so@meta.data,ap)
 
-    if(!is.null(args$GENE_FILTER)) {
+    if(!is.null(genesToKeep)) {
         so = so[genesToKeep,]
     }
 
