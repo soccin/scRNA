@@ -85,16 +85,25 @@ plotNo<-makeAutoIncrementor(10)
 
 
 d10X=readRDS(args$PASS1.RDAFile)
-
 #
 # Add gene filters also
 #
 genesToKeep=NULL
+genesToFilter=NULL
 if(!is.null(args$GENE_FILTER)) {
     cat("\n   Running gene file with file ",args$GENE_FILTER,"\n\n")
     rna=d10X[[1]]@assays$RNA
     allGenes=rownames(rna@counts)
     genesToFilter=scan(args$GENE_FILTER,"")
+    genesToKeep=setdiff(allGenes,genesToFilter)
+}
+
+if(glbs$genome=="xenograft") {
+    cat("\n   Xenograft filtering out mouse genes\n\n")
+    mouseGenes=genesToKeep=grep("^mm10---",rownames(d10X[[1]]@assays$RNA),value=T)
+    genesToFilter=union(genesToFilter,mouseGenes)
+    rna=d10X[[1]]@assays$RNA
+    allGenes=rownames(rna@counts)
     genesToKeep=setdiff(allGenes,genesToFilter)
 }
 
