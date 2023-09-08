@@ -169,7 +169,11 @@ if(maxClusters>50) {
     cat("\n\nTOO MANY CLUSTERS",maxClusters,"\n\n")
 }
 
-pal1=c(cols25(),brewer.dark2(maxClusters-25))
+if(maxClusters>25) {
+    pal1=c(cols25(),brewer.dark2(maxClusters-25))
+} else {
+    pal1=cols25()
+}
 pal2=c(brewer.paired(maxClusters))
 
 pu=list()
