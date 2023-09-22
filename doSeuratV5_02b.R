@@ -169,7 +169,11 @@ if(maxClusters>50) {
     cat("\n\nTOO MANY CLUSTERS",maxClusters,"\n\n")
 }
 
-pal1=c(cols25(),brewer.dark2(maxClusters-25))
+if(maxClusters>25) {
+    pal1=c(cols25(),brewer.dark2(maxClusters-25))
+} else {
+    pal1=cols25()
+}
 pal2=c(brewer.paired(maxClusters))
 
 pu=list()
@@ -197,6 +201,8 @@ cat(" done\n\n")
 md=s1@meta.data %>% rownames_to_column("CellID") %>% tibble
 
 pc=list()
+pct_sample=list()
+
 for(clusterI in grep("_snn_res",colnames(md),value=T)) {
 
     cLevels=sort(as.numeric(levels(md[[clusterI]])))
@@ -271,18 +277,29 @@ for(clusterI in grep("_snn_res",colnames(md),value=T)) {
         ggtitle(paste(clusterI)) +
         scale_fill_manual(values=pal1)
 
+    pct_sample[[len(pct_sample)+1]]=cTbl %>%
+                                    group_by(Clusters) %>%
+                                    mutate(PCT=round(100*nSampleNorm/sum(nSampleNorm),2)) %>%
+                                    select(SampleID,Clusters,PCT) %>%
+                                    spread(SampleID,PCT,fill=0)
+
 }
 
 pdf(file=get_plot_filename(plotNo(),"ClusterChart",nDims,".pdf"),width=14,height=8.5)
 print(pc)
 dev.off()
 
-halt("SampleBiasChart")
+#halt("SampleBiasChart")
 numResolutions=len(grep("_snn_res",colnames(md),value=T))
-pdf(file=get_plot_filename(plotNo(),"SampleBias",".pdf"),width=11,height=8.5)
+pfile=get_plot_filename(plotNo(),"SampleBias",".pdf")
+pdf(file=pfile,width=11,height=8.5)
 print(pu[numResolutions+1])
 print(pc[4*(seq(numResolutions)-1)+1])
 dev.off()
+
+xx=map(pct_sample,tibble)
+names(xx)=paste0("N.Cluster=",map_vec(pct_sample,nrow))
+openxlsx::write.xlsx(xx,gsub(".pdf",".xlsx",pfile))
 
 if(!is.null(oArgs$MODULE_FILE)) {
     oArgs$MODULE_FILE=normalizePath(oArgs$MODULE_FILE)
