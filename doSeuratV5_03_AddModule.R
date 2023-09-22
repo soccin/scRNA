@@ -1,14 +1,28 @@
 suppressPackageStartupMessages(require(stringr))
 
 usage="
-usage: doSeuratV5_03_AddModule.R PARAMS_2b.yaml ModuleFile
+usage: doSeuratV5_03_AddModule.R [CLUSTER_RES=res] PARAMS_2b.yaml ModuleFile
 
+    CLUSTER_RES     optional: resolution of clusters to use for cluster level assigments
     PARAMS_2b.yaml  parameter file from pass2b
     ModuleFile      File with Module Genes (name of module from filename)
 
 "
 
 cArgs=commandArgs(trailing=T)
+#
+# Separate out any options arguments
+#
+optionals=grep("=",cArgs,value=T)
+
+oArgs=list(CLUSTER_RES=NULL)
+if(len(optionals)>0) {
+    require(stringr, quietly = T, warn.conflicts=F)
+    parseArgs=str_match(optionals,"(.*)=(.*)")
+    aa=apply(parseArgs,1,function(x){oArgs[[str_trim(x[2])]]<<-str_trim(x[3])})
+}
+
+cArgs=grep("=",cArgs,value=T,invert=T)
 
 if(len(cArgs)!=2) {
     cat(usage)
@@ -81,7 +95,11 @@ modules=split(moduleTbl$Genes,moduleTbl$Module)
 
 s1=AddModuleScore(s1,features=modules,name="Modules")
 
-clusterRes="res.0.1"
+if(!is.null(oArgs$CLUSTER_RES)) {
+    clusterRes=oArgs$CLUSTER_RES
+} else {
+    clusterRes="0.1"
+}
 clusterRes=grep(paste0(clusterRes,"$"),colnames(s1@meta.data),value=T)
 
 cat("\nPlot modules ...")
