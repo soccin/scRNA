@@ -172,7 +172,8 @@ ptb[[2]]=ggplot()+theme_void()+annotation_custom(tableGrob(tblFailN,rows=NULL))
 ptb[[3]]=ggplot()+theme_void()+annotation_custom(tableGrob(tblTotals,rows=NULL))
 ptb[[4]]=ggplot()+theme_void()+annotation_custom(tableGrob(tblFailPCT,rows=NULL))
 
-pdf(file=get_plot_filename(plotNo(),"PostFilterQCTbls.pdf"),width=11,height=8.5)
+pfile=get_plot_filename(plotNo(),"PostFilterQCTbls.pdf")
+pdf(file=pfile,width=11,height=8.5)
 print(ptb[[1]]/(ptb[[2]]+ptb[[3]])/ptb[[4]])
 dev.off()
 
