@@ -182,7 +182,6 @@ ptb[[3]]=ggplot()+theme_void()+annotation_custom(tableGrob(tblTotals,rows=NULL))
 ptb[[4]]=ggplot()+theme_void()+annotation_custom(tableGrob(tblFailPCT,rows=NULL))
 
 pfile=get_plot_filename(plotNo(),"PostFilterQCTbls.pdf")
-
 pdf(file=pfile,width=11,height=8.5)
 print(ptb[[1]]/(ptb[[2]]+ptb[[3]])/ptb[[4]])
 dev.off()
