@@ -1,8 +1,8 @@
 # scRNA Version 4
 
-## Branch dev/xeno
+## Branch master
 
-Added code to work with xenograft samples (human samples with mouse "contamination")
+Added code to work with xenograft samples (human samples with mouse "contamination") (rebased on 2023-11-20)
 
 ## Summary
 
