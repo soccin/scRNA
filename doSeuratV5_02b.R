@@ -188,7 +188,10 @@ for(ci in grep("_snn_res",colnames(s1@meta.data),value=T)) {
 }
 
 numSamples=len(unique(s1@meta.data$SampleID))
-sampleCols=brewer.dark2(numSamples)
+#
+# brewer.dark2 require min 3 samples
+#
+sampleCols=brewer.dark2(max(3,numSamples))[1:numSamples]
 
 pu[[len(pu)+1]] <- DimPlot(s1, reduction = "umap", group.by="SampleID", raster=T) + scale_color_manual(values=sampleCols)
 pu[[len(pu)+1]] <- DimPlot(s1, reduction = "umap", group.by="Phase", raster=T)
