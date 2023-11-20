@@ -7,3 +7,4 @@ genomes:
   refdata-gex-GRCh38-2020-A: hg38
   gex-GRCh38-2020-A--HALO: hg38
   refdata-gex-GRCh38-and-mm10-2020-A: xenograft
+  xenograft: xenograft
