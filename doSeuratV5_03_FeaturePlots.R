@@ -98,7 +98,7 @@ for(ii in seq(genes)) {
 pfile=get_plot_filename(plotNo(),"GeneUMAPs",basename(geneListFile),"%03d.png")
 pngCairo(pfile,width=11,height=8.5)
 pp1=paginatePlots(pp,2,2,oneLegend=F)
-pp2=map(pgL,paginatePlots,2,3,oneLegend=F)
+pp2=map(pgL,paginatePlots,2,2,oneLegend=F)
 print(pp1)
 print(pp2)
 dev.off()
