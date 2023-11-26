@@ -22,7 +22,8 @@ apply_filter01 <- function(so,filters) {
     subset(so,
            subset = nFeature_RNA > filters$MIN_FEATURE_RNA
                     & nCount_RNA > filters$MIN_NCOUNT_RNA
-                    & percent.mt < filters$PCT_MITO
+                    & percent.mt < filters$PCT_MITO,
+           return.null=TRUE
         )
 
 }

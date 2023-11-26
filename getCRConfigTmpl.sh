@@ -10,4 +10,4 @@ for oi in $OUTS; do
     echo "- dir:" $oi
     echo "  sid:" $si
 done
-echo "genome: [mm10|hg38]"
+echo "genome: [mm10|hg38|xenograft]"

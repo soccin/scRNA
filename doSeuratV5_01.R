@@ -357,3 +357,44 @@ pdf(file=get_plot_filename(plotNo(),"CellCycle.pdf"),width=11,height=8.5)
 
 dev.off()
 
+
+if(glbs$genome=="xenograft") {
+
+md=d10X[[1]]@meta.data %>%
+    tibble %>%
+    mutate(Species=case_when(percent.Hs>95 ~ "Human", percent.Mm>95 ~ "Mouse", T ~ "Mixed")) %>%
+    mutate(Species=factor(Species))
+
+px1=md %>%
+    count(SampleID,Species,.drop=F) %>%
+    ggplot(aes(SampleID,n,fill=Species)) +
+        theme_light(16) +
+        geom_col(position='dodge') +
+        scale_fill_brewer(palette="Dark2",drop=F) +
+        coord_flip() +
+        theme(panel.grid.minor=element_blank())
+
+px2=px1 + scale_y_continuous(trans="log1p",breaks=c(0,1,10,100,1000,10000))
+
+px3=md %>% gather(Species2,PCT,percent.Hs,percent.Mm) %>%
+    ggplot(aes(nCount_RNA,PCT,color=Species)) +
+    geom_point(alpha=.4) +
+    scale_x_log10() +
+    theme_light(12) +
+    facet_wrap(~SampleID)
+
+xPos=10^floor(log10(max(md$nCount_RNA)))
+adf=md %>% group_by(SampleID) %>%
+    summarize(PCT.Human=sprintf("Percent Human = %.1f%%",mean(Species=="Human")*100)) %>%
+    mutate(x=xPos,y=50)
+px3=px3 + geom_label(data=adf,aes(x=x,y=y,label=PCT.Human),color="black",hjust=1,size=4)
+
+
+pdf(file=get_plot_filename(plotNo(),"XenoStats.pdf"),width=11,height=8.5)
+print(px1)
+print(px2)
+print(px3)
+dev.off()
+}
+#d10X[[1]]@meta.data %>% tibble %>% ggplot(aes(percent.Hs,percent.Mm)) + geom_point()
+

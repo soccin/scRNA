@@ -6,6 +6,7 @@ usage: doSeuratV5_03_CTSingleR.R [CLUSTER_RES=res] PARAMS_2b.yaml
     PARAMS_2b.yaml     parameter file from pass2b [post PCA]
     CLUSTER_RES        optional: resolution of clusters to use for cluster level assigments
     ATLAS_TAG          Atlas to use [ImmGenData,MouseRNAseqData]
+    ATLAS_LEVEL        Level to use in atlas [main,fine]
 "
 
 STAGE=4
@@ -17,7 +18,7 @@ cArgs=commandArgs(trailing=T)
 #
 optionals=grep("=",cArgs,value=T)
 
-oArgs=list(CLUSTER_RES=NULL,ATLAS_TAG="MouseRNAseqData")
+oArgs=list(CLUSTER_RES=NULL,ATLAS_TAG="MouseRNAseqData",ATLAS_LEVEL="main")
 if(len(optionals)>0) {
     require(stringr, quietly = T, warn.conflicts=F)
     parseArgs=str_match(optionals,"(.*)=(.*)")
@@ -70,7 +71,7 @@ suppressPackageStartupMessages({
 })
 
 ATLAS_TAG=oArgs$ATLAS_TAG
-
+ATLAS_LEVEL=oArgs$ATLAS_LEVEL
 
 ##########################################################################
 #
@@ -138,7 +139,6 @@ sce=seurat_to_sce(s1)
 # pred_cell_main=SingleR(test=sce,ref=atlas,assay.type.test="logcounts",labels=atlas$label.main,prune=T)
 # cellTypes=singleR_to_long(pred_cell_main,"Cell.Main")
 
-ATLAS_LEVEL="fine"
 if(ATLAS_LEVEL=="fine") {
     pred_cell=SingleR::SingleR(test=sce,ref=atlas,assay.type.test="logcounts",labels=atlas$label.fine,prune=T)
 } else {
@@ -166,8 +166,15 @@ md=md %>% mutate(CT=gsub(" \\(.*","",CT_Main))
 
 s1@meta.data=md %>% column_to_rownames("CellID")
 
-ctNames=sort(unique(atlas$label.main))
-ctCols=pals::cols25(len(ctNames))
+ctNames=sort(unique(md$CT[!is.na(md$CT)]))
+
+nCols=len(ctNames)
+
+if(nCols<=10) {
+    ctCols=RColorBrewer::brewer.pal(nCols,"Paired")
+} else {
+    ctCols=pals::cols25(nCols)
+}
 names(ctCols)=ctNames
 ctCols=ctCols[sort(unique(md$CT[!is.na(md$CT)]))]
 

@@ -32,8 +32,10 @@ plot_highest_exprs_genes<-function(obj,n=25,filterRibo=F,filterMito=F) {
            C=C[grep("^RP[LSP]",rownames(C),invert=T),]
         } else if(glbs$genome=="mm10") {
             C=C[grep("^Rp[lsp]",rownames(C),invert=T),]
+        } else if(glbs$genome=="xenograft") {
+           C=C[grep("^RP[LSP]",rownames(C),invert=T),]
         } else {
-           rlang::abort(paste("UNKNOWN Genome",glbs$genome))
+           rlang::abort(paste("plot_highest_exprs_genes::38::UNKNOWN Genome",glbs$genome))
         }
         titleB=c(titleB,"Filter Ribo")
     }
@@ -41,10 +43,12 @@ plot_highest_exprs_genes<-function(obj,n=25,filterRibo=F,filterMito=F) {
     if(filterMito) {
         if(glbs$genome=="hg38") {
             C=C[grep("^MT-",rownames(C),invert=T),]
+        } else if(glbs$genome=="xenograft") {
+            C=C[grep("^MT-",rownames(C),invert=T),]
         } else if(glbs$genome=="mm10") {
             C=C[grep("^mt-",rownames(C),invert=T),]
         } else {
-           rlang::abort(paste("UNKNOWN Genome",glbs$genome))
+           rlang::abort(paste("plot_highest_exprs_genes::51::UNKNOWN Genome",glbs$genome))
         }
         titleB=c(titleB,"Filter Mito")
     }

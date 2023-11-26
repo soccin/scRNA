@@ -1,6 +1,10 @@
 # scRNA Version 4
 
-## Branch master (2023-05-15 pulled from dev/2023)
+## Branch master
+
+Added code to work with xenograft samples (human samples with mouse "contamination") (rebased on 2023-11-20)
+
+## Summary
 
 Needs R>=4.2.
 

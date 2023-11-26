@@ -111,6 +111,18 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
 
     xx <- Read10X(dataDir)
 
+    if(genome=="xenograft") {
+
+        #
+        # Save the indices of the human genes and then fix
+        # the gene names
+        #
+
+        humanGenes=grep("GRCh38_",rownames(xx))
+        rownames(xx)=gsub("^GRCh38_","",rownames(xx))
+
+    }
+
     so <- CreateSeuratObject(counts = xx, project=projName)
 
     cell.barcode=basename(colnames(so)) %>% gsub("filtered_feature_bc_matrix_","",.)
@@ -129,8 +141,13 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
         so[["percent.mt"]] <- PercentageFeatureSet(so, pattern = "^mt-")
     } else if(genome=="hg38") {
         so[["percent.mt"]] <- PercentageFeatureSet(so, pattern = "^MT-")
+    } else if(genome=="xenograft") {
+        so[["percent.mt"]] <- PercentageFeatureSet(so, pattern = "^MT-")
+        so[["percent.Hs"]] <- PercentageFeatureSet(so, features=humanGenes)
+        so[["percent.Mm"]] <- PercentageFeatureSet(so, pattern = "^mm10---")
+        so[["percent.mt.Mm"]] <- PercentageFeatureSet(so, pattern = "^mm10---mt-")
     } else {
-        stop(paste("Unknown genome",genome,"Should not get here"))
+        stop(paste("seuratTools::150::Unknown genome",genome,"Should not get here"))
     }
 
     so@meta.data$orig.ident=sampleId
@@ -188,13 +205,13 @@ getCellCycleGenes<-function(genome) {
 
         cellCycle.genes=genes.cellCycle.mm10
 
-    } else if(genome=="hg38") {
+    } else if(genome=="hg38" || genome=="xenograft") {
 
         cellCycle.genes=genes.cellCycle.hg38
 
     } else {
 
-       stop(paste("seuratTools::scoreCellCycle::Unknown genome",gbls$genome,"Need to implement"))
+       stop(paste("seuratTools::scoreCellCycle::Unknown genome",glbs$genome,"Need to implement"))
 
     }
 
@@ -240,13 +257,13 @@ plotCellCycle<-function(sc,title="") {
 
         cellCycle.genes=genes.cellCycle.mm10
 
-    } else if(glbs$genome=="hg38") {
+    } else if(glbs$genome=="hg38" || glbs$genome=="xenograft") {
 
         cellCycle.genes=genes.cellCycle.hg38
 
     } else {
 
-       stop(paste("seuratTools::scoreCellCycle::Unknown genome",gbls$genome,"Need to implement"))
+       stop(paste("seuratTools::scoreCellCycle::Unknown genome",glbs$genome,"Need to implement"))
 
     }
 
