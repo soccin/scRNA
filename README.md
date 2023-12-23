@@ -1,6 +1,9 @@
 # Single Cell RNAseq Analysis Code
 
-Code for the analysis of single cell RNAseq data in: Nacev, _et. al._, _Cancer-associated Histone H3 N-terminal arginine mutations disrupt PRC2 activity and impair differentiation_
+Code for the analysis of single cell RNAseq data in: Nacev, _et. al._, _Cancer-associated
+Histone H3 N-terminal arginine mutations disrupt PRC2 activity and impair differentiation_
+
+(version 2023-12-22)
 
 ## Installation
 
