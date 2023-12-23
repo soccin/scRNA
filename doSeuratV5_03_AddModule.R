@@ -109,11 +109,11 @@ if(is.null(args$CRES)) {
 }
 cTag=gsub("_res.*","_res",grep("_res",colnames(s1@meta.data),value=T)[1])
 
-halt()
-
 cat("\nPlot modules ...")
 pm=list()
+ps=list()
 pn=list()
+
 for(ii in seq(len(modules))) {
     print(ii)
     modTag=paste0("Modules",ii)
@@ -123,6 +123,12 @@ for(ii in seq(len(modules))) {
         combine=F)
 
     pm[[ii]]=pp[[1]] + ggtitle(names(modules)[ii])
+
+    pf=FeaturePlot(s1,features=modTag,max.cutoff="q95",min.cutoff="q05",split.by="SampleID",ncol=2,combine=F)
+    pf[[1]]=pf[[1]]+ggtitle("")
+    pf=Reduce(`+`,pf)
+
+    ps[[ii]]=pf+plot_annotation(title=names(modules)[ii],theme = theme(plot.title = element_text(size = 20)))
 
     for(ci in clusterResolutions) {
 
@@ -141,9 +147,16 @@ for(ii in seq(len(modules))) {
 }
 
 cat(" done\n\n")
+
 pfile=cc("seuratQC",args$PROJNAME,plotNo(),"ModuleScores_%03d.png")
 pngCairo(pfile,width=11,height=8.5)
 print(paginatePlots(pm,2,2,FALSE))
+dev.off()
+mergePNGs(pfile)
+
+pfile=cc("seuratQC",args$PROJNAME,plotNo(),"ModuleScoresBySample_%03d.png")
+pngCairo(pfile,width=11,height=8.5)
+print(ps)
 dev.off()
 mergePNGs(pfile)
 
