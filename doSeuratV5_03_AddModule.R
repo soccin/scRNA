@@ -81,6 +81,7 @@ suppressPackageStartupMessages({
     library(readxl)
     library(openxlsx)
     library(pals)
+    library(ggrastr)
 })
 
 ##########################################################################
@@ -120,11 +121,11 @@ for(ii in seq(len(modules))) {
     pp=FeaturePlot(s1,
         features=modTag,
         max.cutoff="q95",min.cutoff="q05",
-        combine=F)
+        combine=F,raster=T)
 
     pm[[ii]]=pp[[1]] + ggtitle(names(modules)[ii])
 
-    pf=FeaturePlot(s1,features=modTag,max.cutoff="q95",min.cutoff="q05",split.by="SampleID",ncol=2,combine=F)
+    pf=FeaturePlot(s1,features=modTag,max.cutoff="q95",min.cutoff="q05",split.by="SampleID",ncol=2,combine=F,raster=T,pt.size=2.5)
     pf[[1]]=pf[[1]]+ggtitle("")
     pf=Reduce(`+`,pf)
 
@@ -137,7 +138,7 @@ for(ii in seq(len(modules))) {
         pn[[len(pn)+1]] = ggplot(s1@meta.data,aes_string(clusterRes,modTag,fill=clusterRes)) +
             geom_violin() +
             theme_light() +
-            geom_jitter(alpha=.1,size=.7,width=.2) +
+            rasterize(geom_jitter(alpha=.1,size=.7,width=.2)) +
             ylab("Module Score") +
             ggtitle(names(modules)[ii]) +
             theme(legend.position = "none")
@@ -148,23 +149,40 @@ for(ii in seq(len(modules))) {
 
 cat(" done\n\n")
 
-pfile=cc("seuratQC",args$PROJNAME,plotNo(),"ModuleScores_%03d.png")
-pngCairo(pfile,width=11,height=8.5)
+# pfile=cc("seuratQC",args$PROJNAME,plotNo(),"ModuleScores_%03d.png")
+# pngCairo(pfile,width=11,height=8.5)
+# print(paginatePlots(pm,2,2,FALSE))
+# dev.off()
+# mergePNGs(pfile)
+
+pfile=cc("seuratQC",args$PROJNAME,plotNo(),"ModuleScores_Vector.pdf")
+pdf(pfile,width=8.5,height=11)
 print(paginatePlots(pm,2,2,FALSE))
 dev.off()
-mergePNGs(pfile)
 
-pfile=cc("seuratQC",args$PROJNAME,plotNo(),"ModuleScoresBySample_%03d.png")
-pngCairo(pfile,width=11,height=8.5)
+
+# pfile=cc("seuratQC",args$PROJNAME,plotNo(),"ModuleScoresBySample_%03d.png")
+# pngCairo(pfile,width=11,height=8.5)
+# print(ps)
+# dev.off()
+# mergePNGs(pfile)
+
+pfile=cc("seuratQC",args$PROJNAME,plotNo(),"ModuleScoresBySample_Vector.pdf")
+pdf(pfile,width=11,height=8.5)
 print(ps)
 dev.off()
-mergePNGs(pfile)
 
-pfile=cc("seuratQC",args$PROJNAME,plotNo(),"ModuleDistribution_%03d.png")
-pngCairo(pfile,width=8.5,height=11)
+# pfile=cc("seuratQC",args$PROJNAME,plotNo(),"ModuleDistribution_%03d.png")
+# pngCairo(pfile,width=8.5,height=11)
+# print(paginatePlots(pn,3,1,FALSE))
+# dev.off()
+# mergePNGs(pfile)
+
+
+pfile=cc("seuratQC",args$PROJNAME,plotNo(),"ModuleDistribution_Vector.pdf")
+pdf(pfile,width=8.5,height=11)
 print(paginatePlots(pn,3,1,FALSE))
 dev.off()
-mergePNGs(pfile)
 
 #
 # Dump metadata
