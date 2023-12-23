@@ -8,6 +8,10 @@ The FASTQ files were first processed using CellRanger V6 with the mouse genome a
 
 The filtered data was normalized and scaled using the SCTransform method from Seurat. For the transform we regressed against the cell cycle scores previously computed. After normlazation we computed the PCA coordinates and retained the first 20 coordiantes in the clustering and projection analysis. For cluster we used the Seurat FindNeighbor and FindClusters functions with several resolution values and after manual inspection fixed on a resolution value of 0.2 for subsequent work. We also computed the UMAP project using RunUMAP and 20 pca coordinates. Cluster specific marker genes were computed using FindAllMarkers with a cutoff of 0.25 in the log fold change and a minimum percentage of 25%. For two specifed gene sets: Adipocyte and Skeletal Muscle, we computed a score for each using AddModuleScore.
 
+## Trajectory Analysis
+
+Trajectory analysis was doing using Monocle3 (version 1.3.1). We used the R package `SeuratWrappers` to convert the Seurat objects for use in Monocle preserving the original pca mapping and UMAP reduction. The data was re-clustered with Monocle's cluster_cells function and then the trajectory graph and cell pseudotimes were computed.
+
 ## Software
 
 All of the custom R scripts used in this analysis are available here (https://github.com/soccin/scRNA/tree/proj/p12553). The following software packages were also used:
@@ -18,3 +22,8 @@ All of the custom R scripts used in this analysis are available here (https://gi
 
 - Seurat Version 4.2.0 (https://satijalab.org/seurat)
 
+- Monocle3 Version 1.3.1 (https://cole-trapnell-lab.github.io/monocle3)
+
+- SeuratWrappers Version 0.3.1
+
+- SeuratObject Version 4.1.3
