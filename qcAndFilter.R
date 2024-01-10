@@ -66,9 +66,8 @@ get_qc_tables <- function(md,filters) {
         N.Fail=nFail,PCT.Fail=pctFail
     )
 
-
-    tbl3a=md %>% group_by(SampleID) %>% summarize(Fail.Feature_RNA=mean(nFeature_RNA<=MIN_FEATURE_RNA),Fail.Count_RNA=mean(nCount_RNA<=MIN_NCOUNT_RNA),Fail.Mito=mean(percent.mt>=PCT_MITO))
-    tbl3b=md %>% group_by(SampleID) %>% summarize(Fail.Feature_RNA=sum(nFeature_RNA<=MIN_FEATURE_RNA),Fail.Count_RNA=sum(nCount_RNA<=MIN_NCOUNT_RNA),Fail.Mito=sum(percent.mt>=PCT_MITO))
+    tbl3a=md %>% group_by(SampleID) %>% summarize(Fail.Features=100*mean(nFeature_RNA<=MIN_FEATURE_RNA),Fail.Count=100*mean(nCount_RNA<=MIN_NCOUNT_RNA),Fail.Mito=100*mean(percent.mt>=PCT_MITO))
+    tbl3b=md %>% group_by(SampleID) %>% summarize(Total=n(),Fail.Features=sum(nFeature_RNA<=MIN_FEATURE_RNA),Fail.Count=sum(nCount_RNA<=MIN_NCOUNT_RNA),Fail.Mito=sum(percent.mt>=PCT_MITO))
 
     list(tbl0,tbl1,tbl2,tbl3a,tbl3b)
 
