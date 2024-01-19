@@ -142,10 +142,14 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
     } else if(genome=="hg38") {
         so[["percent.mt"]] <- PercentageFeatureSet(so, pattern = "^MT-")
     } else if(genome=="xenograft") {
-        so[["percent.mt"]] <- PercentageFeatureSet(so, pattern = "^MT-")
         so[["percent.Hs"]] <- PercentageFeatureSet(so, features=humanGenes)
         so[["percent.Mm"]] <- PercentageFeatureSet(so, pattern = "^mm10---")
-        so[["percent.mt.Mm"]] <- PercentageFeatureSet(so, pattern = "^mm10---mt-")
+        #
+        # For xeno count both human/mouse together here but the downstream
+        # code that filters for human cells and selects human genes will need
+        # to computer so[["percent.Hs"]]
+        #
+        so[["percent.mt.Xeno"]] <- PercentageFeatureSet(so, pattern = "^mm10---mt-|^MT-")
     } else {
         stop(paste("seuratTools::150::Unknown genome",genome,"Should not get here"))
     }
