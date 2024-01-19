@@ -96,6 +96,18 @@ qcSamples <- function(so) {
         sampleId=cc("MERGE",so@project.name)
     }
 
+    #
+    # If xenograft select for human only cells
+    #
+
+    if(glbs$genome=="xenograft") {
+        HS_CUT=80
+        xenoTbl=so@meta.data %>% tibble %>% group_by(SampleID) %>% summarize(Total=n(),N.Hs=sum(percent.Hs>HS_CUT),PCT.Hs=100*mean(percent.Hs>HS_CUT))
+        xenoTblP=ggplot()+theme_void()+annotation_custom(tableGrob(mutate_if(xenoTbl,is.numeric,~round(.,2)),rows=NULL))
+        cat("\n   Xenograft sample, filtering to human (PCT >",HS_CUT,"%) cells\n\n")
+        so=subset(so,percent.Hs>HS_CUT)
+    }
+
     md=tibble(so@meta.data)
 
     pq=list()
@@ -124,7 +136,11 @@ qcSamples <- function(so) {
 
     ptb=plot_qTables(qTbls)
 
-    pq[[len(pq)+1]]=(ptb[[1]]+ptb[[2]]+ptb[[3]])/(ptb[[4]]+ptb[[5]])
+    if(glbs$genome=="xenograft") {
+        pq[[len(pq)+1]]=(ptb[[1]]+ptb[[2]]+ptb[[3]])/(ptb[[4]]+ptb[[5]])/(xenoTblP)
+    } else {
+        pq[[len(pq)+1]]=(ptb[[1]]+ptb[[2]]+ptb[[3]])/(ptb[[4]]+ptb[[5]])
+    }
 
     list(plts=pq, stats=qTbls)
 
