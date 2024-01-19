@@ -147,9 +147,9 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
         #
         # For xeno count both human/mouse together here but the downstream
         # code that filters for human cells and selects human genes will need
-        # to computer so[["percent.Hs"]]
+        # to compute the corrected so[["percent.mt"]]
         #
-        so[["percent.mt.Xeno"]] <- PercentageFeatureSet(so, pattern = "^mm10---mt-|^MT-")
+        so[["percent.mt"]] <- PercentageFeatureSet(so, pattern = "^mm10---mt-|^MT-")
     } else {
         stop(paste("seuratTools::150::Unknown genome",genome,"Should not get here"))
     }
