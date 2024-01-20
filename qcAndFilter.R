@@ -100,7 +100,7 @@ qcSamples <- function(so) {
     # If xenograft select for human only cells
     #
 
-    if(glbs$genome=="xenograft") {
+    if(glbs$genome=="xenograft") { # Select for subset of human cells
         HS_CUT=80
         xenoTbl=so@meta.data %>% tibble %>% group_by(SampleID) %>% summarize(Total=n(),N.Hs=sum(percent.Hs>HS_CUT),PCT.Hs=100*mean(percent.Hs>HS_CUT))
         xenoTblP=ggplot()+theme_void()+annotation_custom(tableGrob(mutate_if(xenoTbl,is.numeric,~round(.,2)),rows=NULL))
@@ -136,7 +136,7 @@ qcSamples <- function(so) {
 
     ptb=plot_qTables(qTbls)
 
-    if(glbs$genome=="xenograft") {
+    if(glbs$genome=="xenograft") { # Add Xeno species count table
         pq[[len(pq)+1]]=(ptb[[1]]+ptb[[2]]+ptb[[3]])/(ptb[[4]]+ptb[[5]])/(xenoTblP)
     } else {
         pq[[len(pq)+1]]=(ptb[[1]]+ptb[[2]]+ptb[[3]])/(ptb[[4]]+ptb[[5]])

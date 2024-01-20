@@ -111,7 +111,7 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
 
     xx <- Read10X(dataDir)
 
-    if(genome=="xenograft") {
+    if(genome=="xenograft") { # Get list of human genes
 
         #
         # Save the indices of the human genes and then fix
@@ -138,10 +138,15 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
     so <- RenameCells(so,new.names=paste0(projName,":s:",sampleId,":bc:",cell.barcode))
 
     if(genome=="mm10") {
+
         so[["percent.mt"]] <- PercentageFeatureSet(so, pattern = "^mt-")
+
     } else if(genome=="hg38") {
+
         so[["percent.mt"]] <- PercentageFeatureSet(so, pattern = "^MT-")
-    } else if(genome=="xenograft") {
+
+    } else if(genome=="xenograft") { # Compute % human vs mouse; get %-MT correct
+
         so[["percent.Hs"]] <- PercentageFeatureSet(so, features=humanGenes)
         so[["percent.Mm"]] <- PercentageFeatureSet(so, pattern = "^mm10---")
         #
@@ -150,8 +155,11 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
         # to compute the corrected so[["percent.mt"]]
         #
         so[["percent.mt"]] <- PercentageFeatureSet(so, pattern = "^mm10---mt-|^MT-")
+
     } else {
+
         stop(paste("seuratTools::150::Unknown genome",genome,"Should not get here"))
+
     }
 
     so@meta.data$orig.ident=sampleId
@@ -209,7 +217,7 @@ getCellCycleGenes<-function(genome) {
 
         cellCycle.genes=genes.cellCycle.mm10
 
-    } else if(genome=="hg38" || genome=="xenograft") {
+    } else if(genome=="hg38" || genome=="xenograft") { # Xeno is human cell cycle
 
         cellCycle.genes=genes.cellCycle.hg38
 
@@ -261,7 +269,7 @@ plotCellCycle<-function(sc,title="") {
 
         cellCycle.genes=genes.cellCycle.mm10
 
-    } else if(glbs$genome=="hg38" || glbs$genome=="xenograft") {
+    } else if(glbs$genome=="hg38" || glbs$genome=="xenograft") { # Xeno is human cell cycle
 
         cellCycle.genes=genes.cellCycle.hg38
 

@@ -358,7 +358,7 @@ pdf(file=get_plot_filename(plotNo(),"CellCycle.pdf"),width=11,height=8.5)
 dev.off()
 
 
-if(glbs$genome=="xenograft") {
+if(glbs$genome=="xenograft") { # Plot xenoqc graphs
 
 md=d10X[[1]]@meta.data %>%
     tibble %>%
