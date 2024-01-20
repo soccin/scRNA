@@ -311,6 +311,9 @@ args00Mad3=list(
         METHOD="MAD3"
     )
 )
+if(glbs$genome=="xenograft") { # Set xeno percent cut for cell filter later
+    args00Mad3$algoParams$XENO_PCTCUT=80
+}
 
 write_yaml(args00Mad3,"pass_00_PARAMS.yaml.mad3")
 
