@@ -99,7 +99,7 @@ if(!is.null(args$GENE_FILTER)) {
     genesToKeep=setdiff(allGenes,genesToFilter)
 }
 
-if(glbs$genome=="xenograft") {
+if(glbs$genome=="xenograft") { # Get list of Human genes to keep in gene filter
     cat("\n   Xenograft filtering out mouse genes\n\n")
     mouseGenes=genesToKeep=grep("^mm10---",rownames(d10X[[1]]@assays$RNA),value=T)
     genesToFilter=union(genesToFilter,mouseGenes)
@@ -137,6 +137,10 @@ for(ii in seq(d10X)) {
     }
 
     so = apply_filter01(so,ap)
+
+    if(glbs$genome=="xenograft") { # Filter to only Human Cells
+        so=subset(so,percent.Hs>ap$XENO_PCTCUT)
+    }
 
     if(is.null(so)) {
 
