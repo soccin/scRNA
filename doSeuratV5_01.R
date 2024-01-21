@@ -133,6 +133,7 @@ MIN_FEATURE_RNA=1500
 MIN_NCOUNT_RNA=5000
 PCT_MITO=10
 METHOD="_auto"
+XENO_PCTCUT=80
 
 getDefault<-function(ll,key) ifelse(is.null(ll[[key]]),get(key),ll[[key]])
 
@@ -141,6 +142,7 @@ if(exists("args00")) {
     MIN_NCOUNT_RNA=getDefault(args00$algoParams,"MIN_NCOUNT_RNA")
     PCT_MITO=getDefault(args00$algoParams,"PCT_MITO")
     METHOD=getDefault(args00$algoParams,"METHOD")
+    XENO_PCTCUT=getDefault(args00$algoParams,"XENO_PCTCUT")
 }
 
 algoParams=list()
@@ -148,6 +150,7 @@ algoParams$MIN_FEATURE_RNA=MIN_FEATURE_RNA
 algoParams$MIN_NCOUNT_RNA=MIN_NCOUNT_RNA
 algoParams$PCT_MITO=PCT_MITO
 algoParams$METHOD=METHOD
+algoParams$XENO_PCTCUT=XENO_PCTCUT
 algoParams$SEED=101
 
 
