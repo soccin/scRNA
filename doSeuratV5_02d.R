@@ -204,7 +204,8 @@ umapGenes=cl %>%
 gumap=FeaturePlot(s1,features=umapGenes,combine=F,max.cutoff="q95")
 pgu=paginatePlots(gumap,2,3,oneLegend=F)
 
-pc1=DimPlot(s0,group.by=clusterRes,cols=pal1)
+#pc1=DimPlot(s1,group.by=clusterRes,cols=pal1,raster=T,pt.size=1.4)
+pc1=DimPlot(s1,group.by=clusterRes,cols=pal1)
 
 umFile=get_plot_filename(plotNo(),"ClusterUMAP",clustTag,"FDR",FDR.cut,"logFC",logFC.cut,"%03d",".png")
 
