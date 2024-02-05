@@ -74,6 +74,22 @@ get_genome_from_cellranger<-function(cellRangerDir) {
     cmdline=scan(cmdlineFile,"",quiet = TRUE)
 
     genomeFile=grep("--transcriptome=",cmdline,value=T) %>% basename
+    if(len(genomeFile)==0) {
+
+        #
+        # ran cell ranger with --transcriptome GENOME
+        # instead of --transcriptome=GENOME
+        #
+
+        genomeFile=cmdline[grep("--transcriptome",cmdline)+1] %>% basename
+
+        if(len(genomeFile)==0) {
+            cat("\n\tFATAL ERROR Can not find genomeFile\n\n")
+            rlang::abort("FATAL_ERROR")
+        }
+
+    }
+
     genome=genomes[genomeFile]
 
     if(is.na(genome)) {
