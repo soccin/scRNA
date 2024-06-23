@@ -68,9 +68,36 @@ get_genome_from_cellranger<-function(cellRangerDir) {
 
     cmdlineFile=dir_ls(cellRangerDir,regex="_cmd")
     if(len(cmdlineFile)!=1) {
-        cat("\n\n  cellRangerDir =",cellRangerDir,"not a valid CellRanger Directory\n\n")
+
+        if(Sys.getenv("scGENOME")!="") {
+
+            genome=genomes[Sys.getenv("scGENOME")]
+
+            if(is.na(genome)) {
+                cat("\n\n  Unknown genomeFile =",genomeFile,"\n\n")
+                stop("FATAL ERROR")
+            }
+
+            glbs$genome <<- union(glbs$genome,genome)
+            return(genome)
+
+        }
+
+        #
+        # Not a normal cellranger output folder (Like from SAIL)
+        # get Genome from scGENOME env variable
+        #
+
+        cat("\n\n  cellRangerDir =",
+            cellRangerDir,
+            "not a valid CellRanger Directory\n\n")
+        cat("  You can set the Genome using the\n\t$scGENOME\n")
+        cat("  environment variable\n\n")
         stop("FATAL ERROR")
+
     }
+
+
     cmdline=scan(cmdlineFile,"",quiet = TRUE)
 
     genomeFile=grep("--transcriptome=",cmdline,value=T) %>% basename
@@ -112,7 +139,7 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
     # Normalize cellRangerDir to root if subfolder was given
     #
     cellRangerDir=gsub("/outs.*","",cellRangerDir)
-
+    cat("\n\ncellRangerDir =",cellRangerDir,"\n\n")
     if(is.null(glbs$genome)) {
         genome=get_genome_from_cellranger(cellRangerDir)
     } else {
@@ -120,6 +147,13 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
     }
 
     dataDir=dir_ls(cellRangerDir,regex="outs/filtered_feature_bc_matrix$",recurs=T)
+    #
+    # Maybe we have SAIL cell ranger output
+    #
+    if(len(dataDir)!=1) {
+        dataDir=dir_ls(cellRangerDir,regex="filtered_feature_bc_matrix$")
+    }
+
     if(len(dataDir)!=1) {
         cat("\n\n  Can not find bc_matrix folder\n\n")
         stop("FATAL ERROR")
@@ -144,14 +178,20 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
     cell.barcode=basename(colnames(so)) %>% gsub("filtered_feature_bc_matrix_","",.)
 
     cmdlineFile=dir_ls(cellRangerDir,regex="_cmd")
-    cmdline=scan(cmdlineFile,"",quiet = TRUE)
+    pNum=""
+    sampleId=""
 
-    sampleId=grep("--id=",cmdline,value=T) %>% gsub(".*id=","",.) %>% gsub("^s_","",.)
-    pNum=extractProjNoFromPath(grep("--fastq",cmdline,value=T))
+    if(len(cmdlineFile)==1) {
+        cmdline=scan(cmdlineFile,"",quiet = TRUE)
+        sampleId=grep("--id=",cmdline,value=T) %>% gsub(".*id=","",.) %>% gsub("^s_","",.)
+        pNum=extractProjNoFromPath(grep("--fastq",cmdline,value=T))
+    }
 
     if(pNum!="") {projName=pNum}
 
-    so <- RenameCells(so,new.names=paste0(projName,":s:",sampleId,":bc:",cell.barcode))
+    if(sampleId!="") {
+        so <- RenameCells(so,new.names=paste0(projName,":s:",sampleId,":bc:",cell.barcode))
+    }
 
     if(genome=="mm10") {
 
