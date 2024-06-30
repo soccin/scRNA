@@ -86,7 +86,11 @@ s1=readRDS(args$PASS2b.RDAFile)
 DefaultAssay(s1)="SCT"
 
 if(modFileExt=="xlsx") {
-    moduleTbl=read_xlsx(moduleFile,sheet="GeneList")
+    if("GeneList" %in% readxl::excel_sheets(moduleFile)) {
+        moduleTbl=read_xlsx(moduleFile,sheet="GeneList")
+    } else {
+        moduleTbl=read_xlsx(moduleFile)
+    }
 } else if(modFileExt=="csv") {
     moduleTbl=read_csv(moduleFile)
 }
