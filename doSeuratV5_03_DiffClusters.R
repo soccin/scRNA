@@ -83,7 +83,7 @@ for(ci in transpose(comps)) {
 
     compName=paste(rev(ci),collapse="_vs_")
 
-    fm=FindMarkers(so,ident.1=ci$ClustA,ident.2=ci$ClustB)
+    fm=FindMarkers(so,ident.1=ci$ClustB,ident.2=ci$ClustA)
     gstats=fm$avg_log2FC
     names(gstats)=rownames(fm)
     fg=fgsea(msigdbr_list,gstats,minSize=15,maxSize=500)
