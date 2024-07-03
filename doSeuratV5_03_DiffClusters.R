@@ -99,6 +99,6 @@ for(ci in transpose(comps)) {
 
 }
 
-pt_df=map(pt,as.data.frame)
+pt_df=map(pathways,data.frame)
 
 openxlsx::write.xlsx(pt_df,cc(args$PROJNAME,"ClusterPathways","V1.xlsx"))
