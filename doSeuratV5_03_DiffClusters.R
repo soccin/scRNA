@@ -105,4 +105,4 @@ pt_df=map(pathways,data.frame)
 
 openxlsx::write.xlsx(pt_df,cc(args$PROJNAME,"ClusterPathways","V1.xlsx"))
 
-openxlsx::write.xlsx(diffTbl,cc(args$PROJNAME,"DiffGenesSortAbdFoldChange","V1.xlsx"))
+openxlsx::write.xlsx(diffTbl,cc(args$PROJNAME,"DiffGenesSortAbsFoldChange","V1.xlsx"))
