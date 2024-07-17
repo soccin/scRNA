@@ -77,6 +77,7 @@ msigdbr_list = split(x = msigdbr_df$gene_symbol, f = msigdbr_df$gs_name)
 pathdb=msigdbr_df %>% distinct(gs_id,.keep_all=T) %>% select(-gene_symbol,-entrez_gene,-ensembl_gene,-human_gene_symbol,-human_entrez_gene,-human_ensembl_gene)
 
 pathways=list()
+diffTbl=list()
 comps=tribble(~ClustA,~ClustB,1,0,1,2,1,3)
 
 for(ci in transpose(comps)) {
@@ -84,6 +85,7 @@ for(ci in transpose(comps)) {
     compName=paste(rev(ci),collapse="_vs_")
 
     fm=FindMarkers(so,ident.1=ci$ClustB,ident.2=ci$ClustA)
+    diffTbl[[compName]]=fm %>% rownames_to_column("Gene") %>% arrange(desc(abs(avg_log2FC)))
     gstats=fm$avg_log2FC
     names(gstats)=rownames(fm)
     fg=fgsea(msigdbr_list,gstats,minSize=15,maxSize=500)
@@ -102,3 +104,5 @@ for(ci in transpose(comps)) {
 pt_df=map(pathways,data.frame)
 
 openxlsx::write.xlsx(pt_df,cc(args$PROJNAME,"ClusterPathways","V1.xlsx"))
+
+openxlsx::write.xlsx(diffTbl,cc(args$PROJNAME,"DiffGenesSortAbdFoldChange","V1.xlsx"))
