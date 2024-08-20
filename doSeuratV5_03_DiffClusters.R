@@ -1,15 +1,16 @@
 suppressPackageStartupMessages(require(stringr))
 
 usage="
-usage: doSeuratV5_02.R PARAMS.yaml
+usage: doSeuratV5_02.R PARAMS.yaml diffParams.yaml
 
     PARAMS.yaml     parameter file from pass1
+    diffParams.yaml parameters for differential analysis
 
 "
 
 cArgs=commandArgs(trailing=T)
 
-if(len(cArgs)!=1) {
+if(len(cArgs)!=2) {
     cat(usage)
     quit()
 }
@@ -40,6 +41,7 @@ source(file.path(SDIR,"plotTools.R"))
 
 library(yaml)
 args=read_yaml(cArgs[1])
+diffParams=read_yaml(cArgs[2])
 
 glbs=args$glbs
 ap=args$algoParams
@@ -66,25 +68,36 @@ obj=readRDS(args$PASS2b.RDAFile)
 
 so=obj
 
-so@meta.data$Clusters=so@meta.data$SCT_snn_res.0.1
-Idents(so)="Clusters"
+Idents(so)=diffParams$groupVar
 
 library(fgsea)
 library(msigdbr)
 
-msigdbr_df = msigdbr(species = "Homo sapiens")
+if(args$glbs$genome %in% c("human","xenograft")) {
+
+    msigdb_species="Homo sapiens"
+
+} else {
+
+    cat("\n\nUnknown genome for msigdb",args$glbs$genome,"\n\n")
+    rlang::abort("FATAL::ERROR")
+
+}
+
+msigdbr_df = msigdbr(species = msigdb_species)
 msigdbr_list = split(x = msigdbr_df$gene_symbol, f = msigdbr_df$gs_name)
 pathdb=msigdbr_df %>% distinct(gs_id,.keep_all=T) %>% select(-gene_symbol,-entrez_gene,-ensembl_gene,-human_gene_symbol,-human_entrez_gene,-human_ensembl_gene)
 
 pathways=list()
 diffTbl=list()
-comps=tribble(~ClustA,~ClustB,1,0,1,2,1,3)
+
+comps=diffParams$comps %>% map(as_tibble) %>% bind_rows
 
 for(ci in transpose(comps)) {
 
     compName=paste(rev(ci),collapse="_vs_")
 
-    fm=FindMarkers(so,ident.1=ci$ClustB,ident.2=ci$ClustA)
+    fm=FindMarkers(so,ident.1=ci$GroupB,ident.2=ci$GroupA)
     diffTbl[[compName]]=fm %>% rownames_to_column("Gene") %>% arrange(desc(abs(avg_log2FC)))
     gstats=fm$avg_log2FC
     names(gstats)=rownames(fm)
