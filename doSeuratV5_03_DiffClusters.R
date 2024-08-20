@@ -98,7 +98,11 @@ for(ci in transpose(comps)) {
     compName=paste(rev(ci),collapse="_vs_")
 
     fm=FindMarkers(so,ident.1=ci$GroupB,ident.2=ci$GroupA)
-    diffTbl[[compName]]=fm %>% rownames_to_column("Gene") %>% arrange(desc(abs(avg_log2FC)))
+    fm=fm %>% rownames_to_column("Gene") %>% arrange(desc(abs(avg_log2FC)))
+    colnames(ff)[4]=paste0("pct.",ci$GroupB)
+    colnames(ff)[5]=paste0("pct.",ci$GroupA)
+    diffTbl[[compName]]=fm
+
     gstats=fm$avg_log2FC
     names(gstats)=rownames(fm)
     fg=fgsea(msigdbr_list,gstats,minSize=15,maxSize=500)
