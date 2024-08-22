@@ -101,10 +101,10 @@ for(ci in transpose(comps)) {
     fm=fm %>% rownames_to_column("Gene") %>% arrange(desc(abs(avg_log2FC)))
     colnames(fm)[4]=paste0("pct.",ci$GroupB)
     colnames(fm)[5]=paste0("pct.",ci$GroupA)
-    diffTbl[[compName]]=fm
+    diffTbl[[compName]]=fm %>% filter(abs(avg_log2FC)>log2(1.5))
 
     gstats=fm$avg_log2FC
-    names(gstats)=rownames(fm)
+    names(gstats)=fm$Gene
     fg=fgsea(msigdbr_list,gstats,minSize=15,maxSize=500)
 
     pt=tibble(fg) %>%
