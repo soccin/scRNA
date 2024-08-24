@@ -131,6 +131,8 @@ get_genome_from_cellranger<-function(cellRangerDir) {
 
 read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
 
+
+
     #
     # This version uses the full cellRanger output to infer the Genome
     #
@@ -179,7 +181,6 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
 
     cmdlineFile=dir_ls(cellRangerDir,regex="_cmd")
     pNum=""
-    sampleId=""
 
     if(len(cmdlineFile)==1) {
         cmdline=scan(cmdlineFile,"",quiet = TRUE)
@@ -187,11 +188,18 @@ read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
         pNum=extractProjNoFromPath(grep("--fastq",cmdline,value=T))
     }
 
+    #
+    # If we have a config file is overrides the sampleId
+    # list names of dirs was set to `sid`
+    #
+
+    if(args$CONFIG!=".none") {
+        sampleId=names(cellRangerDir)
+    }
+
     if(pNum!="") {projName=pNum}
 
-    if(sampleId!="") {
-        so <- RenameCells(so,new.names=paste0(projName,":s:",sampleId,":bc:",cell.barcode))
-    }
+    so <- RenameCells(so,new.names=paste0(projName,":s:",sampleId,":bc:",cell.barcode))
 
     if(genome=="mm10") {
 
