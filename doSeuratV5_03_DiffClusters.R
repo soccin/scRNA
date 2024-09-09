@@ -68,6 +68,12 @@ obj=readRDS(args$PASS2b.RDAFile)
 
 so=obj
 
+if(!is.null(diffParams$metadata)) {
+    cat("\n\tReplacing default metdata with",diffParams$metadata,"\n\n")
+    md=read_csv(diffParams$metadata) %>% column_to_rownames("CellID") %>% as.data.frame
+    so@meta.data=md
+}
+
 Idents(so)=diffParams$groupVar
 
 library(fgsea)
