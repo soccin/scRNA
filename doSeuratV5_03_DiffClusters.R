@@ -74,6 +74,13 @@ if(!is.null(diffParams$metadata)) {
     so@meta.data=md
 }
 
+deTest="wilcox"
+if(!is.null(diffParams$method)) {
+    cat("\n\tUsing diff method",diffParams$method,"\n\n")
+    deTest=diffParams$method
+}
+
+
 Idents(so)=diffParams$groupVar
 
 library(fgsea)
@@ -102,16 +109,26 @@ pathways=list()
 diffTbl=list()
 
 comps=diffParams$comps %>% map(as_tibble) %>% bind_rows
+grpLevels=unique(so@meta.data[[diffParams$groupVar]])
 
 for(ci in transpose(comps)) {
 
     compName=paste(rev(ci),collapse="_vs_")
 
-    fm=FindMarkers(so,ident.1=ci$GroupB,ident.2=ci$GroupA)
+    if(!(ci$GroupA %in% grpLevels & ci$GroupB %in% grpLevels)){
+        cat("\n\tMissing Group in comparison",compName,'\n')
+        cat("\t   ci$GroupA",ci$GroupA %in% grpLevels,"\n")
+        cat("\t   ci$GroupB",ci$GroupB %in% grpLevels,"\n\n")
+        next
+    }
+
+    fm=FindMarkers(so,ident.1=ci$GroupB,ident.2=ci$GroupA,test.use=deTest)
     fm=fm %>% rownames_to_column("Gene") %>% arrange(desc(abs(avg_log2FC)))
     colnames(fm)[4]=paste0("pct.",ci$GroupB)
     colnames(fm)[5]=paste0("pct.",ci$GroupA)
-    diffTbl[[compName]]=fm %>% filter(abs(avg_log2FC)>log2(1.5))
+    diffTbl[[compName]]=fm %>%
+        filter(abs(avg_log2FC)>log2(1.5) & p_val_adj<0.05) %>%
+        select(-p_val,-p_val_adj)
 
     gstats=fm$avg_log2FC
     names(gstats)=fm$Gene
@@ -130,6 +147,6 @@ for(ci in transpose(comps)) {
 
 pt_df=map(pathways,data.frame)
 
-openxlsx::write.xlsx(pt_df,cc(args$PROJNAME,"ClusterPathways","V1.xlsx"))
+openxlsx::write.xlsx(pt_df,cc(args$PROJNAME,"ClusterPathways",deTest,"V1.xlsx"))
 
-openxlsx::write.xlsx(diffTbl,cc(args$PROJNAME,"DiffGenesSortAbsFoldChange","V1.xlsx"))
+openxlsx::write.xlsx(diffTbl,cc(args$PROJNAME,"DiffGenesSortAbsFoldChange",deTest,"V1.xlsx"))
