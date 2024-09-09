@@ -83,6 +83,10 @@ if(args$glbs$genome %in% c("human","xenograft")) {
 
     msigdb_species="Homo sapiens"
 
+} else if(args$glbs$genome %in% c("mm10")) {
+
+    msigdb_species="Mus musculus"
+
 } else {
 
     cat("\n\nUnknown genome for msigdb",args$glbs$genome,"\n\n")
