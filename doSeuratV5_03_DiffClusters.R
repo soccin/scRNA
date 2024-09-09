@@ -122,7 +122,14 @@ for(ci in transpose(comps)) {
         next
     }
 
-    fm=FindMarkers(so,ident.1=ci$GroupB,ident.2=ci$GroupA,test.use=deTest)
+    fm=NULL
+
+    res=try({fm=FindMarkers(so,ident.1=ci$GroupB,ident.2=ci$GroupA,test.use=deTest)})
+    if(class(res)=="try-error") {
+        cat("\n\n",compName,res,"\n\n")
+        next
+    }
+
     fm=fm %>% rownames_to_column("Gene") %>% arrange(desc(abs(avg_log2FC)))
     colnames(fm)[4]=paste0("pct.",ci$GroupB)
     colnames(fm)[5]=paste0("pct.",ci$GroupA)
@@ -147,6 +154,10 @@ for(ci in transpose(comps)) {
 
 pt_df=map(pathways,data.frame)
 
-openxlsx::write.xlsx(pt_df,cc(args$PROJNAME,"ClusterPathways",deTest,"V1.xlsx"))
+counts=md %>% count(.[[diffParams$groupVar]])
+colnames(counts)[1]=diffParams$groupVar
 
-openxlsx::write.xlsx(diffTbl,cc(args$PROJNAME,"DiffGenesSortAbsFoldChange",deTest,"V1.xlsx"))
+
+openxlsx::write.xlsx(pt_df,cc(args$PROJNAME,"ClusterPathways",diffParams$groupVar,deTest,"V1.xlsx"))
+
+openxlsx::write.xlsx(c(list(counts=counts),diffTbl),cc(args$PROJNAME,"DiffGenesSortAbsFoldChange",diffParams$groupVar,deTest,"V1.xlsx"))
