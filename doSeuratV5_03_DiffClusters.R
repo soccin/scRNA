@@ -3,7 +3,7 @@ suppressPackageStartupMessages(require(stringr))
 usage="
 usage: doSeuratV5_02.R PARAMS.yaml diffParams.yaml
 
-    PARAMS.yaml     parameter file from pass1
+    PARAMS.yaml     parameter file from pass2b
     diffParams.yaml parameters for differential analysis
 
 "
@@ -108,6 +108,8 @@ pathdb=msigdbr_df %>% distinct(gs_id,.keep_all=T) %>% select(-gene_symbol,-entre
 pathways=list()
 diffTbl=list()
 
+FCCut=1.5
+
 comps=diffParams$comps %>% map(as_tibble) %>% bind_rows
 grpLevels=unique(so@meta.data[[diffParams$groupVar]])
 
@@ -134,8 +136,8 @@ for(ci in transpose(comps)) {
     colnames(fm)[4]=paste0("pct.",ci$GroupB)
     colnames(fm)[5]=paste0("pct.",ci$GroupA)
     diffTbl[[compName]]=fm %>%
-        filter(abs(avg_log2FC)>log2(1.5) & p_val_adj<0.05) %>%
-        select(-p_val,-p_val_adj)
+        filter(abs(avg_log2FC)>log2(FCCut) & p_val_adj<0.05) %>%
+        select(-p_val)
 
     gstats=fm$avg_log2FC
     names(gstats)=fm$Gene
@@ -154,10 +156,10 @@ for(ci in transpose(comps)) {
 
 pt_df=map(pathways,data.frame)
 
-counts=md %>% count(.[[diffParams$groupVar]])
+counts=so@meta.data %>% count(.[[diffParams$groupVar]])
 colnames(counts)[1]=diffParams$groupVar
 
 
-openxlsx::write.xlsx(pt_df,cc(args$PROJNAME,"ClusterPathways",diffParams$groupVar,deTest,"V1.xlsx"))
+openxlsx::write.xlsx(pt_df,cc(args$PROJNAME,"ClusterPathways",diffParams$groupVar,deTest,"V2.xlsx"))
 
-openxlsx::write.xlsx(c(list(counts=counts),diffTbl),cc(args$PROJNAME,"DiffGenesSortAbsFoldChange",diffParams$groupVar,deTest,"V1.xlsx"))
+openxlsx::write.xlsx(c(list(counts=counts),diffTbl),cc(args$PROJNAME,"DiffGenesSortAbsFoldChange",diffParams$groupVar,deTest,"FC",FCCut,"V2.xlsx"))
