@@ -161,8 +161,8 @@ pt_df=map(pathways,data.frame)
 counts=so@meta.data %>% count(.[[diffParams$groupVar]])
 colnames(counts)[1]=diffParams$groupVar
 
-names(diffTbl)=substr(names(diffTbl),1,32)
-names(pt_df)=substr(names(pt_df),1,32)
+names(diffTbl)=substr(names(diffTbl),1,31)
+names(pt_df)=substr(names(pt_df),1,31)
 
 if(len(unique(names(diffTbl)))!=len(names(diffTbl))) {
     cat("\n\nFATAL::ERROR: Names not unique at 32 characters\n\n")
