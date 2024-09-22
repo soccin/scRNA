@@ -109,13 +109,15 @@ pathways=list()
 diffTbl=list()
 
 FCCut=1.5
+qCutDiff=0.05
+qCutPath=0.05
 
 comps=diffParams$comps %>% map(as_tibble) %>% bind_rows
 grpLevels=unique(so@meta.data[[diffParams$groupVar]])
 
 for(ci in transpose(comps)) {
 
-    compName=paste(rev(ci),collapse="_vs_")
+    compName=paste(rev(ci),collapse="-")
 
     if(!(ci$GroupA %in% grpLevels & ci$GroupB %in% grpLevels)){
         cat("\n\tMissing Group in comparison",compName,'\n')
@@ -136,7 +138,7 @@ for(ci in transpose(comps)) {
     colnames(fm)[4]=paste0("pct.",ci$GroupB)
     colnames(fm)[5]=paste0("pct.",ci$GroupA)
     diffTbl[[compName]]=fm %>%
-        filter(abs(avg_log2FC)>log2(FCCut) & p_val_adj<0.05) %>%
+        filter(abs(avg_log2FC)>log2(FCCut) & p_val_adj<qCutDiff) %>%
         select(-p_val)
 
     gstats=fm$avg_log2FC
@@ -144,7 +146,7 @@ for(ci in transpose(comps)) {
     fg=fgsea(msigdbr_list,gstats,minSize=15,maxSize=500)
 
     pt=tibble(fg) %>%
-        filter(padj<0.05) %>%
+        filter(padj<qCutPath) %>%
         arrange(pval) %>%
         rowwise %>%
         mutate(leadingEdge=paste((leadingEdge),collapse=";")) %>%
@@ -159,7 +161,14 @@ pt_df=map(pathways,data.frame)
 counts=so@meta.data %>% count(.[[diffParams$groupVar]])
 colnames(counts)[1]=diffParams$groupVar
 
+names(diffTbl)=substr(names(diffTbl),1,32)
+names(pt_df)=substr(names(pt_df),1,32)
 
-openxlsx::write.xlsx(pt_df,cc(args$PROJNAME,"ClusterPathways",diffParams$groupVar,deTest,"V2.xlsx"))
+if(len(unique(names(diffTbl)))!=len(names(diffTbl))) {
+    cat("\n\nFATAL::ERROR: Names not unique at 32 characters\n\n")
+    rlang::abort("FATAL")
+}
 
-openxlsx::write.xlsx(c(list(counts=counts),diffTbl),cc(args$PROJNAME,"DiffGenesSortAbsFoldChange",diffParams$groupVar,deTest,"FC",FCCut,"V2.xlsx"))
+openxlsx::write.xlsx(pt_df,cc(args$PROJNAME,"ClusterPathways",diffParams$groupVar,deTest,"FDR",qCutPath,"V2.xlsx"))
+
+openxlsx::write.xlsx(c(list(counts=counts),diffTbl),cc(args$PROJNAME,"DiffGenesSortAbsFoldChange",diffParams$groupVar,deTest,"FC",FCCut,"FDR",qCutPath,"V2.xlsx"))
