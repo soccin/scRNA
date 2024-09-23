@@ -86,7 +86,13 @@ if(!clusterRes %in% colnames(s1@meta.data)) {
     rlang::abort("\n\nInvalid Cluster Resolution\n\n")
 }
 
-s1=SetIdent(s1,value=clusterRes)
+#
+# Fix cluster levels from 0-n-1 to 1-N
+#
+
+s1@meta.data$seurat_clusters=factor(as.numeric(s1@meta.data[[clusterRes]]))
+
+s1=SetIdent(s1,value="seurat_clusters")
 
 clusterMarkers=FindAllMarkers(s1,only.pos=TRUE,logfc.threshold=0.25,min.pct = 0.25)
 
@@ -205,7 +211,7 @@ gumap=FeaturePlot(s1,features=umapGenes,combine=F,max.cutoff="q95")
 pgu=paginatePlots(gumap,2,3,oneLegend=F)
 
 #pc1=DimPlot(s1,group.by=clusterRes,cols=pal1,raster=T,pt.size=1.4)
-pc1=DimPlot(s1,group.by=clusterRes,cols=pal1)
+pc1=DimPlot(s1,group.by="seurat_clusters",cols=pal1)
 
 umFile=get_plot_filename(plotNo(),"ClusterUMAP",clustTag,"FDR",FDR.cut,"logFC",logFC.cut,"%03d",".png")
 
