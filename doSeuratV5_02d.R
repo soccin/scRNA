@@ -134,7 +134,7 @@ ll=c(list(GeneCounts=geneCounts,AllCluster=cl),clusterMarkerTbl)
 
 clustTag=gsub("inte.*res.","cRes_",clusterRes)
 
-xfile=cc("tblClusterMarkers",clustTag,"FDR",FDR.cut,"logFC",logFC.cut)
+xfile=cc(args$PROJNAME,"TblClusterMarkers",clustTag,"FDR",FDR.cut,"logFC",logFC.cut)
 
 write.xlsx(ll,paste0(xfile,".xlsx"),overwrite=T)
 
