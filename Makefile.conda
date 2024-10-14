@@ -1,0 +1,62 @@
+export SHELL:=/bin/bash
+.ONESHELL:
+
+UNAME:=$(shell uname)
+
+ifeq ($(UNAME), Darwin)
+CONDASH:=Miniconda3-latest-MacOSX-arm64.sh
+endif
+
+ifeq ($(UNAME), Linux)
+CONDASH:=Miniconda3-latest-Linux-x86_64.sh
+endif
+
+default:
+
+#CNAME:="scRNA"
+ifeq ($(CNAME), )
+	@echo Need to set CNAME
+	exit 0
+endif
+
+CONDAURL:=https://repo.anaconda.com/miniconda/$(CONDASH)
+
+install: conda
+	source conda/etc/profile.d/conda.sh
+	conda create -y -n $(CNAME) -c conda-forge python=3.12
+	conda activate $(CNAME)
+	conda install -y conda-forge::r-base
+	conda install -y conda-forge::r-gert # Will need this for devtools
+	conda install -y r-essentials
+	conda install -y bioconda::bioconductor-celldex
+
+conda:
+	@set +e
+	echo ">>> Setting up conda..."
+	wget "$(CONDAURL)"
+	bash "$(CONDASH)" -b -p conda
+	rm -f "$(CONDASH)"
+
+define help
+
+Makefile to facilitate setup of conda environment for ARORA project
+
+To install conda type
+```
+make -f <MAKEFILE> install CNAME={Name Of Env}
+```
+where <MAKEFILE> is the filename of this file
+
+After installation to activate conda do:
+```
+source PATH_TO_INSALL_DIR/conda/etc/profile.d/conda.sh
+conda activate arora
+```
+where PATH_TO_INSTALL_DIR is the path of the installation directory.
+
+
+endef
+export help
+help:
+	@printf "$$help"
+.PHONY : help
