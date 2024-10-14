@@ -11,12 +11,9 @@ ifeq ($(UNAME), Linux)
 CONDASH:=Miniconda3-latest-Linux-x86_64.sh
 endif
 
-default:
-
-#CNAME:="scRNA"
-ifeq ($(CNAME), )
-	@echo Need to set CNAME
-	exit 0
+CNAME=scRNA
+ifndef CNAME
+$(error CNAME is not set)
 endif
 
 CONDAURL:=https://repo.anaconda.com/miniconda/$(CONDASH)
@@ -25,10 +22,16 @@ install: conda
 	source conda/etc/profile.d/conda.sh
 	conda create -y -n $(CNAME) -c conda-forge python=3.12
 	conda activate $(CNAME)
-	conda install -y conda-forge::r-base
-	conda install -y conda-forge::r-gert # Will need this for devtools
-	conda install -y r-essentials
+
+	conda install -y conda-forge::r-seurat=4.4.0
+	conda install -y r-tidyverse
+	conda install -y bioconda::bioconductor-singler
 	conda install -y bioconda::bioconductor-celldex
+	conda install -y bioconda::bioconductor-singlecellexperiment
+
+#
+# Remember to install packages in install.R
+#
 
 conda:
 	@set +e
