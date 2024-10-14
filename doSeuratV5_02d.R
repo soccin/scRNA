@@ -86,7 +86,13 @@ if(!clusterRes %in% colnames(s1@meta.data)) {
     rlang::abort("\n\nInvalid Cluster Resolution\n\n")
 }
 
-s1=SetIdent(s1,value=clusterRes)
+#
+# Fix cluster levels from 0-n-1 to 1-N
+#
+
+s1@meta.data$seurat_clusters=factor(as.numeric(s1@meta.data[[clusterRes]]))
+
+s1=SetIdent(s1,value="seurat_clusters")
 
 clusterMarkers=FindAllMarkers(s1,only.pos=TRUE,logfc.threshold=0.25,min.pct = 0.25)
 
@@ -128,7 +134,7 @@ ll=c(list(GeneCounts=geneCounts,AllCluster=cl),clusterMarkerTbl)
 
 clustTag=gsub("inte.*res.","cRes_",clusterRes)
 
-xfile=cc("tblClusterMarkers",clustTag,"FDR",FDR.cut,"logFC",logFC.cut)
+xfile=cc(args$PROJNAME,"TblClusterMarkers",clustTag,"FDR",FDR.cut,"logFC",logFC.cut)
 
 write.xlsx(ll,paste0(xfile,".xlsx"),overwrite=T)
 
@@ -205,7 +211,7 @@ gumap=FeaturePlot(s1,features=umapGenes,combine=F,max.cutoff="q95")
 pgu=paginatePlots(gumap,2,3,oneLegend=F)
 
 #pc1=DimPlot(s1,group.by=clusterRes,cols=pal1,raster=T,pt.size=1.4)
-pc1=DimPlot(s1,group.by=clusterRes,cols=pal1)
+pc1=DimPlot(s1,group.by="seurat_clusters",cols=pal1)
 
 umFile=get_plot_filename(plotNo(),"ClusterUMAP",clustTag,"FDR",FDR.cut,"logFC",logFC.cut,"%03d",".png")
 
@@ -222,3 +228,66 @@ print(pgu)
 
 dev.off()
 mergePNGs(umFile)
+fs::file_delete(fs::dir_ls(dirname(umFile),regex="\\.png$"))
+
+#
+# Redo marker analysis with no threshold to get lists for pathway analysis
+#
+
+cat("\n\n\tDoing FindAllMarkers for Pathway analysis\n\tThis will take a long time\n\n")
+
+clusterMarkersForPathways=FindAllMarkers(s1,only.pos=F,logfc.threshold=0,min.pct = 0.25)
+
+write_csv(clusterMarkersForPathways,cc(args$PROJNAME,"TblClusterMarkers",clustTag,"PathwayList.csv"))
+
+library(fgsea)
+library(msigdbr)
+
+if(args$glbs$genome %in% c("human","xenograft")) {
+
+    msigdb_species="Homo sapiens"
+
+} else if(args$glbs$genome %in% c("mm10")) {
+
+    msigdb_species="Mus musculus"
+
+} else {
+
+    cat("\n\nUnknown genome for msigdb",args$glbs$genome,"\n\n")
+    rlang::abort("FATAL::ERROR")
+
+}
+
+msigdbr_df = msigdbr(species = msigdb_species)
+msigdbr_list = split(x = msigdbr_df$gene_symbol, f = msigdbr_df$gs_name)
+pathdb=msigdbr_df %>% distinct(gs_id,.keep_all=T) %>% select(-gene_symbol,-entrez_gene,-ensembl_gene,-human_gene_symbol,-human_entrez_gene,-human_ensembl_gene)
+
+pathways=list()
+qCutPath=0.05
+
+cmp=split(clusterMarkersForPathways,clusterMarkersForPathways$cluster)
+
+for(ci in cmp) {
+
+    cluster=as.character(ci$cluster[1])
+    gstats=ci$avg_log2FC
+    names(gstats)=ci$gene
+    fg=fgsea(msigdbr_list,gstats,minSize=15,maxSize=500)
+
+    pt=tibble(fg) %>%
+        filter(padj<qCutPath) %>%
+        arrange(pval) %>%
+        rowwise %>%
+        mutate(leadingEdge=paste((leadingEdge),collapse=";")) %>%
+        left_join(pathdb,by=c(pathway="gs_name"))
+
+    pathways[[cluster]]=pt
+
+}
+
+pt_df=map(pathways,data.frame)
+
+openxlsx::write.xlsx(
+                pt_df,
+                cc(args$PROJNAME,"ClusterMarkerPathways",clustTag,"FDR",qCutPath,"V2.xlsx")
+            )

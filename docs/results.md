@@ -16,12 +16,12 @@ are some of the files for projct `p23456_C`.
 
 This stage looks at some QC values including cell level filter thresholds, cell cycle bias and most variable genes.
 
-- stage1/{ProjNo}_plt_01_QC.pdf: Plots showing a number of metrics to assess the quality of cells and help in the selection for threshold for cell filtering. The key metrics plotted are:
+- `stage1/{ProjNo}_plt_01_QC.pdf`: Plots showing a number of metrics to assess the quality of cells and help in the selection for threshold for cell filtering. The key metrics plotted are:
     - nFeature_RNA: the numnber of genes detected in a given cell
     - nCounts_RNA: the number of unique molecules found in each cell
     - percent.mt: the number of reads that map to mitochondrial genes.
 
-- stage1/{ProjNo}_plt_02_CellCycle.pdf: A plot of the first two PCA coordinates colored by the cell cycle phase of the cells which is used to assess the extent of the cell cycle signal in the dataset.
+- `stage1/{ProjNo}_plt_02_CellCycle.pdf`: A plot of the first two PCA coordinates colored by the cell cycle phase of the cells which is used to assess the extent of the cell cycle signal in the dataset.
 
 - `stage1/{ProjNo}_plt_11_PostFilterQCTbls`: Tables showing the number of cells that are filtered/kept for the downstream anaylsis.
 
