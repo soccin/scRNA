@@ -5,7 +5,7 @@ usage: doSeuratV5_02.R PARAMS.yaml diffParams.yaml
 
     PARAMS.yaml     parameter file from pass1
     diffParams.yaml parameters for differential analysis
-
+                    See: scRNA/diffParams.Example.yaml for details
 "
 
 cArgs=commandArgs(trailing=T)
@@ -103,7 +103,12 @@ if(args$glbs$genome %in% c("human","xenograft")) {
 
 msigdbr_df = msigdbr(species = msigdb_species)
 msigdbr_list = split(x = msigdbr_df$gene_symbol, f = msigdbr_df$gs_name)
-pathdb=msigdbr_df %>% distinct(gs_id,.keep_all=T) %>% select(-gene_symbol,-entrez_gene,-ensembl_gene,-human_gene_symbol,-human_entrez_gene,-human_ensembl_gene)
+pathdb=msigdbr_df %>%
+    distinct(gs_id,.keep_all=T) %>%
+    select(
+        -gene_symbol,-entrez_gene,-ensembl_gene,-human_gene_symbol,
+        -human_entrez_gene,-human_ensembl_gene
+    )
 
 pathways=list()
 diffTbl=list()
@@ -115,8 +120,8 @@ for(ci in transpose(comps)) {
 
     compName=paste(rev(ci),collapse="_vs_")
 
-    if(!(ci$GroupA %in% grpLevels & ci$GroupB %in% grpLevels)){
-        cat("\n\tMissing Group in comparison",compName,'\n')
+    if(!(ci$GroupA %in% grpLevels && ci$GroupB %in% grpLevels)){
+        cat("\n\tMissing Group in comparison",compName,"\n")
         cat("\t   ci$GroupA",ci$GroupA %in% grpLevels,"\n")
         cat("\t   ci$GroupB",ci$GroupB %in% grpLevels,"\n\n")
         next
