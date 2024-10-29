@@ -2,6 +2,8 @@
 # metadata must have the CellID column along with
 # the column you indicate in the groupVar
 #
+# FC Convention == GroupB/GroupA
+#
 metadata: "Config/METADATA_V2.csv"
 groupVar: GroupCol
 comps:
