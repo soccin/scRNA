@@ -38,6 +38,13 @@ if(R.Version()$major<4) {
     quit()
 }
 
+if(packageVersion("celldex")<"1.12") {
+    cat(usage)
+    cat("\n\nThis script needs Version(celldex)>=1.12\n")
+    cat("Load conda environment here: Work/CONDA/VirtualEnvs/scRNA_V4\n\n")
+    quit()
+}
+
 if(Sys.getenv("SDIR")=="") {
     file.arg=grep("--file=",commandArgs(),value=T)
     if(len(file.arg)>0) {
@@ -164,14 +171,18 @@ for(cres in grep("_res",colnames(md),value=T)) {
 
 md=md %>% mutate(CT=gsub(" \\(.*","",CT_Main))
 
+md$CT=fct_lump_n(factor(md$CT),10)
+md$CT[is.na(md$CT)]="Other"
+
 s1@meta.data=md %>% column_to_rownames("CellID")
 
 ctNames=sort(unique(md$CT[!is.na(md$CT)]))
 
 nCols=len(ctNames)
 
-if(nCols<=10) {
-    ctCols=RColorBrewer::brewer.pal(nCols,"Paired")
+if(nCols<=11) {
+    #ctCols=c(RColorBrewer::brewer.pal(10,"Paired"),"grey35")
+    ctCols=c(pals::cols25(10),"grey35")
 } else {
     ctCols=pals::cols25(nCols)
 }
