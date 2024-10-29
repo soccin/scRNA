@@ -1,0 +1,13 @@
+#
+# metadata must have the CellID column along with
+# the column you indicate in the groupVar
+#
+metadata: "Config/METADATA_V2.csv"
+groupVar: GroupCol
+comps:
+- GroupA: G1
+  GroupB: G0
+- GroupA: G1
+  GroupB: G2
+- GroupA: G1
+  GroupB: G3
