@@ -3,9 +3,9 @@ suppressPackageStartupMessages(require(stringr))
 usage="
 usage: doSeuratV5_02.R PARAMS.yaml diffParams.yaml
 
-    PARAMS.yaml     parameter file from pass2b
+    PARAMS.yaml     parameter file from pass1
     diffParams.yaml parameters for differential analysis
-
+                    See: scRNA/diffParams.Example.yaml for details
 "
 
 cArgs=commandArgs(trailing=T)
@@ -103,24 +103,25 @@ if(args$glbs$genome %in% c("human","xenograft")) {
 
 msigdbr_df = msigdbr(species = msigdb_species)
 msigdbr_list = split(x = msigdbr_df$gene_symbol, f = msigdbr_df$gs_name)
-pathdb=msigdbr_df %>% distinct(gs_id,.keep_all=T) %>% select(-gene_symbol,-entrez_gene,-ensembl_gene,-human_gene_symbol,-human_entrez_gene,-human_ensembl_gene)
+pathdb=msigdbr_df %>%
+    distinct(gs_id,.keep_all=T) %>%
+    select(
+        -gene_symbol,-entrez_gene,-ensembl_gene,-human_gene_symbol,
+        -human_entrez_gene,-human_ensembl_gene
+    )
 
 pathways=list()
 diffTbl=list()
-
-FCCut=1.5
-qCutDiff=0.05
-qCutPath=0.05
 
 comps=diffParams$comps %>% map(as_tibble) %>% bind_rows
 grpLevels=unique(so@meta.data[[diffParams$groupVar]])
 
 for(ci in transpose(comps)) {
 
-    compName=paste(rev(ci),collapse="-")
+    compName=paste(rev(ci),collapse="_vs_")
 
-    if(!(ci$GroupA %in% grpLevels & ci$GroupB %in% grpLevels)){
-        cat("\n\tMissing Group in comparison",compName,'\n')
+    if(!(ci$GroupA %in% grpLevels && ci$GroupB %in% grpLevels)){
+        cat("\n\tMissing Group in comparison",compName,"\n")
         cat("\t   ci$GroupA",ci$GroupA %in% grpLevels,"\n")
         cat("\t   ci$GroupB",ci$GroupB %in% grpLevels,"\n\n")
         next
@@ -138,15 +139,15 @@ for(ci in transpose(comps)) {
     colnames(fm)[4]=paste0("pct.",ci$GroupB)
     colnames(fm)[5]=paste0("pct.",ci$GroupA)
     diffTbl[[compName]]=fm %>%
-        filter(abs(avg_log2FC)>log2(FCCut) & p_val_adj<qCutDiff) %>%
-        select(-p_val)
+        filter(abs(avg_log2FC)>log2(1.5) & p_val_adj<0.05) %>%
+        select(-p_val,-p_val_adj)
 
     gstats=fm$avg_log2FC
     names(gstats)=fm$Gene
     fg=fgsea(msigdbr_list,gstats,minSize=15,maxSize=500)
 
     pt=tibble(fg) %>%
-        filter(padj<qCutPath) %>%
+        filter(padj<0.05) %>%
         arrange(pval) %>%
         rowwise %>%
         mutate(leadingEdge=paste((leadingEdge),collapse=";")) %>%
@@ -158,17 +159,10 @@ for(ci in transpose(comps)) {
 
 pt_df=map(pathways,data.frame)
 
-counts=so@meta.data %>% count(.[[diffParams$groupVar]])
+counts=md %>% count(.[[diffParams$groupVar]])
 colnames(counts)[1]=diffParams$groupVar
 
-names(diffTbl)=substr(names(diffTbl),1,31)
-names(pt_df)=substr(names(pt_df),1,31)
 
-if(len(unique(names(diffTbl)))!=len(names(diffTbl))) {
-    cat("\n\nFATAL::ERROR: Names not unique at 32 characters\n\n")
-    rlang::abort("FATAL")
-}
+openxlsx::write.xlsx(pt_df,cc(args$PROJNAME,"ClusterPathways",diffParams$groupVar,deTest,"V1.xlsx"))
 
-openxlsx::write.xlsx(pt_df,cc(args$PROJNAME,"ClusterPathways",diffParams$groupVar,deTest,"FDR",qCutPath,"V2.xlsx"))
-
-openxlsx::write.xlsx(c(list(counts=counts),diffTbl),cc(args$PROJNAME,"DiffGenesSortAbsFoldChange",diffParams$groupVar,deTest,"FC",FCCut,"FDR",qCutPath,"V2.xlsx"))
+openxlsx::write.xlsx(c(list(counts=counts),diffTbl),cc(args$PROJNAME,"DiffGenesSortAbsFoldChange",diffParams$groupVar,deTest,"V1.xlsx"))
