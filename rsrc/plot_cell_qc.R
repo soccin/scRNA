@@ -29,7 +29,7 @@ plot_cell_qc <- function(obj,feature,maxVal=NA,lower=T,numCellsPerSample=5000) {
     fmd=md %>% filter(.data[[feature]]<maxVal)
     smd=fmd %>% sample_n(min(nrow(fmd),numCells))
 
-    break0=scales::breaks_pretty(5)(fmd[[feature]])
+    break0=unique(c(0,scales::breaks_pretty(8)(fmd[[feature]])))
     cat(break0,"\n")
     breakDelta=median(diff(break0))
     rm1=which(abs((break0-cut3mad))<(breakDelta/10))
