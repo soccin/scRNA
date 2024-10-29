@@ -116,14 +116,16 @@ diffTbl=list()
 comps=diffParams$comps %>% map(as_tibble) %>% bind_rows
 grpLevels=unique(so@meta.data[[diffParams$groupVar]])
 
+countTbl=so@meta.data %>% count(Group=.[[diffParams$groupVar]],name="Count")
+
 for(ci in transpose(comps)) {
 
     compName=paste(rev(ci),collapse="_vs_")
 
     if(!(ci$GroupA %in% grpLevels && ci$GroupB %in% grpLevels)){
         cat("\n\tMissing Group in comparison",compName,"\n")
-        cat("\t   ci$GroupA",ci$GroupA %in% grpLevels,"\n")
-        cat("\t   ci$GroupB",ci$GroupB %in% grpLevels,"\n\n")
+        cat("\t   ci$GroupA",ci$GroupA,ci$GroupA %in% grpLevels,"\n")
+        cat("\t   ci$GroupB",ci$GroupB,ci$GroupB %in% grpLevels,"\n\n")
         next
     }
 
@@ -157,12 +159,43 @@ for(ci in transpose(comps)) {
 
 }
 
+
 pt_df=map(pathways,data.frame)
 
 counts=md %>% count(.[[diffParams$groupVar]])
 colnames(counts)[1]=diffParams$groupVar
 
+fix_names_for_excel<-function(ss) {
+    gsub("-","_",ss) %>% gsub("_vs_","-",.)
+}
 
-openxlsx::write.xlsx(pt_df,cc(args$PROJNAME,"ClusterPathways",diffParams$groupVar,deTest,"V1.xlsx"))
+compNames=names(diffTbl)
+excelNames=
+    substr(
+        paste0(
+            "C",
+            sprintf("%02d",seq(compNames)),
+            "_",
+            fix_names_for_excel(compNames)
+            ),
+            1,31
+        )
 
-openxlsx::write.xlsx(c(list(counts=counts),diffTbl),cc(args$PROJNAME,"DiffGenesSortAbsFoldChange",diffParams$groupVar,deTest,"V1.xlsx"))
+cTbl=comps %>% mutate(CompName=cc(GroupB,"vs",GroupA))
+
+compManifest=tibble(TAG=excelNames,CompName=compNames) %>% 
+    left_join(cTbl) %>% 
+    select(TAG,GroupB,GroupA,CompName)
+
+names(pt_df)=excelNames
+names(diffTbl)=excelNames
+
+openxlsx::write.xlsx(
+    c(list(comps=compManifest), pt_df),
+    cc(args$PROJNAME,"ClusterPathways",diffParams$groupVar,deTest,"V1.xlsx")
+    )
+
+openxlsx::write.xlsx(
+    c(list(counts=counts,comps=compManifest),diffTbl),
+    cc(args$PROJNAME,"DiffGenesSortAbsFoldChange",diffParams$groupVar,deTest,"V1.xlsx")
+    )
