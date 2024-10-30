@@ -234,9 +234,29 @@ fs::file_delete(fs::dir_ls(dirname(umFile),regex="\\.png$"))
 # Redo marker analysis with no threshold to get lists for pathway analysis
 #
 
-cat("\n\n\tDoing FindAllMarkers for Pathway analysis\n\tThis will take a long time\n\n")
+require(furrr)
+plan(multisession,workers=16)
 
-clusterMarkersForPathways=FindAllMarkers(s1,only.pos=F,logfc.threshold=0,min.pct = 0.25)
+idents.all <- sort(x = unique(x = Idents(object = s1)))
+options(future.globals.maxSize=max(object.size(s1)*1.2,1e9))
+
+FindMarkersForPathwaysI<-function(i) {
+    FindMarkers(s1,ident.1=idents.all[i],ident.2=NULL,only.pos=F,logfc.threshold=0,min.pct=0.1) %>%
+        mutate(cluster=idents.all[i]) %>%
+        mutate(gene=rownames(.))
+}
+
+ftbls=future_map(seq_along(idents.all),FindMarkersForPathwaysI,.progress=T,.options = furrr_options(seed = TRUE))
+clusterMarkersForPathways=bind_rows(ftbls)
+
+# cat("\n\n\tDoing FindAllMarkers for Pathway analysis\n\tThis will take a long time\n\n")
+# clusterMarkersForPathways=FindAllMarkers(
+#     s1,
+#     only.pos=F,
+#     logfc.threshold=0,
+#     min.pct = 0.25,
+#     verbose=T
+#     )
 
 write_csv(clusterMarkersForPathways,cc(args$PROJNAME,"TblClusterMarkers",clustTag,"PathwayList.csv"))
 
