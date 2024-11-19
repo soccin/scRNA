@@ -301,7 +301,7 @@ print(pc[4*(seq(numResolutions)-1)+1])
 dev.off()
 
 xx=map(pct_sample,tibble)
-names(xx)=paste0("N.Cluster=",map_vec(pct_sample,nrow))
+names(xx)=paste0(seq(len(xx))," ","N.Cluster=",map_vec(pct_sample,nrow))
 openxlsx::write.xlsx(xx,gsub(".pdf",".xlsx",pfile))
 
 if(!is.null(oArgs$MODULE_FILE)) {
