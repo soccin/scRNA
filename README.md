@@ -1,8 +1,8 @@
 # scRNA Version 4
 
-## Branch dev/SAIL
+## Branch Master
 
-Version to work with output from SAIL. Working on merging back with master
+Merged in version to work with output from SAIL. 
 
 ## Summary
 
