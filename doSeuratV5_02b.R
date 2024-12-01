@@ -121,7 +121,7 @@ pdf(file=get_plot_filename(plotNo(),"PCADimMetric.pdf"),width=11,height=8.5)
 print(p.elbow)
 dev.off()
 
-#stop("\n\n CHECK PCA AND CONTINUE\n\n")
+halt("\n\n CHECK PCA AND CONTINUE\n\n")
 
 ap$NDIMS=20
 nDims=20
@@ -131,7 +131,19 @@ ap$ClusterResolutions=c(0.1,0.2,0.5,0.8)
 cat("\nClustering ...")
 s1 <- FindNeighbors(s1, dims = 1:nDims)
 s1 <- FindClusters(s1, resolution = ap$ClusterResolutions)
-s1 <- RunUMAP(s1, dims = 1:nDims)
+
+#
+# Adjust UMAP params if integrated
+#
+if(DefaultAssay(s0)=="integrated") {
+    #
+    # If integrated reduce min.dist to get better
+    # resolution on UMAP (not one blob)
+    #
+    s1 <- RunUMAP(s1, dims = 1:nDims, spread=1, min.dist=0.1)
+} else {
+    s1 <- RunUMAP(s1, dims = 1:nDims)
+}
 
 #
 # Collect any changes in globals and parameters
