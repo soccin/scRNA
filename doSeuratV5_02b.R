@@ -135,7 +135,7 @@ s1 <- FindClusters(s1, resolution = ap$ClusterResolutions)
 #
 # Adjust UMAP params if integrated
 #
-if(DefaultAssay(s0)=="integrated") {
+if(DefaultAssay(s1)=="integrated") {
     #
     # If integrated reduce min.dist to get better
     # resolution on UMAP (not one blob)
