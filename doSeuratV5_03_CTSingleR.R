@@ -97,9 +97,11 @@ if(args$glbs$genome=="mm10") {
         cat("\n\nUnknown ATLAS",ATLAS_TAG,"\n")
         quit()
     }
+} else if(args$glbs$genome=="hg38") {
+    atlas=celldex::HumanPrimaryCellAtlasData
 } else {
     cat("\n    Genome",args$glbs$genome,"not implemented\n\n")
-    halt("FATAL ERROR::CTSingleR")
+    rlang::abort("FATAL ERROR::CTSingleR")
 }
 
 

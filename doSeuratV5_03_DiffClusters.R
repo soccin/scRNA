@@ -86,7 +86,7 @@ Idents(so)=diffParams$groupVar
 library(fgsea)
 library(msigdbr)
 
-if(args$glbs$genome %in% c("human","xenograft")) {
+if(args$glbs$genome %in% c("human","xenograft","hg38")) {
 
     msigdb_species="Homo sapiens"
 
