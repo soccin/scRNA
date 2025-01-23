@@ -98,7 +98,8 @@ if(args$glbs$genome=="mm10") {
         quit()
     }
 } else if(args$glbs$genome=="hg38") {
-    atlas=celldex::HumanPrimaryCellAtlasData
+    atlas=celldex::HumanPrimaryCellAtlasData()
+    ATLAS_TAG="HumanPrimaryCellAtlas"
 } else {
     cat("\n    Genome",args$glbs$genome,"not implemented\n\n")
     rlang::abort("FATAL ERROR::CTSingleR")
