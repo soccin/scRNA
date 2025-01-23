@@ -80,6 +80,8 @@ if(!is.null(diffParams$method)) {
     deTest=diffParams$method
 }
 
+Qcut=1
+logFCcut=0
 
 Idents(so)=diffParams$groupVar
 
@@ -118,6 +120,20 @@ grpLevels=unique(so@meta.data[[diffParams$groupVar]])
 
 countTbl=so@meta.data %>% count(Group=.[[diffParams$groupVar]],name="Count")
 
+fmL=list()
+
+#
+# From Seurat source:
+#
+# It seems our version of Seurat is using the first version not the second
+#
+pseudocount.use=1
+base=2
+default_mean_fxn_v4<-function(x) {
+    return(log(x = rowMeans(x = expm1(x = x)) + pseudocount.use, base = base))
+    #return(log(x = (rowSums(x = expm1(x = x)) + pseudocount.use)/NCOL(x), base = base))
+  }
+
 for(ci in transpose(comps)) {
 
     compName=paste(rev(ci),collapse="_vs_")
@@ -131,18 +147,39 @@ for(ci in transpose(comps)) {
 
     fm=NULL
 
-    res=try({fm=FindMarkers(so,ident.1=ci$GroupB,ident.2=ci$GroupA,test.use=deTest)})
+    res=try({fm=FindMarkers(so,ident.1=ci$GroupB,ident.2=ci$GroupA,test.use=deTest,logfc.threshold=logFCcut)})
     if(class(res)=="try-error") {
         cat("\n\n",compName,res,"\n\n")
         next
     }
 
     fm=fm %>% rownames_to_column("Gene") %>% arrange(desc(abs(avg_log2FC)))
+    fmL[[len(fmL)+1]]=fm
+
     colnames(fm)[4]=paste0("pct.",ci$GroupB)
     colnames(fm)[5]=paste0("pct.",ci$GroupA)
-    diffTbl[[compName]]=fm %>%
-        filter(abs(avg_log2FC)>log2(1.5) & p_val_adj<0.05) %>%
-        select(-p_val,-p_val_adj)
+
+    fmf=fm %>%
+        filter(abs(avg_log2FC)>=logFCcut & p_val_adj<=Qcut) %>%
+        select(-p_val)
+
+    #
+    # Get Average Expression
+    #
+    cells=Seurat:::IdentsToCells(so,ident.1=ci$GroupB,ident.2=ci$GroupA)
+
+    avgE_1=default_mean_fxn_v4(so@assays[[DefaultAssay(so)]]@data[fmf$Gene,cells$cells.1])
+    avgE_2=default_mean_fxn_v4(so@assays[[DefaultAssay(so)]]@data[fmf$Gene,cells$cells.2])
+
+    if(len(avgE_1)!=nrow(fmf)) {
+        cat("\n\nFATAL ERROR / Num genes does not match\n\n")
+        rlang::abort("ERROR::L-178")
+    }
+
+    fmf[[paste0("avgE.",ci$GroupB)]]=avgE_1
+    fmf[[paste0("avgE.",ci$GroupA)]]=avgE_2
+
+    diffTbl[[compName]]=fmf
 
     gstats=fm$avg_log2FC
     names(gstats)=fm$Gene
@@ -192,10 +229,12 @@ names(diffTbl)=excelNames
 
 openxlsx::write.xlsx(
     c(list(comps=compManifest), pt_df),
-    cc(args$PROJNAME,"ClusterPathways",diffParams$groupVar,deTest,"V1.xlsx")
+    cc(args$PROJNAME,"ClusterPathways",diffParams$groupVar,deTest,"V2.xlsx")
     )
 
 openxlsx::write.xlsx(
     c(list(counts=counts,comps=compManifest),diffTbl),
-    cc(args$PROJNAME,"DiffGenesSortAbsFoldChange",diffParams$groupVar,deTest,"V1.xlsx")
+    cc(args$PROJNAME,"DiffGenesSortAbsFoldChange",diffParams$groupVar,deTest,
+        "FDR",Qcut,"logFC",logFCcut,"V2.xlsx"
+        )
     )
