@@ -4,11 +4,10 @@ The pipeline is based on the standard Seurat (version 4) workflow and consists o
 
 Details on the Seurat package: [https://satijalab.org/seurat/](https://satijalab.org/seurat/)
 
-The various files are arranged in folders by stage to help organize. Also the files will start with the ID of your project so will have the form `stage1/{ProjNo}_plt_01_QC.pdf` so for example:
+The various files are arranged in folders by stage to help organize them. Also the files will start with the ID of your project so will have the form `stage1/{ProjNo}_plt_01_QC.pdf` so for example:
 ```
 stage1/p23456_C_plt_01_QC.pdf
 stage2/p23456_C_plt_21_PCADimMetric.pdf
-stage3/p23456_C_plt_31_ClusterMarkers_SCT_snn_res.0.1_FDR_0.05_logFC_1.pdf
 ```
 are some of the files for projct `p23456_C`. 
 
@@ -59,8 +58,12 @@ For a given cluster resolution; either choosen by default of selected after revi
 
 ### Stage IV - Cell Types
 
-Cell type level analysis. UMAPs showing the various cell types as identified using the `singleR` package with the one of the following RNAseq databases:
+Cell type level analysis. UMAPs showing the various cell types as identified using the `singleR` package with the one of the following RNAseq databases depending on species.
 
+For human:
+- HumanPrimaryCellAtlasData: Normalized expression values for 713 microarray samples from the Human Primary Cell Atlas (HPCA) (Mabbott et al., 2013). These 713 samples were processed and normalized as described in Aran, Looney and Liu et al. (2019).
+
+For mouse:
 - ImmGenData: The ImmGen reference consists of microarray profiles of pure mouse immune cells from the project of the same name (Heng et al. 2008). This is currently the most highly resolved immune reference - possibly overwhelmingly so, given the granularity of the fine labels.
 
 - Mouse RNA-seq: This reference consists of a collection of mouse bulk RNA-seq data sets downloaded from the gene expression omnibus (Benayoun et al. 2019). A variety of cell types are available, again mostly from blood but also covering several other tissues.
