@@ -80,8 +80,8 @@ if(!is.null(diffParams$method)) {
     deTest=diffParams$method
 }
 
-Qcut=1
-logFCcut=0
+Qcut=0.05
+logFCcut=0.25 # Seurat default
 
 Idents(so)=diffParams$groupVar
 
