@@ -196,6 +196,11 @@ for(ci in transpose(comps)) {
 
 }
 
+if(len(diffTbl)==0) {
+    cat("\n\nFATAL ERROR: All comparisons failed\n")
+    cat("Check that groupVar =",groupVar,"is set correctly\n\n")
+    rlang::abort("FATAL_ERROR")
+}
 
 pt_df=map(pathways,data.frame)
 
