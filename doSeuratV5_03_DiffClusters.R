@@ -136,7 +136,7 @@ default_mean_fxn_v4<-function(x) {
 
 for(ci in transpose(comps)) {
 
-    compName=paste(rev(ci),collapse="_vs_")
+    compName=paste(c(ci$GroupB,ci$GroupA),collapse="_vs_")
 
     if(!(ci$GroupA %in% grpLevels && ci$GroupB %in% grpLevels)){
         cat("\n\tMissing Group in comparison",compName,"\n")
@@ -204,7 +204,7 @@ if(len(diffTbl)==0) {
 
 pt_df=map(pathways,data.frame)
 
-counts=md %>% count(.[[diffParams$groupVar]])
+counts=so@meta.data %>% count(.[[diffParams$groupVar]])
 colnames(counts)[1]=diffParams$groupVar
 
 fix_names_for_excel<-function(ss) {
@@ -234,12 +234,12 @@ names(diffTbl)=excelNames
 
 openxlsx::write.xlsx(
     c(list(comps=compManifest), pt_df),
-    cc(args$PROJNAME,"ClusterPathways",diffParams$groupVar,deTest,"V2.xlsx")
+    cc(args$PROJNAME,"ClusterPathways",diffParams$groupVar,deTest,"V3.xlsx")
     )
 
 openxlsx::write.xlsx(
     c(list(counts=counts,comps=compManifest),diffTbl),
     cc(args$PROJNAME,"DiffGenesSortAbsFoldChange",diffParams$groupVar,deTest,
-        "FDR",Qcut,"logFC",logFCcut,"V2.xlsx"
+        "FDR",Qcut,"logFC",logFCcut,"V3.xlsx"
         )
     )
