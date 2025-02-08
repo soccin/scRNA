@@ -320,7 +320,7 @@ openxlsx::write.xlsx(xx,gsub(".pdf",".xlsx",pfile))
 # Dump metadata
 #
 
-s1@meta.data %>% rownames_to_column("CellId") %>% write_csv("metaDataPass2_v0.csv")
+s1@meta.data %>% rownames_to_column("CellID") %>% write_csv("metaDataPass2_v0.csv")
 
 if(!is.null(oArgs$MODULE_FILE)) {
     oArgs$MODULE_FILE=normalizePath(oArgs$MODULE_FILE)
