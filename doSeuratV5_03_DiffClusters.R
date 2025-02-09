@@ -163,23 +163,27 @@ for(ci in transpose(comps)) {
         filter(abs(avg_log2FC)>=logFCcut & p_val_adj<=Qcut) %>%
         select(-p_val)
 
-    #
-    # Get Average Expression
-    #
-    cells=Seurat:::IdentsToCells(so,ident.1=ci$GroupB,ident.2=ci$GroupA)
+    if(nrow(fmf)>1) {
 
-    avgE_1=default_mean_fxn_v4(so@assays[[DefaultAssay(so)]]@data[fmf$Gene,cells$cells.1])
-    avgE_2=default_mean_fxn_v4(so@assays[[DefaultAssay(so)]]@data[fmf$Gene,cells$cells.2])
+        #
+        # Get Average Expression
+        #
+        cells=Seurat:::IdentsToCells(so,ident.1=ci$GroupB,ident.2=ci$GroupA)
 
-    if(len(avgE_1)!=nrow(fmf)) {
-        cat("\n\nFATAL ERROR / Num genes does not match\n\n")
-        rlang::abort("ERROR::L-178")
+        avgE_1=default_mean_fxn_v4(so@assays[[DefaultAssay(so)]]@data[fmf$Gene,cells$cells.1,drop=F])
+        avgE_2=default_mean_fxn_v4(so@assays[[DefaultAssay(so)]]@data[fmf$Gene,cells$cells.2,drop=F])
+
+        if(len(avgE_1)!=nrow(fmf)) {
+            cat("\n\nFATAL ERROR / Num genes does not match\n\n")
+            rlang::abort("ERROR::L-178")
+        }
+
+        fmf[[paste0("avgE.",ci$GroupB)]]=avgE_1
+        fmf[[paste0("avgE.",ci$GroupA)]]=avgE_2
+
+        diffTbl[[compName]]=fmf
+
     }
-
-    fmf[[paste0("avgE.",ci$GroupB)]]=avgE_1
-    fmf[[paste0("avgE.",ci$GroupA)]]=avgE_2
-
-    diffTbl[[compName]]=fmf
 
     gstats=fm$avg_log2FC
     names(gstats)=fm$Gene
@@ -211,26 +215,28 @@ fix_names_for_excel<-function(ss) {
     gsub("-","_",ss) %>% gsub("_vs_","-",.)
 }
 
-compNames=names(diffTbl)
-excelNames=
+excel_names<-function(cnames) {
     substr(
         paste0(
             "C",
-            sprintf("%02d",seq(compNames)),
+            sprintf("%02d",seq(cnames)),
             "_",
-            fix_names_for_excel(compNames)
+            fix_names_for_excel(cnames)
             ),
             1,31
         )
+}
+
+compNames=names(diffTbl)
+names(diffTbl)=excel_names(names(diffTbl))
+
+names(pt_df)=excel_names(names(pt_df))
 
 cTbl=comps %>% mutate(CompName=cc(GroupB,"vs",GroupA))
 
-compManifest=tibble(TAG=excelNames,CompName=compNames) %>% 
+compManifest=tibble(TAG=excel_names(names(diffTbl)),CompName=compNames) %>%
     left_join(cTbl) %>% 
     select(TAG,GroupB,GroupA,CompName)
-
-names(pt_df)=excelNames
-names(diffTbl)=excelNames
 
 openxlsx::write.xlsx(
     c(list(comps=compManifest), pt_df),
