@@ -114,3 +114,43 @@ clusterRes=grep(paste0(clusterRes,"$"),colnames(s1@meta.data),value=T)
 
 s1=AddModuleScore_UCell(s1,features=modules,name="_UC")
 
+uModules=grep("_UC$",colnames(s1@meta.data),value=T)
+
+UCellCutoff=0.2
+
+cat("\nPlot modules ...")
+pm=list()
+pn=list()
+for(ii in seq(len(uModules))) {
+    print(ii)
+    modTag=gsub("_UC$","",uModules[ii])
+    pp=FeaturePlot(s1,
+        features=uModules[ii],
+        max.cutoff=UCellCutoff,min.cutoff=0,
+        cols=c("grey90","darkred"),
+        combine=F)
+
+    pm[[ii]]=pp[[1]] + ggtitle(modTag)
+
+    # pn[[ii]] = ggplot(s1@meta.data,aes_string(clusterRes,modTag,fill=clusterRes)) +
+    #     geom_violin() +
+    #     theme_light() +
+    #     geom_jitter(alpha=.1,size=.7,width=.2) +
+    #     ylab("Module Score") +
+    #     ggtitle(names(modules)[ii]) +
+    #     theme(legend.position = "none")
+
+
+}
+
+STAGE=7
+cat(" done\n\n")
+pfile=get_plot_filename(plotNo(),"UcellModuleScores_%03d.png")
+pngCairo(pfile,width=11,height=8.5)
+print(paginatePlots(pm,2,2,FALSE))
+dev.off()
+mergePNGs(pfile)
+
+
+
+fs::file_delete(fs::dir_ls("results/stage7",regex=".png"))
