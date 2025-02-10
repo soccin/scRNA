@@ -84,6 +84,7 @@ suppressPackageStartupMessages({
 ##########################################################################
 
 s1=readRDS(args$PASS2b.RDAFile)
+genes=rownames(s1@assays[[DefaultAssay(s1)]])
 
 cat("Using SCT assay\n")
 DefaultAssay(s1)="SCT"
@@ -101,6 +102,12 @@ if(modFileExt=="xlsx") {
 modules=split(moduleTbl$Genes,moduleTbl$Module)
 names(modules)=make.names(names(modules))
 
+TAG="Intersect"
+if(TAG=="Intersect") {
+    modules0=modules
+    modules=map(modules,\(x){intersect(x,genes)})
+}
+
 if(!is.null(oArgs$CLUSTER_RES)) {
     clusterRes=oArgs$CLUSTER_RES
 } else {
@@ -108,13 +115,15 @@ if(!is.null(oArgs$CLUSTER_RES)) {
 }
 clusterRes=grep(paste0(clusterRes,"$"),colnames(s1@meta.data),value=T)
 
+s1@meta.data[[clusterRes]]=factor(as.numeric(s1@meta.data[[clusterRes]]))
+
 #
 # 
 #
 
 s1=AddModuleScore_UCell(s1,features=modules,name="_UC")
-
 uModules=grep("_UC$",colnames(s1@meta.data),value=T)
+s1=SmoothKNN(s1,signature.names=uModules,reduction="umap")
 
 UCellCutoff=0.2
 
@@ -125,32 +134,57 @@ for(ii in seq(len(uModules))) {
     print(ii)
     modTag=gsub("_UC$","",uModules[ii])
     pp=FeaturePlot(s1,
-        features=uModules[ii],
+        features=cc(uModules[ii],"kNN"),
         max.cutoff=UCellCutoff,min.cutoff=0,
         cols=c("grey90","darkred"),
         combine=F)
 
     pm[[ii]]=pp[[1]] + ggtitle(modTag)
 
-    # pn[[ii]] = ggplot(s1@meta.data,aes_string(clusterRes,modTag,fill=clusterRes)) +
-    #     geom_violin() +
-    #     theme_light() +
-    #     geom_jitter(alpha=.1,size=.7,width=.2) +
-    #     ylab("Module Score") +
-    #     ggtitle(names(modules)[ii]) +
-    #     theme(legend.position = "none")
+    pn[[ii]] = ggplot(s1@meta.data,aes_string(clusterRes,uModules[ii],fill=clusterRes)) +
+        geom_violin() +
+        theme_light() +
+        geom_jitter(alpha=.1,size=.7,width=.2) +
+        ylab("Module Score") +
+        ggtitle(names(modules)[ii]) +
+        theme(legend.position = "none")
 
 
 }
 
 STAGE=7
 cat(" done\n\n")
-pfile=get_plot_filename(plotNo(),"UcellModuleScores_%03d.png")
+pfile=get_plot_filename(plotNo(),cc("UCellModuleScores",TAG,"%03d.png"))
 pngCairo(pfile,width=11,height=8.5)
 print(paginatePlots(pm,2,2,FALSE))
 dev.off()
 mergePNGs(pfile)
 
-
+pfile=get_plot_filename(plotNo(),cc("UCellModuleDistribution",TAG,"%03d.png"))
+pngCairo(pfile,width=8.5,height=11)
+print(paginatePlots(pn,3,1,FALSE))
+dev.off()
+mergePNGs(pfile)
 
 fs::file_delete(fs::dir_ls("results/stage7",regex=".png"))
+
+mTbl=s1@meta.data %>%
+    rownames_to_column("CellID") %>%
+    tibble %>%
+    select(CellID,SampleID,all_of(uModules)) %>%
+    gather(Module,Score,all_of(uModules))
+mS=mTbl %>% group_by(CellID) %>% slice_max(Score) %>% slice(1)
+
+pTbl=list()
+thetas=c(0.05,0.1,0.15,0.2)
+for(theta in thetas) {
+    pTbl[[len(pTbl)+1]]=mS %>%
+        group_by(SampleID) %>%
+        summarize(PCT.Unknown=mean(Score<=theta)) %>%
+        mutate(Threshold=theta)
+}
+pTbl=bind_rows(pTbl) %>% spread(SampleID,PCT.Unknown)
+
+tfile=get_plot_filename(plotNo(),cc("UCellPCTUnknown",TAG,".xlsx"))
+openxlsx::write.xlsx(pTbl,tfile)
+
