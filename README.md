@@ -1,8 +1,10 @@
 # scRNA Version 4
 
-## Branch Master
+## Branch Master - ver/Seurat4_v4
 
-Merged in version to work with output from SAIL. 
+- Added support for multi-output cellranger runs `cellranger multi`
+
+- Merged in version to work with output from SAIL. 
 
 ## Summary
 
