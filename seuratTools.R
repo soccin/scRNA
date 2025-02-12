@@ -111,7 +111,11 @@ get_genome_from_cellranger<-function(cellRangerDir) {
         genomeFile=cmdline[grep("--transcriptome",cmdline)+1] %>% basename
 
         if(len(genomeFile)==0) {
-            cat("\n\tFATAL ERROR Can not find genomeFile\n\n")
+            cat("\n  FATAL ERROR Can not find genomeFile\n")
+            cat("   cellRangerDir =",cellRangerDir,"\n")
+            cat("   cmdline =",cmdline,"\n")
+            cat("   genomeFile =",genomeFile,"\n\n")
+            cat("  Genome can be set via env var scGENOME or in config.yaml file\n\n")
             rlang::abort("FATAL_ERROR")
         }
 
