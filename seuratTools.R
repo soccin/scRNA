@@ -137,10 +137,12 @@ is_cellranger_multi_output<-function(cellRangerDir) {
 
     cellRangerRootDir=gsub("/outs.*","",cellRangerDir)
     cmdlineFile=dir_ls(cellRangerRootDir,regex="_cmd")
-    cmdline=scan(cmdlineFile,"",quiet = TRUE)
-
-    return(cmdline[2]=="multi" && grepl("/per_sample_outs/",cellRangerDir))
-
+    if(len(cmdlineFile)==1) {
+        cmdline=scan(cmdlineFile,"",quiet = TRUE)
+        return(cmdline[2]=="multi" && grepl("/per_sample_outs/",cellRangerDir))
+    } else {
+        return(FALSE)
+    }
 }
 
 read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
