@@ -133,39 +133,82 @@ get_genome_from_cellranger<-function(cellRangerDir) {
 
 }
 
+is_cellranger_multi_output<-function(cellRangerDir) {
+
+    cellRangerRootDir=gsub("/outs.*","",cellRangerDir)
+    cmdlineFile=dir_ls(cellRangerRootDir,regex="_cmd")
+    cmdline=scan(cmdlineFile,"",quiet = TRUE)
+
+    return(cmdline[2]=="multi" && grepl("/per_sample_outs/",cellRangerDir))
+
+}
+
 read10XDataFolderAsSeuratObj<-function(cellRangerDir,projName) {
-
-
 
     #
     # This version uses the full cellRanger output to infer the Genome
     #
 
     #
-    # Normalize cellRangerDir to root if subfolder was given
+    # First check if this is a multi-output cellranger run
     #
-    cellRangerDir=gsub("/outs.*","",cellRangerDir)
-    cat("\n\ncellRangerDir =",cellRangerDir,"\n\n")
-    if(is.null(glbs$genome)) {
-        genome=get_genome_from_cellranger(cellRangerDir)
-    } else {
-        genome=glbs$genome
-    }
 
-    dataDir=dir_ls(cellRangerDir,regex="outs/filtered_feature_bc_matrix$",recurs=T)
-    #
-    # Maybe we have SAIL cell ranger output
-    #
-    if(len(dataDir)!=1) {
+    multiCellRanger=is_cellranger_multi_output(cellRangerDir)
+
+    if(multiCellRanger) {
+
+        cat("\n\n  Multi-output cellranger run\n")
+        cat("    cellRangerDir =",cellRangerDir,"\n")
+
         dataDir=dir_ls(cellRangerDir,regex="filtered_feature_bc_matrix$")
+
+        if(is.null(glbs$genome)) {
+            cat("\n\n  FATAL ERROR No genome set\n\n")
+            cat("  Need to set genome in config.yaml file\n")
+            cat("  or use the scGENOME environment variable\n\n")
+            rlang::abort("FATAL ERROR")
+        }
+        genome=glbs$genome
+
+    } else {
+
+        #
+        # Not a cellranger multi-output run, process as normal
+        #
+        # Normalize cellRangerDir to root if subfolder was given
+        #
+
+        cellRangerDir=gsub("/outs.*","",cellRangerDir)
+        cat("\n\ncellRangerDir =",cellRangerDir,"\n\n")
+        if(is.null(glbs$genome)) {
+            genome=get_genome_from_cellranger(cellRangerDir)
+        } else {
+            genome=glbs$genome
+        }
+
+        dataDir=dir_ls(cellRangerDir,regex="outs/filtered_feature_bc_matrix$",recurs=T)
+        #
+        # Maybe we have SAIL cell ranger output
+        #
+        if(len(dataDir)!=1) {
+            dataDir=dir_ls(cellRangerDir,regex="filtered_feature_bc_matrix$")
+        }
+
+
     }
 
     if(len(dataDir)!=1) {
-        cat("\n\n  Can not find bc_matrix folder\n\n")
-        stop("FATAL ERROR")
+        cat("\n\n  Can not find bc_matrix folder\n")
+        cat("  cellRangerDir =",cellRangerDir,"\n")
+        cat("  isMulti =",multiCellRanger,"\n")
+        cat("  dataDir =",dataDir,"\n\n")
+        rlang::abort("FATAL ERROR")
     }
 
     xx <- Read10X(dataDir)
+    if(len(xx)>1 && multiCellRanger) {
+        xx=xx[["Gene Expression"]]
+    }
 
     if(genome=="xenograft") { # Get list of human genes
 
