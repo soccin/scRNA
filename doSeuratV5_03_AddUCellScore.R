@@ -188,3 +188,7 @@ pTbl=bind_rows(pTbl) %>% spread(SampleID,PCT.Unknown)
 tfile=get_plot_filename(plotNo(),cc("UCellPCTUnknown",TAG,".xlsx"))
 openxlsx::write.xlsx(pTbl,tfile)
 
+MTAG=basename(args$MODULES) %>% tools::file_path_sans_ext()
+
+s1@meta.data %>% rownames_to_column("CellID") %>% write_csv(cc("uCellScores",MTAG,".csv"))
+
