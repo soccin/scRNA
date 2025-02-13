@@ -58,6 +58,7 @@ ap=args$algoParams
 plotNo<-makeAutoIncrementor(50)
 
 moduleFile=cArgs[2]
+moduleTag=basename(moduleFile) %>% tools::file_path_sans_ext()
 
 if(!grepl("\\.(xlsx|csv)$",moduleFile)) {
     cat("\n    Note implemented: Only XLSX modules files currently working\n\n")
@@ -131,13 +132,13 @@ for(ii in seq(len(modules))) {
 }
 
 cat(" done\n\n")
-pfile=get_plot_filename(plotNo(),"ModuleScores_%03d.png")
+pfile=get_plot_filename(plotNo(),moduleTag,"ModuleScores_%03d.png")
 pngCairo(pfile,width=11,height=8.5)
 print(paginatePlots(pm,2,2,FALSE))
 dev.off()
 mergePNGs(pfile)
 
-pfile=get_plot_filename(plotNo(),"ModuleDistribution_%03d.png")
+pfile=get_plot_filename(plotNo(),moduleTag,"ModuleDistribution_%03d.png")
 pngCairo(pfile,width=8.5,height=11)
 print(paginatePlots(pn,3,1,FALSE))
 dev.off()
@@ -150,7 +151,7 @@ mergePNGs(pfile)
 md=s1@meta.data %>% data.frame %>% rownames_to_column("CellID") %>% tibble
 moduleCols=grep("^Modules\\d+",names(md))
 colnames(md)[moduleCols]=paste0("mod.",names(modules))
-write_csv(md,"metaData_AddModules.csv")
+write_csv(md,cc("metaData",moduleTag,"AddModules.csv"))
 
 
 
