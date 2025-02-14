@@ -1,11 +1,18 @@
-require(tidyverse)
 
-argv=yaml::read_yaml("pass_02b_PARAMS.yaml")
+params=yaml::read_yaml("pass_02b_PARAMS.yaml")
 
 THETA=0.1
-UCELLFILE="uCellScores_lung_Gardner_v1_.csv"
+argv=commandArgs(trailing=T)
+if(len(argv)!=1) {
+    cat("\n\n   plotUCellFractions uCellMetaDataFile.csv\n\n")
+    quit()
+}
+UCELLFILE=argv[1]
 
-md=read_csv(UCELLFILE) %>%
+require(tidyverse)
+
+md0=read_csv(UCELLFILE)
+md=md0 %>%
     select(CellID,SampleID,matches("_UC$")) %>%
     rename_all(~gsub("_UC$","",.))
 
@@ -34,9 +41,9 @@ pg=ct %>%
 
 mTag=basename(UCELLFILE) %>% tools::file_path_sans_ext() %>% gsub("_$","",.) %>% gsub("uCell[^_]*_","",.) %>% gsub("_"," ",.)
 
-p2=pg + scale_fill_brewer(palette="Paired") + labs(title=mTag,subtitle=argv$PROJNAME)
+p2=pg + scale_fill_brewer(palette="Paired") + labs(title=mTag,subtitle=params$PROJNAME)
 
-pFile=cc(argv$PROJNAME,"moduleFractionsUCell",mTag,".pdf") %>% gsub(" ","_",.)
+pFile=cc(params$PROJNAME,"moduleFractionsUCell",mTag,".pdf") %>% gsub(" ","_",.)
 pdf(file=pFile,height=8.5,width=11)
 print(p2)
 dev.off()
@@ -49,6 +56,25 @@ pctType=ct %>%
     select(-n) %>%
     spread(SampleID,PCT,fill=0)
 
-tFile=cc(argv$PROJNAME,"moduleFractionsUCell",mTag,".xlsx") %>% gsub(" ","_",.)
+tFile=cc(params$PROJNAME,"moduleFractionsUCell",mTag,".xlsx") %>% gsub(" ","_",.)
 openxlsx::write.xlsx(pctType,tFile)
+
+
+sc=md0 %>%
+    select(CellID,SampleID,SCT_snn_res.0.5,matches("_UC$")) %>%
+    gather(Module,Score,matches("_UC")) %>%
+    mutate(Module=gsub("_UC$","",Module))
+
+scoreBySample=sc %>%
+    group_by(SampleID,Module) %>%
+    summarize(Score=mean(Score)) %>%
+    spread(Module,Score)
+
+scoreByCluster=sc %>%
+    group_by(SCT_snn_res.0.5,Module) %>%
+    summarize(Score=mean(Score)) %>%
+    spread(Module,Score)
+
+tFile=cc(params$PROJNAME,"moduleMeansUCell",mTag,".xlsx") %>% gsub(" ","_",.)
+openxlsx::write.xlsx(list(ScoreByCluster=scoreByCluster,ScoreBySample=scoreBySample),tFile)
 
