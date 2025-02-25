@@ -80,8 +80,17 @@ if(!is.null(diffParams$method)) {
     deTest=diffParams$method
 }
 
-Qcut=0.05
-logFCcut=0.25 # Seurat default
+if(!is.null(diffParams$Qcut)) {
+    Qcut=diffParams$Qcut
+} else {
+    Qcut=0.05
+}
+
+if(!is.null(diffParams$logFCcut)) {
+    logFCcut=diffParams$logFCcut
+} else {
+    logFCcut=0.25 # Seurat default
+}
 
 Idents(so)=diffParams$groupVar
 
@@ -208,7 +217,7 @@ if(len(diffTbl)==0) {
 
 pt_df=map(pathways,data.frame)
 
-counts=so@meta.data %>% count(.[[diffParams$groupVar]])
+counts=so@meta.data %>% count(.[[diffParams$groupVar]]) %>% rename(NumCells=n)
 colnames(counts)[1]=diffParams$groupVar
 
 fix_names_for_excel<-function(ss) {
@@ -234,9 +243,12 @@ names(pt_df)=excel_names(names(pt_df))
 
 cTbl=comps %>% mutate(CompName=cc(GroupB,"vs",GroupA))
 
-compManifest=tibble(TAG=excel_names(names(diffTbl)),CompName=compNames) %>%
-    left_join(cTbl) %>% 
-    select(TAG,GroupB,GroupA,CompName)
+compManifest=tibble(TAG=names(diffTbl),CompName=compNames) %>%
+    full_join(cTbl) %>% 
+    select(TAG,GroupB,GroupA,CompName) %>%
+    left_join(tibble(TAG=names(diffTbl),N=map_vec(diffTbl,nrow))) %>%
+    mutate(N=ifelse(is.na(N),0,N)) %>%
+    rename(NumGenes=N)
 
 openxlsx::write.xlsx(
     c(list(comps=compManifest), pt_df),
@@ -246,6 +258,6 @@ openxlsx::write.xlsx(
 openxlsx::write.xlsx(
     c(list(counts=counts,comps=compManifest),diffTbl),
     cc(args$PROJNAME,"DiffGenesSortAbsFoldChange",diffParams$groupVar,deTest,
-        "FDR",Qcut,"logFC",logFCcut,"V3.xlsx"
+        "FDR",Qcut,"logFC",round(logFCcut,3),"V3.xlsx"
         )
     )
