@@ -1,8 +1,0 @@
-groupVar: Clusters
-comps:
-- GroupA: 1.0
-  GroupB: 0.0
-- GroupA: 1.0
-  GroupB: 2.0
-- GroupA: 1.0
-  GroupB: 3.0
