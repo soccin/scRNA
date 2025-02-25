@@ -4,6 +4,10 @@
 #
 # FC Convention == GroupB/GroupA
 #
+# Can override the default logFCcut and Qcut
+# logFCcut: 0.25
+# Qcut: 0.05
+#
 metadata: "Config/METADATA_V2.csv"
 groupVar: GroupCol
 comps:
