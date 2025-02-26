@@ -250,9 +250,18 @@ for(ii in seq(d10X)) {
 #
 cat("\nMERGE Samples\n")
 
-cat("\nMerging sample files...")
-merge=merge(d10X[[1]],d10X[-1],project=args$PROJNAME)
-cat("done\n\n")
+if(len(d10X)>1) {
+
+    cat("\nMerging sample files...")
+    merge=merge(d10X[[1]],d10X[-1],project=args$PROJNAME)
+    cat("done\n\n")
+
+} else {
+
+    cat("\nOnly 1 sample so pseudo-merge\n\n")
+    merge=d10X[[1]]
+
+}
 
 ##############################################################################
 # Do SCTransform
