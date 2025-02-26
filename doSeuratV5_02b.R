@@ -121,7 +121,7 @@ pdf(file=get_plot_filename(plotNo(),"PCADimMetric.pdf"),width=11,height=8.5)
 print(p.elbow)
 dev.off()
 
-halt("\n\n CHECK PCA AND CONTINUE\n\n")
+#halt("\n\n CHECK PCA AND CONTINUE\n\n")
 
 ap$NDIMS=20
 nDims=20
@@ -186,7 +186,9 @@ if(maxClusters>25) {
 } else {
     pal1=cols25()
 }
-pal2=c(brewer.paired(maxClusters))
+#
+# paired needs min of 3 colors
+pal2=c(brewer.paired(max(maxClusters,3)))[1:maxClusters]
 
 pu=list()
 for(ci in grep("_snn_res",colnames(s1@meta.data),value=T)) {
