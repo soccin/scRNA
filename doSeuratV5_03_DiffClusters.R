@@ -147,6 +147,8 @@ for(ci in transpose(comps)) {
 
     compName=paste(c(ci$GroupB,ci$GroupA),collapse="_vs_")
 
+    cat("comp:", compName, "\n")
+
     if(!(ci$GroupA %in% grpLevels && ci$GroupB %in% grpLevels)){
         cat("\n\tMissing Group in comparison",compName,"\n")
         cat("\t   ci$GroupA",ci$GroupA,ci$GroupA %in% grpLevels,"\n")
@@ -160,6 +162,11 @@ for(ci in transpose(comps)) {
     if(class(res)=="try-error") {
         cat("\n\n",compName,res,"\n\n")
         next
+    }
+
+    if(nrow(fm)==0) {
+        cat("\n\nNo DEGs",compName,"\n\n")
+        next()
     }
 
     fm=fm %>% rownames_to_column("Gene") %>% arrange(desc(abs(avg_log2FC)))
