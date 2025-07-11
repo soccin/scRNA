@@ -182,7 +182,8 @@ if(maxClusters>50) {
 }
 
 if(maxClusters>25) {
-    pal1=c(cols25(),brewer.dark2(maxClusters-25))
+    nn=maxClusters-25
+    pal1=c(cols25(),brewer.dark2(max(3,nn))[1:nn])
 } else {
     pal1=cols25()
 }
