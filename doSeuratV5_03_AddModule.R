@@ -110,6 +110,7 @@ clusterRes=grep(paste0(clusterRes,"$"),colnames(s1@meta.data),value=T)
 cat("\nPlot modules ...")
 pm=list()
 pn=list()
+po=list()
 for(ii in seq(len(modules))) {
     print(ii)
     modTag=paste0("Modules",ii)
@@ -121,6 +122,14 @@ for(ii in seq(len(modules))) {
     pm[[ii]]=pp[[1]] + ggtitle(names(modules)[ii])
 
     pn[[ii]] = ggplot(s1@meta.data,aes_string(clusterRes,modTag,fill=clusterRes)) +
+        geom_violin() +
+        theme_light() +
+        geom_jitter(alpha=.1,size=.7,width=.2) +
+        ylab("Module Score") +
+        ggtitle(names(modules)[ii]) +
+        theme(legend.position = "none")
+
+    po[[ii]] = ggplot(s1@meta.data,aes_string("SampleID",modTag,fill="SampleID")) +
         geom_violin() +
         theme_light() +
         geom_jitter(alpha=.1,size=.7,width=.2) +
