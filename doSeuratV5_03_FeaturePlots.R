@@ -99,20 +99,24 @@ nSamples=len(unique(s1@meta.data$orig.ident))
 if(nSamples<=4) {
     splot.nrow=2
     splot.ncol=2
-} else {
+} else if(nSamples <=6) {
     splot.nrow=2
+    splot.ncol=3
+} else {
+    splot.nrow=3
     splot.ncol=3
 }
 
 pfile=get_plot_filename(plotNo(),"GeneUMAPs",basename(geneListFile),"%03d.png")
 pngCairo(pfile,width=11,height=8.5)
 pp1=paginatePlots(pp,2,2,oneLegend=F)
-pp2=map(pgL,paginatePlots,splot.nrow,splot.ncol,oneLegend=F)
+pp2=map(pgL,paginatePlots,splot.nrow,splot.ncol,oneLegend=T)
 print(pp1)
 print(pp2)
 dev.off()
 
 mergePNGs(pfile)
+fs::dir_ls(dirname(pfile),regex=basename(gsub("_%03d.*",".*.png$",pfile))) %>% map(fs::file_delete)
 
 if(!is.null(args$CRES)) {
 

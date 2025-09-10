@@ -60,7 +60,7 @@ plotNo<-makeAutoIncrementor(50)
 moduleFile=cArgs[2]
 
 if(!grepl("\\.(xlsx|csv)$",moduleFile)) {
-    cat("\n    Note implemented: Only XLSX modules files currently working\n\n")
+    cat("\n    Note implemented: Only XLSX/CSV modules files currently working\n\n")
     quit()
 }
 
