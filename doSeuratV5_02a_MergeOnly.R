@@ -269,6 +269,8 @@ if(len(d10X)>1) {
 #
 cat("\nSCTransform\n")
 
+options(future.globals.maxSize = 4 * 1024^3)
+
 if(args$CC_REGRESS) {
     cat("\n\nRegress out Cell Cycle\n\n")
     d10X.integrate=SCTransform(merge,vars.to.regress = c('S.Score', 'G2M.Score'))
