@@ -9,15 +9,15 @@ NOTES FOR CUSTOMIZATION:
 - Can add/remove bullet points based on specific project parameters
 -->
 
-**Subject:** scRNA-seq Analysis Results - Project [PROJECT_ID]
+**Subject:** scRNA-seq Analysis Results
 
 The results for your scRNA-seq project [PROJECT_ID] are now available. You can access them at:
 
-**https://bicdelivery.mskcc.org/project/[PROJECT_ID]/seurat/r_001**
+  https://bicdelivery.mskcc.org/project/[PROJECT_ID]/seurat/r_001
 
 Please find attached a detailed description of the output files and analyses (results.pdf).
 
-**Analysis Summary:**
+Analysis Summary:
 
 - Pipeline: Seurat v4 (current standard)
 - QC filters: Standard cell filtering thresholds applied
@@ -29,7 +29,7 @@ Please find attached a detailed description of the output files and analyses (re
 For this analysis, we removed ribosomal genes as they appeared to be creating issues in the pathway analysis. If ribosomal genes are important to your experiment, please let us know and we can provide an alternative analysis.
 <!-- END OPTIONAL SECTION -->
 
-**Next Steps:**
+Next Steps:
 
 Please review the clustering results and let us know if a different resolution would be more appropriate for your biological question. We can readily rerun the differential expression and pathway analyses at your preferred resolution.
 
