@@ -72,7 +72,7 @@ s1=readRDS(args$PASS2b.RDAFile)
 
 if(len(cArgs)>1) {
     cResValue=cArgs[2]
-    clusterRes=grep(cResValue,grep("res\\.",colnames(s1@meta.data),value=T),value=T)
+    clusterRes=grep(str_c(cResValue,"$"),grep("res\\.",colnames(s1@meta.data),value=T),value=T)
 } else {
     cat("\n\nNeed to specify a cluster resolution that will match with grep\n")
     cat("possible resolutions =>\n")
