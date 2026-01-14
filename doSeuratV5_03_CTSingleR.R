@@ -192,40 +192,73 @@ if(nCols<=11) {
 names(ctCols)=ctNames
 ctCols=ctCols[sort(unique(md$CT[!is.na(md$CT)]))]
 
-pg=DimPlot(s1,group.by="CT",cols=ctCols)
 
-pdf(file=get_plot_filename(cc("b",plotNo()),"CellTypes","SingleR",ATLAS_TAG,ATLAS_LEVEL,".pdf"),width=12,height=8.5)
-print(pg)
+#
+# We want a consistent color scheme amount all plots
+#
+allCellTypes=md %>% select(matches("^CTC.*Main")) %>% unlist %>% unname %>% unique %>% sort
+ctCols=pals::cols25(len(allCellTypes))
+ctCols=setNames(ctCols,allCellTypes)
+
+ctClusterCols=colnames(s1@meta.data) %>% grep("^CTC_Main",.,value=T)
+
+pg=list()
+for(cti in ctClusterCols) {
+  pg[[cti]]=DimPlot(s1,group.by=cti,cols=ctCols) + guides(color=guide_legend(ncol=1,override.aes=list(size=5)))
+}
+
+library(grid)
+# Convert all plots to grobs
+grobs <- lapply(pg, ggplotGrob)
+
+# Find maximum width for each column across all plots
+max_widths <- do.call(unit.pmax, lapply(grobs, function(g) g$widths))
+
+# Apply the same widths to all grobs
+grobs <- lapply(grobs, function(g) {
+  g$widths <- max_widths
+  g
+})
+
+# Now draw them
+pdf(file=get_plot_filename(cc("b",plotNo()),"CellTypes","SingleR",ATLAS_TAG,ATLAS_LEVEL,".pdf"),width=11,height=8.5)
+for (g in grobs) {
+  grid.newpage()
+  grid.draw(g)
+}
 dev.off()
+
 write_csv(md,cc("cellTypes_SingleR",ATLAS_TAG,ATLAS_LEVEL,".csv.gz"))
 
-if(ATLAS_TAG=="ImmGenData") {
 
-annote=read_csv(file.path(SDIR,"data","celldex_ImmGenData_Annote.csv.gz")) %>% 
-    select(label.main,label.fine,label.ont,onto.name) %>%
-    distinct(label.fine,.keep_all=T)
 
-mdfine=md %>% 
-    select(CellID,matches("^CT_|^CTC_")) %>% 
-    gather(Class,Type,-CellID) %>% 
-    left_join(annote,by=c(Type="label.fine")) %>% 
-    select(CellID,Class,onto.name) %>% 
-    mutate(Class=gsub("_Main","_Fine",Class)) %>%
-    spread(Class,onto.name) %>%
-    mutate(CT_Fine=factor(CT_Fine) %>% 
-                    fct_infreq %>%
-                    fct_na_value_to_level("Unknown") %>%
-                    fct_lump_n(24) %>%
-                    fct_recode(Other="Unknown")
-                    ) 
+# if(ATLAS_TAG=="ImmGenData") {
 
-s1@meta.data=left_join(md,mdfine) %>% column_to_rownames("CellID")
+# annote=read_csv(file.path(SDIR,"data","celldex_ImmGenData_Annote.csv.gz")) %>%
+#     select(label.main,label.fine,label.ont,onto.name) %>%
+#     distinct(label.fine,.keep_all=T)
 
-pf=DimPlot(s1,group.by="CT_Fine",cols=pals::cols25()) + guides(color=guide_legend(ncol=1,override.aes=list(size=5)))
+# mdfine=md %>%
+#     select(CellID,matches("^CT_|^CTC_")) %>%
+#     gather(Class,Type,-CellID) %>%
+#     left_join(annote,by=c(Type="label.fine")) %>%
+#     select(CellID,Class,onto.name) %>%
+#     mutate(Class=gsub("_Main","_Fine",Class)) %>%
+#     spread(Class,onto.name) %>%
+#     mutate(CT_Fine=factor(CT_Fine) %>%
+#                     fct_infreq %>%
+#                     fct_na_value_to_level("Unknown") %>%
+#                     fct_lump_n(24) %>%
+#                     fct_recode(Other="Unknown")
+#                     )
 
-pdf(file=get_plot_filename(cc("b",plotNo()),"CellTypes","SingleR",ATLAS_TAG,"FineOnto",".pdf"),width=15,height=8.5)
-print(pf)
-dev.off()
+# s1@meta.data=left_join(md,mdfine) %>% column_to_rownames("CellID")
 
-write_csv(left_join(md,mdfine),cc("cellTypes_SingleR",ATLAS_TAG,ATLAS_LEVEL,".csv.gz"))
-}
+# pf=DimPlot(s1,group.by="CT_Fine",cols=pals::cols25()) + guides(color=guide_legend(ncol=1,override.aes=list(size=5)))
+
+# pdf(file=get_plot_filename(cc("b",plotNo()),"CellTypes","SingleR",ATLAS_TAG,"FineOnto",".pdf"),width=15,height=8.5)
+# print(pf)
+# dev.off()
+
+# write_csv(left_join(md,mdfine),cc("cellTypes_SingleR",ATLAS_TAG,ATLAS_LEVEL,".csv.gz"))
+# }
