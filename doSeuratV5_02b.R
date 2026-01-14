@@ -13,7 +13,8 @@ usage: doSeuratV5_02b.R [MODULE_FILE=file] PARAMS.yaml
     PARAMS.yaml     parameter file from pass2[integration]
 
     OPTIONAL:
-        MODULE_FILE     TSV file with list of genes for modules
+        MODULE_FILE         TSV file with list of genes for modules
+        CLUSTER_RESOLUTIONS List of resolutions to use (\"0.1,0.2,0.3\")
 
 "
 
@@ -24,7 +25,7 @@ cArgs=commandArgs(trailing=T)
 #
 optionals=grep("=",cArgs,value=T)
 
-oArgs=list(MODULE_FILE=NULL)
+oArgs=list(MODULE_FILE=NULL,CLUSTER_RESOLUTIONS=NULL)
 if(len(optionals)>0) {
     require(stringr, quietly = T, warn.conflicts=F)
     parseArgs=str_match(optionals,"(.*)=(.*)")
@@ -126,9 +127,14 @@ dev.off()
 ap$NDIMS=20
 nDims=20
 
-ap$ClusterResolutions=c(0.1,0.2,0.5,0.8)
+if(is.null(oArgs$CLUSTER_RESOLUTIONS)) {
+  ap$ClusterResolutions=c(0.1,0.2,0.5,0.8)
+} else {
+  ap$ClusterResolutions=as.numeric(strsplit(oArgs$CLUSTER_RESOLUTIONS,",")[[1]])
+}
+cat("\nClustering:\n")
+cat("  Resolutions :=",paste(ap$ClusterResolutions,collapse=","),"\n...")
 
-cat("\nClustering ...")
 s1 <- FindNeighbors(s1, dims = 1:nDims)
 s1 <- FindClusters(s1, resolution = ap$ClusterResolutions)
 
