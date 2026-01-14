@@ -269,7 +269,7 @@ if(len(d10X)>1) {
 #
 cat("\nSCTransform\n")
 
-options(future.globals.maxSize = 4 * 1024^3)
+options(future.globals.maxSize = 8 * 1024^3)
 
 if(args$CC_REGRESS) {
     cat("\n\nRegress out Cell Cycle\n\n")
