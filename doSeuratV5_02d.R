@@ -8,10 +8,10 @@ STAGE=3
 suppressPackageStartupMessages(require(stringr))
 
 usage="
-usage: doSeuratV5_02d.R PARAMS.yaml
+usage: doSeuratV5_02d.R PARAMS.yaml ClusterRes
 
     PARAMS.yaml     parameter file from pass2b
-    ClusterRes      Resolution value of clusters to use
+    ClusterRes      resolution value suffix to grep (e.g. 0.4)
 "
 
 cArgs=commandArgs(trailing=T)
