@@ -1,12 +1,16 @@
 suppressPackageStartupMessages(require(stringr))
 
 usage="
-usage: doSeuratV5_03_CTSingleR.R [CLUSTER_RES=res] PARAMS_2b.yaml
+usage: doSeuratV5_03_CTSingleR.R [KEY=value ...] PARAMS_2b.yaml
 
     PARAMS_2b.yaml     parameter file from pass2b [post PCA]
-    CLUSTER_RES        optional: resolution of clusters to use for cluster level assigments
-    ATLAS_TAG          Atlas to use [ImmGenData,MouseRNAseqData]
-    ATLAS_LEVEL        Level to use in atlas [main,fine]
+
+    Optional key=value arguments:
+    CLUSTER_RES=res    resolution to use for cluster-level assignments (default: all _res columns)
+    ATLAS_TAG=tag      atlas to use for mm10 [MouseRNAseqData,ImmGenData] (default: MouseRNAseqData)
+                       ignored for hg38; HumanPrimaryCellAtlasData is always used
+    ATLAS_LEVEL=level  label level to use for cell-level assignments [main,fine] (default: main)
+                       note: cluster-level assignments always use fine labels
 "
 
 STAGE=4
@@ -98,8 +102,11 @@ if(args$glbs$genome=="mm10") {
         quit()
     }
 } else if(args$glbs$genome=="hg38") {
+    if(ATLAS_TAG!="HumanPrimaryCellAtlasData") {
+        cat("\nNote: ATLAS_TAG ignored for hg38; using HumanPrimaryCellAtlasData\n")
+    }
     atlas=celldex::HumanPrimaryCellAtlasData()
-    ATLAS_TAG="HumanPrimaryCellAtlas"
+    ATLAS_TAG="HumanPrimaryCellAtlasData"
 } else {
     cat("\n    Genome",args$glbs$genome,"not implemented\n\n")
     rlang::abort("FATAL ERROR::CTSingleR")
@@ -163,7 +170,18 @@ md=md %>% left_join(
             select(CellID,CT_Main=pruned.labels)
         )
 
-for(cres in grep("_res",colnames(md),value=T)) {
+CLUSTER_RES=oArgs$CLUSTER_RES
+resColumns=grep("_res",colnames(md),value=T)
+if(!is.null(CLUSTER_RES)) {
+    resColumns=grep(paste0("_res.",CLUSTER_RES,"$"),resColumns,value=T)
+    if(len(resColumns)==0) {
+        cat("\n\nCLUSTER_RES=",CLUSTER_RES,"not found in metadata columns\n")
+        cat("Available resolutions:",grep("_res",colnames(md),value=T),"\n\n")
+        quit()
+    }
+}
+
+for(cres in resColumns) {
     print(cres)
     res=gsub(".*_res.","",cres)
     cpred=SingleR::SingleR(test=sce,ref=atlas,assay.type.test="logcounts",labels=atlas$label.fine,clusters=md[[cres]],prune=T)
