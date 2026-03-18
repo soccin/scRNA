@@ -1,3 +1,15 @@
+---
+mainfont: "CMU Concrete"
+mathfont: "Concrete-Math"
+monofont: "Fira Code"
+fontsize: 12pt
+geometry: margin=1in
+linkcolor: blue
+urlcolor: blue
+header-includes:
+  - \usepackage{microtype}
+---
+
 ## scRNA Results
 
 The pipeline is based on the standard Seurat (version 4) workflow and consists of a number of stages. Below is a list of the files (mostly plots/pdfs) and a short description of their contents.
@@ -16,6 +28,7 @@ are some of the files for projct `p23456_C`.
 This stage looks at some QC values including cell level filter thresholds, cell cycle bias and most variable genes.
 
 - `stage1/{ProjNo}_plt_01_QC.pdf`: Plots showing a number of metrics to assess the quality of cells and help in the selection for threshold for cell filtering. The key metrics plotted are:
+
     - nFeature_RNA: the numnber of genes detected in a given cell
     - nCounts_RNA: the number of unique molecules found in each cell
     - percent.mt: the number of reads that map to mitochondrial genes.

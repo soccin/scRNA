@@ -1,1 +1,1 @@
-pandoc results.md -o results.pdf -V geometry:margin=1in
+pandoc results.md -o results.pdf --pdf-engine=xelatex
