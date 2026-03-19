@@ -5,7 +5,7 @@ usage: doSeuratV5_03_AddModule.R [CLUSTER_RES=res] PARAMS_2b.yaml ModuleFile
 
     CLUSTER_RES     optional: resolution of clusters to use for cluster level assigments
     PARAMS_2b.yaml  parameter file from pass2b
-    ModuleFile      File with Module Genes (name of module from filename)
+    ModuleFile      File with Module Genes, xlsx or csv (name of module from filename)
 
 "
 
@@ -61,7 +61,7 @@ moduleFile=cArgs[2]
 moduleTag=basename(moduleFile) %>% tools::file_path_sans_ext()
 
 if(!grepl("\\.(xlsx|csv)$",moduleFile)) {
-    cat("\n    Note implemented: Only XLSX modules files currently working\n\n")
+    cat("\n    Not implemented: only xlsx and csv module files are supported\n\n")
     quit()
 }
 
